@@ -1,0 +1,13 @@
+2 December 2013
+
+This looks like a good method for testing whether a Bayesian model has fit to sequential (i.e. exchangeable) data. This is probably interesting and worth pursuing e.g. I could test various exciting nonparametric Bayesian models - will the witness function reveal something interesting? Could try this GPLVM - deep GPs - maybe even neural networks - I think this is an interesting line of research. Warped mixtures? All sorts of things we could try.
+
+Not so useful for conditional modelling since this corresponds to observing one value from some distribution - this is not particularly informative when just looking at distances of points - can this be fixed with more interesting kernels on functions or something else entirely?
+
+Various forms of partial exchangeability also seem interesting - is there a version of this test for a single network observation - can I relate di Finetti and Aldous Hoover in such a way as to see how to generalise the idea of MMD?
+
+9 December 2013
+
+A particular RBM I trained was biased to certain numbers - once this bias was removed the RBM was still biased to particularly rounded numbers.
+
+If this persists when several RBMs are trained then we can conclude that training an RBM is biased - if not then this one RBM was unlucky
