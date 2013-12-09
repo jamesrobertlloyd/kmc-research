@@ -1,0 +1,236 @@
+% Use the following line _only_ if you're still using LaTeX 2.09.
+%\documentstyle[icml2014,epsf,natbib]{article}
+% If you rely on Latex2e packages, like most modern people use this:
+\documentclass{article}
+
+% use Times
+\usepackage{times}
+% For figures
+\usepackage{graphicx} % more modern
+%\usepackage{epsfig} % less modern
+\usepackage{subfigure} 
+
+% For citations
+\usepackage{natbib}
+
+% For algorithms
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% As of 2011, we use the hyperref package to produce hyperlinks in the
+% resulting PDF.  If this breaks your system, please commend out the
+% following usepackage line and replace \usepackage{icml2014} with
+% \usepackage[nohyperref]{icml2014} above.
+\usepackage{hyperref}
+
+% Packages hyperref and algorithmic misbehave sometimes.  We can fix
+% this with the following command.
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Employ the following version of the ``usepackage'' statement for
+% submitting the draft version of the paper for review.  This will set
+% the note in the first column to ``Under review.  Do not distribute.''
+\usepackage{format/icml2014} 
+% Employ this version of the ``usepackage'' statement after the paper has
+% been accepted, when creating the final version.  This will set the
+% note in the first column to ``Proceedings of the...''
+%\usepackage[accepted]{icml2014}
+
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{color}
+\usepackage{preamble}
+\definecolor{mydarkblue}{rgb}{0,0.08,0.45}
+\hypersetup{ %
+    pdftitle={},
+    pdfauthor={},
+    pdfsubject={},
+    pdfkeywords={},
+    pdfborder=0 0 0,
+    pdfpagemode=UseNone,
+    colorlinks=true,
+    linkcolor=mydarkblue,
+    citecolor=mydarkblue,
+    filecolor=mydarkblue,
+    urlcolor=mydarkblue,
+    pdfview=FitH}
+    
+    
+\usepackage{amsmath, amsfonts, bm, lipsum, capt-of}
+\usepackage{natbib, xcolor, wrapfig, booktabs, multirow, caption}
+\DeclareCaptionType{copyrightbox}
+\usepackage{float}
+
+%\renewcommand{\baselinestretch}{0.99}
+
+\def\ie{i.e.\ }
+\def\eg{e.g.\ }
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
+%\author{
+%James Robert Lloyd\\
+%University of Cambridge\\
+%Department of Engineering\\
+%\texttt{jrl44@cam.ac.uk}
+%\And
+%David Duvenaud\\
+%University of Cambridge \\
+%Department of Engineering \\
+%\texttt{dkd23@cam.ac.uk}
+%\And
+%Roger Grosse\\
+%M.I.T.\\
+%Brain and Cognitive Sciences \\
+%\texttt{rgrosse@mit.edu}
+%\And
+%Joshua B. Tenenbaum\\
+%M.I.T.\\
+%Brain and Cognitive Sciences \\
+%\texttt{jbt@mit.edu}
+%\And
+%Zoubin Ghahramani\\
+%University of Cambridge \\
+%Department of Engineering \\
+%\texttt{zoubin@eng.cam.ac.uk}
+%}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\setlength{\marginparwidth}{0.6in}
+\input{include/commenting.tex}
+
+%% For submission, make all render blank.
+%\renewcommand{\LATER}[1]{}
+%\renewcommand{\fLATER}[1]{}
+%\renewcommand{\TBD}[1]{}
+%\renewcommand{\fTBD}[1]{}
+%\renewcommand{\PROBLEM}[1]{}
+%\renewcommand{\fPROBLEM}[1]{}
+%\renewcommand{\NA}[1]{#1}  % Note, NA's pass through!
+
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{Kernel posterior predictive checks}
+
+\begin{document} 
+
+\twocolumn[
+\icmltitle{Kernel posterior predictive checks}
+
+% It is OKAY to include author information, even for blind
+% submissions: the style file will automatically remove it for you
+% unless you've provided the [accepted] option to the icml2014
+% package.
+\icmlauthor{Your Name}{email@yourdomain.edu}
+\icmladdress{Your Fantastic Institute,
+            314159 Pi St., Palo Alto, CA 94306 USA}
+\icmlauthor{Your CoAuthor's Name}{email@coauthordomain.edu}
+\icmladdress{Their Fantastic Institute,
+            27182 Exp St., Toronto, ON M6H 2T1 CANADA}
+
+% You may provide any keywords that you 
+% find helpful for describing your paper; these are used to populate 
+% the "keywords" metadata in the PDF but will not be shown in the document
+\icmlkeywords{}
+
+\vskip 0.3in
+]
+
+\begin{abstract} 
+We invetigate the utility of the maximum mean discrepancy two sample test as a means of model checking.
+We apply it to several models for unsupervised learning and discover their inaccuracies.
+\end{abstract} 
+
+\allowdisplaybreaks
+
+\section{Introduction}
+
+Model checking is an inevitable part of a complete data analysis.
+It is going to be especially important as probabilistic programming takes off and people build sophisticated models.
+
+Usually one chooses statistics of interest and evaluates the extent to which the beliefs of the model and realised value on the data align.
+But how does one generate these statistics?
+Ideally one chooses statistics that are of practical importance.
+
+However, it would also be interesting to find the statistic that most strongly indicates a discrepancy; enter MMD.
+
+Call to arms about a lack of model checking in machine learning literature - find some quotes where new models come from speculations about the form of data.
+
+\section{Background: Model checking}
+
+It can either be interpreted as a Bayesian probability statement.
+
+More usefully it can be related to an estimate of utility of a model for predicting a certain quantity.
+
+However, caution : model checking should not replace model comparison and averaging and posterior predictive $p$-values determine \emph{statistical} significance, not \emph{practical} significance.
+
+\section{Background: Maximum mean discrepancy}
+
+Estimates supremum of difference between mean of functions drawn from some space of functions.
+RKHS MMD uses smooth functions to find the discrepancy.
+Forms a metric over probability distributions.
+
+\section{Kernel MMD for posterior predictive checking}
+
+Generate lots of data from posterior predictive distribution
+
+\section{Toy examples}
+
+\subsection{Spot the odd one out}
+
+Data generated from mixture of two Gaussians and a uniform ring.
+Fit a mixture of Gaussians model.
+MMD statistic using default lengthscale heuristic does not show any difference - it is looking for very broad discrepancies.
+
+MMD using smaller lengthscale finds the discrepancy.
+Green $\circ$ are data, red $\times$ are locations over-represented by the model, blue $+$ are locations under-represented by the model.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/blob_blob_ring}
+\caption{
+An experiment on synthetic data revealing a statistically significant maximum mean discrepancy.
+Green $\circ$ are data, red $\times$ are locations over-represented by the model, blue $+$ are locations under-represented by the model.
+}
+\label{fig:blob_blob_ring}
+\end{figure}
+
+MMD has successfully identified the incorrectly modelled cluster.
+
+\section{Potential case studies}
+
+\subsection{A unimodal distribution}
+
+\subsection{Mixture of Gaussians}
+
+\subsection{PCA}
+
+\subsection{GPLVM}
+
+\subsection{Warped mixtures}
+
+\subsection{Alex Matthews latest classification model}
+
+\subsection{GP density model}
+
+\subsection{A generative model for images?}
+
+\subsection{A generative model for sound?}
+
+\subsection{A generative model for video?}
+
+\subsection{A generative model for text?}
+
+\section{Discussion}
+
+Do you know what your model is up to right now?
+Maybe you should check it is ok.
+
+\bibliography{gpss}
+\bibliographystyle{format/icml2014}
+
+\end{document} 
