@@ -14,6 +14,7 @@ import time
 import PIL.Image
 
 import numpy
+import numpy as np
 
 import theano
 import theano.tensor as T
@@ -511,8 +512,8 @@ def test_rbm(learning_rate=0.1, training_epochs=15,
     return rbm
 
 def train_rbm(learning_rate=0.1, training_epochs=15,
-              dataset='../../data/mnist/mnist.pkl.gz', batch_size=20,
-              n_hidden=500):
+              dataset='mnist.pkl.gz', batch_size=20,
+              n_hidden=500, random_seed=1):
     datasets = load_data(dataset)
 
     train_set_x, train_set_y = datasets[0]
@@ -536,7 +537,7 @@ def train_rbm(learning_rate=0.1, training_epochs=15,
     index = T.lscalar()    # index to a [mini]batch
     x = T.matrix('x')  # the data is presented as rasterized images
 
-    rng = numpy.random.RandomState(1234)
+    rng = numpy.random.RandomState(random_seed)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
 
     # initialize storage for the persistent chain (state = hidden
@@ -564,19 +565,7 @@ def train_rbm(learning_rate=0.1, training_epochs=15,
            givens={x: train_set_x[index * batch_size:
                                   (index + 1) * batch_size]},
            name='train_rbm')
-
-    plotting_time = 0.
     start_time = time.clock()
-
-    plotting_start = time.clock()
-    # Construct image from the weight matrix
-    image = PIL.Image.fromarray(tile_raster_images(
-             X=rbm.W.get_value(borrow=True)[:784].T,
-             img_shape=(28, 28), tile_shape=(10, 10),
-             tile_spacing=(1, 1)))
-    image.save('random_filters.png')
-    plotting_stop = time.clock()
-    plotting_time += (plotting_stop - plotting_start)
 
     # go through training epochs
     for epoch in xrange(training_epochs):
@@ -584,26 +573,15 @@ def train_rbm(learning_rate=0.1, training_epochs=15,
         # go through the training set
         mean_cost = []
         for batch_index in xrange(n_train_batches):
-            print 'batch %d of %d, epoch %d of %d' % (batch_index+1, n_train_batches, epoch+1, training_epochs)
+            #print 'batch %d of %d, epoch %d of %d' % (batch_index+1, n_train_batches, epoch+1, training_epochs)
             mean_cost += [train_rbm(batch_index)]
 
         print 'Training epoch %d, cost is ' % epoch, numpy.mean(mean_cost)
 
-        # Plot filters after each training epoch
-        plotting_start = time.clock()
-        # Construct image from the weight matrix
-        image = PIL.Image.fromarray(tile_raster_images(
-                 X=rbm.W.get_value(borrow=True)[:784].T,
-                 img_shape=(28, 28), tile_shape=(10, 10),
-                 tile_spacing=(1, 1)))
-        image.save('filters_at_epoch_%i.png' % epoch)
-        plotting_stop = time.clock()
-        plotting_time += (plotting_stop - plotting_start)
-
     end_time = time.clock()
 
-    pretraining_time = (end_time - start_time) - plotting_time
+    pretraining_time = (end_time - start_time)
 
     print ('Training took %f minutes' % (pretraining_time / 60.))
 
-    return rbm
+    return (rbm, train_set_x, train_set_y, test_set_x, test_set_y)
