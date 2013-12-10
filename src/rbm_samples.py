@@ -10,13 +10,14 @@ Created Docemeber 2013
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
+import os.path
 
 import cloud
 
 from deep_learning.rbm_label import train_rbm
 
 def train_rbm_on_mnist(random_seed=1):
-    (rbm, train_set_x, train_set_y, test_set_x, test_set_y) = train_rbm(learning_rate=0.1, training_epochs=1,
+    (rbm, train_set_x, train_set_y, test_set_x, test_set_y) = train_rbm(learning_rate=0.1, training_epochs=15,
                                                                         n_hidden = 500,
                                                                         dataset='bucket/mnist.pkl.gz',
                                                                         random_seed=random_seed)
@@ -69,20 +70,28 @@ def train_and_sample(random_seed):
     (images, labels) = sample_from_rbm(*result, samples=1, plot_every=1000, random_seed=random_seed)
     return (images, labels)
 
-def main():
+def main(n_rbms=5, save_folder='../data/mnist/many-rbm-samples/default', cloud_simulation=True):
     execfile('picloud_misc_credentials.py')
-    cloud.start_simulator()
-    n_rbms = 4
+    if cloud_simulation:
+        cloud.start_simulator()
+
+    #n_rbms = 4
+    #save_folder = 'picloud_test'
+    if not os.path.isdir(save_folder):
+        os.makedirs(save_folder)
+
     seeds = list(range(n_rbms))
-    job_ids = cloud.map(train_and_sample, seeds, _type='c1', _cores=1)
+    print 'Sending jobs'
+    job_ids = cloud.map(train_and_sample, seeds, _type='f2', _cores=1)
+    print 'Jobs sent'
     images = np.zeros((0,28*28))
     labels = np.zeros((0,1))
     count = 1
     for (some_images, some_labels) in cloud.iresult(job_ids):
-        print 'Job %d complete' % count
+        print 'Job %d of %d complete' % (count, n_rbms)
         count += 1
         images = np.vstack((images, some_images))
         labels = np.vstack((labels, some_labels))
-        np.savetxt('images.csv', images, delimiter=',')
-        np.savetxt('labels.csv', labels, delimiter=',')
+        np.savetxt(os.path.join(save_folder, 'images.csv'), images, delimiter=',')
+        np.savetxt(os.path.join(save_folder, 'labels.csv'), labels, delimiter=',')
     return (images, labels)
