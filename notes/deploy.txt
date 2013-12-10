@@ -1,0 +1,7 @@
+from rbm_samples import *
+
+conf_settings = cloud.util.configmanager.ConfigSettings(cloud.util.configmanager.ConfigManager())
+conf_settings.num_procs = 1
+conf_settings.commit()
+
+main(n_rbms=100, save_folder='../data/mnist/many-rbm-samples/...
