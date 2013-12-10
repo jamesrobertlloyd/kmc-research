@@ -60,5 +60,7 @@ pip-log.txt
 *.DS_Store
 
 papers/conference/kernel-model-checking.pdf
+src/bucket/
+src/picloud_misc_credentials.py
 
 
