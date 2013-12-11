@@ -80,7 +80,7 @@ def main(n_rbms=5, save_folder='../data/mnist/many-rbm-samples/default', cloud_s
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder)
 
-    seeds = list(range(n_rbms))
+    seeds = [np.random.randint(2**31) for dummy in range(n_rbms)]
     print 'Sending jobs'
     job_ids = cloud.map(train_and_sample, seeds, _type='f2', _cores=1)
     print 'Jobs sent'
