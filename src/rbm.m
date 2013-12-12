@@ -3,11 +3,9 @@
 clear all;
 addpath(genpath('./mmd'));
 
-%% Load images
+%% Load mnist images
 
 load '../data/mnist/mnist_all.mat'
-fantasies = csvread('../data/mnist/rbm-samples/images.csv');
-labels = csvread('../data/mnist/rbm-samples/labels.csv');
 test_digits = [test0;
                test1;
                test2;
@@ -18,6 +16,18 @@ test_digits = [test0;
                test7;
                test8;
                test9];
+
+%% Load rbm fantasies
+
+fantasies = csvread('../data/mnist/rbm-samples/images.csv');
+labels = csvread('../data/mnist/rbm-samples/labels.csv');
+num_images = 3000;
+
+%% Load multi rbm fantasies
+
+fantasies = csvread('../data/mnist/many-rbm-samples/images.csv');
+labels = csvread('../data/mnist/many-rbm-samples/labels.csv');
+num_images = 294;
            
 %% Standardise digit data
 
@@ -30,6 +40,22 @@ fantasies = fantasies / max(max(fantasies));
 perm = randperm(size(test_digits, 1));
 test_digits = test_digits(perm,:);
 
+%% Display random fantasies
+
+i = randi(num_images);
+imagesc(reshape(fantasies(i,:), 28, 28)');
+display(labels(i));
+
+%% Extract digits
+
+X = test_digits(1:num_images,:);
+Y = fantasies(1:num_images,:);
+
+%% Extract digits
+
+X = test_digits(1:num_images,:);
+Y = test_digits(num_images:(num_images+num_images-1),:);
+
 %% Calculate some distances for reference
 
 d1 = sqrt(sq_dist(X', X'));
@@ -38,10 +64,7 @@ hist([d1(:);d2(:)]);
 
 %% Perform MMD test
 
-X = test_digits(1:3000,:);
-Y = fantasies(1:3000,:);
-
-alpha = 0.01;
+alpha = 0.05;
 params.sig = -1;
 params.shuff = 100;
 [testStat,thresh,params] = mmdTestBoot_jl(X,Y,alpha,params);
