@@ -27,7 +27,7 @@ num_images = 3000;
 
 fantasies = csvread('../data/mnist/many-rbm-samples/images.csv');
 labels = csvread('../data/mnist/many-rbm-samples/labels.csv');
-num_images = 294;
+num_images = 630;
            
 %% Standardise digit data
 
@@ -64,9 +64,9 @@ hist([d1(:);d2(:)]);
 
 %% Perform MMD test
 
-alpha = 0.05;
+alpha = 0.01;
 params.sig = -1;
-params.shuff = 100;
+params.shuff = 1000;
 [testStat,thresh,params] = mmdTestBoot_jl(X,Y,alpha,params);
 testStat
 thresh
