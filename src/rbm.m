@@ -27,7 +27,7 @@ num_images = 3000;
 
 fantasies = csvread('../data/mnist/many-rbm-samples/images.csv');
 labels = csvread('../data/mnist/many-rbm-samples/labels.csv');
-num_images = 630;
+num_images = 1530;
            
 %% Standardise digit data
 
