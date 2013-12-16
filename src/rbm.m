@@ -2,6 +2,7 @@
 
 clear all;
 addpath(genpath('./mmd'));
+addpath(genpath('./util'));
 
 %% Load mnist images
 
