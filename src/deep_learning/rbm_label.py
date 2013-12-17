@@ -182,21 +182,6 @@ class RBM(object):
         return [pre_sigmoid_h1, h1_mean, h1_sample,
                 pre_sigmoid_v1, v1_mean, v1_sample]
 
-    def gibbs_vhv_clamped(self, v0_sample):
-        ''' This function implements one step of Gibbs sampling,
-            starting from the visible state'''
-        pre_sigmoid_h1, h1_mean, h1_sample = self.sample_h_given_v(v0_sample)
-        pre_sigmoid_v1, v1_mean, v1_sample = self.sample_v_given_h(h1_sample)
-        # Clamp the indicator variable
-        temp = v1_mean.get_value()
-        temp[-10:] = v0_sample.get_value()[-10:]
-        v1_mean.set_value(temp)
-        temp = v1_sample.get_value()
-        temp[-10:] = v0_sample.get_value()[-10:]
-        v1_sample.set_value(temp)
-        return [pre_sigmoid_h1, h1_mean, h1_sample,
-                pre_sigmoid_v1, v1_mean, v1_sample]
-
     def get_cost_updates(self, lr=0.1, persistent=None, k=1):
         """This functions implements one step of CD-k or PCD-k
 
@@ -513,22 +498,30 @@ def test_rbm(learning_rate=0.1, training_epochs=15,
 
 def train_rbm(learning_rate=0.1, training_epochs=15,
               dataset='mnist.pkl.gz', batch_size=20,
-              n_hidden=500, random_seed=1):
-    datasets = load_data(dataset)
+              n_hidden=500, random_seed=1, augment_with_labels=True):
 
-    train_set_x, train_set_y = datasets[0]
-    test_set_x, test_set_y = datasets[2]
+    if isinstance(dataset, str):
+        datasets = load_data(dataset)
 
-    # Augment training data with class labels so that we can later sample from class conditional distributions
+        train_set_x, train_set_y = datasets[0]
+        test_set_x, test_set_y = datasets[2]
+    else:
+        train_set_x, train_set_y, test_set_x, test_set_y = dataset
 
-    x_array = train_set_x.get_value()
-    y_list = train_set_y.owner.inputs[0].get_value()
-    y_array = np.zeros((x_array.shape[0], 10))
-    for i in range(x_array.shape[0]):
-        y_array[i,y_list[i]] = 1
-    combined_array = np.hstack((x_array, y_array))
+    if augment_with_labels:
 
-    train_set_x.set_value(combined_array)
+        # Augment training data with class labels so that we can later sample from class conditional distributions
+
+        x_array = train_set_x.get_value()
+        y_list = train_set_y.owner.inputs[0].get_value()
+        y_array = np.zeros((x_array.shape[0], 10))
+        for i in range(x_array.shape[0]):
+            y_array[i,y_list[i]] = 1
+        combined_array = np.hstack((x_array, y_array))
+
+        train_set_x.set_value(combined_array)
+
+    n_visible = train_set_x.get_value().shape[1]
 
     # compute number of minibatches for training, validation and testing
     n_train_batches = train_set_x.get_value(borrow=True).shape[0] / batch_size
@@ -547,7 +540,8 @@ def train_rbm(learning_rate=0.1, training_epochs=15,
                                      borrow=True)
 
     # construct the RBM class
-    rbm = RBM(input=x, n_visible=28 * 28 + 10,
+    #n_visible = 28 * 28 + 10 if augment_with_labels else 28 * 28
+    rbm = RBM(input=x, n_visible=n_visible,
               n_hidden=n_hidden, numpy_rng=rng, theano_rng=theano_rng)
 
     # get the cost and the gradient corresponding to one step of CD-15
@@ -573,7 +567,7 @@ def train_rbm(learning_rate=0.1, training_epochs=15,
         # go through the training set
         mean_cost = []
         for batch_index in xrange(n_train_batches):
-            #print 'batch %d of %d, epoch %d of %d' % (batch_index+1, n_train_batches, epoch+1, training_epochs)
+            print 'batch %d of %d, epoch %d of %d' % (batch_index+1, n_train_batches, epoch+1, training_epochs)
             mean_cost += [train_rbm(batch_index)]
 
         print 'Training epoch %d, cost is ' % epoch, numpy.mean(mean_cost)

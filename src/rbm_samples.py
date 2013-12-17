@@ -2,7 +2,7 @@
 Generate and save samples from an rbm trained on digit data
 Or maybe several rbms?
 
-Created Docemeber 2013
+Created Decemeber 2013
 
 @authors: James Robert Lloyd (jrl44@cam.ac.uk)
 """
