@@ -29,6 +29,12 @@ num_images = 3000;
 fantasies = csvread('../data/mnist/many-rbm-samples/images.csv');
 labels = csvread('../data/mnist/many-rbm-samples/labels.csv');
 num_images = 1530;
+
+%% Load dbn fantasies
+
+fantasies = csvread('../data/mnist/dbn-samples/images.csv');
+labels = csvread('../data/mnist/dbn-samples/labels.csv');
+num_images = 3000;
            
 %% Standardise digit data
 
@@ -52,7 +58,7 @@ display(labels(i));
 X = test_digits(1:num_images,:);
 Y = fantasies(1:num_images,:);
 
-%% Extract digits
+%% Extract digits - null hypothesis
 
 X = test_digits(1:num_images,:);
 Y = test_digits(num_images:(num_images+num_images-1),:);
@@ -100,6 +106,14 @@ for j = 1:10
     pause;
 end
 
+[~, i] = sort(witness_X, 'ascend');
+
+for j = 1:10
+    imagesc(reshape(X(i(j),:), 28, 28)');
+    drawnow;
+    pause;
+end
+
 % Average image
 
 % average_image = mean(Y(i(1:200),:),1);
@@ -110,6 +124,14 @@ end
 
 for j = 1:10
     imagesc(reshape(X(i(j),:), 28, 28)');
+    drawnow;
+    pause;
+end
+
+[~, i] = sort(witness_Y, 'descend');
+
+for j = 1:10
+    imagesc(reshape(Y(i(j),:), 28, 28)');
     drawnow;
     pause;
 end
@@ -236,10 +258,10 @@ i = find(witness_Y==min(witness_Y(standard_score_1(m+1:end) < -0.3)));
 x = standard_score_1(i+m);
 y = standard_witness(i+m);
 imagesc([x-width,x+width],[y+width,y-width], reshape(-fantasies(i,:), 28, 28)');
-i = find(witness_Y==min(witness_Y(standard_score_1(m+1:end) < -0.4)));
-x = standard_score_1(i+m);
-y = standard_witness(i+m);
-imagesc([x-width,x+width],[y+width,y-width], reshape(-X(i,:), 28, 28)');
+% i = find(witness_Y==min(witness_Y(standard_score_1(m+1:end) < -0.4)));
+% x = standard_score_1(i+m);
+% y = standard_witness(i+m);
+% imagesc([x-width,x+width],[y+width,y-width], reshape(-fantasies(i,:), 28, 28)');
 i = find(witness_X==max(witness_X(standard_score_1(1:m) > -0.5)));
 x = standard_score_1(i);
 y = standard_witness(i);

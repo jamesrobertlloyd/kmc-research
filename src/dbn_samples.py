@@ -121,8 +121,6 @@ def sample_from_dbn(rbm_1, rbm_2, train_set_x, train_set_y, test_set_x, test_set
         vis_prob = 1 / (1 + np.exp(-pre_sigmoid_activation))
 
         vis_image = vis_prob
-        plt.imshow(vis_image.reshape(28,28))
-        plt.show()
 
         images = np.vstack((images, vis_image))
         labels = np.vstack((labels, np.where(starting_image[0,-10:])[0][0]))
@@ -180,7 +178,7 @@ def debug():
     train_set_x, train_set_y = datasets[0]
     test_set_x, test_set_y = datasets[2]
     # Debug stuff
-    samples=10
+    samples=5000
     plot_every=1000
     random_seed=1
     # Let's a go
@@ -188,8 +186,6 @@ def debug():
 
     images = np.zeros((0,28*28))
     labels = np.zeros((0,1))
-
-    n_chains = 1
 
     number_of_train_samples = train_set_x.get_value(borrow=True).shape[0]
 
@@ -201,7 +197,10 @@ def debug():
 
         # pick random test examples, with which to initialize the persistent chain
         train_idx = rng.randint(number_of_train_samples - n_chains)
-        starting_image = np.asarray(train_set_x.get_value(borrow=True)[train_idx:train_idx + n_chains])
+        starting_image = np.asarray(train_set_x.get_value(borrow=True)[train_idx:train_idx+1])
+        print y_list[train_idx]
+        #plt.imshow(starting_image.reshape(28,28))
+        #plt.show(block=True)
 
         vis = starting_image
         pre_sigmoid_activation = np.dot(vis, rbm_1.W.get_value()) + rbm_1.hbias.get_value()
@@ -225,19 +224,25 @@ def debug():
             vis_prob = 1 / (1 + np.exp(-pre_sigmoid_activation))
             vis = (vis_prob > np.random.rand(vis_prob.shape[0], vis.shape[1])) * 1
             # Clamp
-            vis[0,-10:] = starting_image[0,-10:]
+            vis[0,-10:] = y_ind#starting_image[0,-10:]
+            # Plot        
+            #pre_sigmoid_activation = np.dot(vis[0,:-10], rbm_1.W.get_value().T) + rbm_1.vbias.get_value()
+            #vis_prob = 1 / (1 + np.exp(-pre_sigmoid_activation))
+            #plt.imshow(vis_prob.reshape(28,28))
+            #plt.show(block=True)
 
         pre_sigmoid_activation = np.dot(vis[0,:-10], rbm_1.W.get_value().T) + rbm_1.vbias.get_value()
         vis_prob = 1 / (1 + np.exp(-pre_sigmoid_activation))
 
         vis_image = vis_prob
-        plt.imshow(vis_image.reshape(28,28))
-        plt.show()
+
+        #plt.imshow(vis_image.reshape(28,28))
+        #plt.show(block=True)
 
         images = np.vstack((images, vis_image))
-        labels = np.vstack((labels, np.where(starting_image[0,-10:])[0][0]))
-        #np.savetxt('images.csv', images, delimiter=',')
-        #np.savetxt('labels.csv', labels, delimiter=',')
+        labels = np.vstack((labels, y_list[train_idx]))
+        np.savetxt('images.csv', images, delimiter=',')
+        np.savetxt('labels.csv', labels, delimiter=',')
         count += 1
         print 'Sampled %d images' % count
 
