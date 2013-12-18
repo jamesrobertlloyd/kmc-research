@@ -23,13 +23,6 @@ def train_and_sample_from_dbn(random_seed=1,
                               architecture=[500,500,2000],
                               samples=1,
                               plot_every=1000):
-    # Debug
-    random_seed=1
-    dataset='bucket/mnist.pkl.gz'
-    epochs=1
-    architecture=[500,500,2000]
-    samples=1
-    plot_every=1
     # Setup
     rbms = []
     original_dataset='bucket/mnist.pkl.gz'
@@ -129,8 +122,8 @@ def train_and_sample_from_dbn(random_seed=1,
 
         images = np.vstack((images, vis_image))
         labels = np.vstack((labels, y_list[train_idx]))
-        #np.savetxt('images.csv', images, delimiter=',')
-        #np.savetxt('labels.csv', labels, delimiter=',')
+        np.savetxt('images.csv', images, delimiter=',')
+        np.savetxt('labels.csv', labels, delimiter=',')
         count += 1
         print 'Sampled %d images' % count
 
