@@ -201,9 +201,121 @@ Green $\circ$ are data, red $\times$ are locations over-represented by the model
 
 MMD has successfully identified the incorrectly modelled cluster.
 
-\section{Potential case studies}
+\section{Case studies}
 
-\subsection{A unimodal distribution}
+\subsection{Newcomb speed of light data}
+
+A simple 1-$d$ example.
+
+\subsection{What exactly do neural networks dream about?}
+
+``To recognize shapes, first learn to generate images'' \cite{Hinton2007}.
+Restricted Boltzmann Machine (RBM) pretraining of neural networks was shown by \cite{Hinton2006} to learn a deep belief network (DBN) for the training data \ie a generative model.
+Subsequently, as well as computing estimates of marginal likelihood and testing errors, it became standard to demonstrate the effectiveness of a neural network by generating samples from the distribution it had learned\fTBD{cite things}.
+
+When trained on the MNIST handwritten digit data, the samples certainly look like digits, but it is hard to detect any systematic anomalies purely by visual inspection.
+We now use the kernel two-sample test to investigate how faithfully RBMs and DBNs can capture the distribution over handwritten digits.
+
+\subsubsection{RBMs prefer rounded numbers}
+
+We trained an RBM with architecture $(784)\leftrightarrow(500)\leftrightarrow(10)$ using 15 epochs of PCD-15, a batch size of something and a learning rate of 0.1 (\ie we used the same settings as the code available at (cite deep learning tutorial)).
+We generated 3000 independent samples from the learned generative model by initialising the network with a random training image and performing 1000 clamped gibbs updates (without clamping the label pixels, the generative distribution is biased towards certain digits) to generate each image (this is standard \eg \cite{Hinton2007}).
+
+Figure~\ref{fig:rbm_samples} shows the first twenty random samples (\NA{mean activations actually}) from this model.
+They certainly look like digits, but has the true distribution over digits been faithfully captured.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/rbm_samples}
+\caption{
+Samples from an RBM (actually the mean activations).
+}
+\label{fig:rbm_samples}
+\end{figure}
+
+Performing a kernel two sample test using the median length scale heuristic resulted in an estimated $p$-value less than 0.001 \ie a clear discrepancy between the model and the data.
+We can investigate this discrepancy by examining the images at which the witness function is extremised.
+The most over/under represented images are displayed in figure~\ref{fig:rbm_over_under}.
+It appears to favour a rounded 2/3/9 whilst it does not like slanty 3, 5 and 8.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/rbm_over_under}
+\caption{
+Over (top row) and under (bottom row) represented images by the RBM.
+}
+\label{fig:rbm_over_under}
+\end{figure}
+
+To test that this was not just a poorly trained single RBM, we trained 1500 RBMs and generated one sample from each and performed the same tests.
+The estimated $p$-value was 0.005.
+We show the over/under represented images in figure~\ref{fig:many_rbm_over_under}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/many_rbm_over_under}
+\caption{
+Over (top row) and under (bottom row) represented images by many RBMs.
+}
+\label{fig:many_rbm_over_under}
+\end{figure}
+
+Again we see a fondness for rounded numbers.
+This is not digit label bias per se since we were sampling from conditional distributions.
+To better probe the round / slanty hypothesis further lets look at conditional distributions.
+Figure~\ref{fig:many_rbm_over_under_digit} shows that the RBMs are mislabeling on average - the digits 2 and 5 are close.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/many_rbm_over_under_digit}
+\caption{
+Over (top row) and under (bottom row) represented images by many RBMs - conditional distributions.
+}
+\label{fig:many_rbm_over_under_digit}
+\end{figure}
+
+Now separating by PCA in figure~\ref{fig:many_rbm_over_under}.
+It is still mostly curvy against slanty.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/many_rbm_over_under_pca}
+\caption{
+Over (top row) and under (bottom row) represented images by many RBMs - PCA spread.
+}
+\label{fig:many_rbm_over_under_pca}
+\end{figure}
+
+So what is going wrong?
+It is probably something to do with round numbers using similar features and therefore these features get better developed faster?
+
+\subsubsection{DBNs also prefer rounded numbers}
+
+\NA{The model below does not use fine tuning - need to do this}
+
+Trained one DBN with architecture $(784)\rightarrow(500)\rightarrow(500)\leftrightarrow(2000)\leftrightarrow(10)$.
+Again get a minute $p$-value.
+Here are some pictures.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/dbn_over_under}
+\caption{
+Over (top row) and under (bottom row) represented images by DBN.
+}
+\label{fig:many_rbm_over_under}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/dbn_over_under_digit}
+\caption{
+Over (top row) and under (bottom row) represented images by DBN - conditional distributions.
+}
+\label{fig:many_rbm_over_under_digit}
+\end{figure}
+
+It looks like it is in need of fine tuning - lots of ghosting.
 
 \subsection{Mixture of Gaussians}
 
@@ -217,12 +329,6 @@ MMD has successfully identified the incorrectly modelled cluster.
 
 \subsection{GP density model}
 
-\subsection{A generative model for images?}
-
-\subsection{A generative model for sound?}
-
-\subsection{A generative model for video?}
-
 \subsection{A generative model for text?}
 
 \section{Discussion}
@@ -230,7 +336,7 @@ MMD has successfully identified the incorrectly modelled cluster.
 Do you know what your model is up to right now?
 Maybe you should check it is ok.
 
-\bibliography{gpss}
+\bibliography{gpss, library}
 \bibliographystyle{format/icml2014}
 
 \end{document} 
