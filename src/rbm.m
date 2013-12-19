@@ -17,6 +17,16 @@ test_digits = [test0;
                test7;
                test8;
                test9];
+test_labels = 0 * ones(size(test0,1),1);
+test_labels = [test_labels; 1 * ones(size(test1,1),1)];
+test_labels = [test_labels; 2 * ones(size(test2,1),1)];
+test_labels = [test_labels; 3 * ones(size(test3,1),1)];
+test_labels = [test_labels; 4 * ones(size(test4,1),1)];
+test_labels = [test_labels; 5 * ones(size(test5,1),1)];
+test_labels = [test_labels; 6 * ones(size(test6,1),1)];
+test_labels = [test_labels; 7 * ones(size(test7,1),1)];
+test_labels = [test_labels; 8 * ones(size(test8,1),1)];
+test_labels = [test_labels; 9 * ones(size(test9,1),1)];
 
 %% Load rbm fantasies
 
@@ -28,12 +38,18 @@ num_images = 3000;
 
 fantasies = csvread('../data/mnist/many-rbm-samples/images.csv');
 labels = csvread('../data/mnist/many-rbm-samples/labels.csv');
-num_images = 1530;
+num_images = 1500;
 
 %% Load dbn fantasies
 
 fantasies = csvread('../data/mnist/dbn-samples/images.csv');
 labels = csvread('../data/mnist/dbn-samples/labels.csv');
+num_images = 3000;
+
+%% Load dbn 500 500 2000 fantasies
+
+fantasies = csvread('../data/mnist/dbn-500-500-2000/images.csv');
+labels = csvread('../data/mnist/dbn-500-500-2000/labels.csv');
 num_images = 3000;
            
 %% Standardise digit data
@@ -46,6 +62,7 @@ fantasies = fantasies / max(max(fantasies));
 
 perm = randperm(size(test_digits, 1));
 test_digits = test_digits(perm,:);
+test_labels = test_labels(perm,:);
 
 %% Display random fantasies
 
@@ -53,15 +70,39 @@ i = randi(num_images);
 imagesc(reshape(fantasies(i,:), 28, 28)');
 display(labels(i));
 
-%% Extract digits
+%% Display many random fantasies
 
+rows = 2;
+cols = 15;
+raster = [];
+for row = 1:rows
+    one_line = [];
+    for col = 1:cols
+        i = randi(num_images);
+        one_line = [one_line, reshape(fantasies(i,:), 28, 28)'];
+    end
+    raster = [raster; one_line];
+end
+h = figure('Position', [300, 300, 000+size(raster,2), 000+size(raster,1)]);
+imagesc(-raster);
+colormap(bone);
+set(gca, 'YTick', []);
+set(gca, 'XTick', []);
+save2pdf( 'samples.pdf', h, 600, true );
+
+%% Extract digits
+    
 X = test_digits(1:num_images,:);
+X_labels = test_labels(1:num_images);
 Y = fantasies(1:num_images,:);
+Y_labels = labels(1:num_images);
 
 %% Extract digits - null hypothesis
 
 X = test_digits(1:num_images,:);
+X_labels = test_labels(1:num_images);
 Y = test_digits(num_images:(num_images+num_images-1),:);
+Y_labels = test_labels(num_images:(num_images+num_images-1));
 
 %% Calculate some distances for reference
 
@@ -71,9 +112,9 @@ hist([d1(:);d2(:)]);
 
 %% Perform MMD test
 
-alpha = 0.01;
+alpha = 0.005;
 params.sig = -1;
-params.shuff = 1000;
+params.shuff = 100;
 [testStat,thresh,params] = mmdTestBoot_jl(X,Y,alpha,params);
 testStat
 thresh
@@ -143,6 +184,131 @@ end
 %i = find(witness_X==max(witness_X));
 
 %imagesc(reshape(X(i,:), 28, 28)');
+
+%% Plot some over represented images
+
+%params.sig = 7;
+
+m = size(X, 1);
+n = size(Y, 1);
+t_X = X;
+t_Y = Y;
+K1 = rbf_dot(X, t_X, params.sig);
+K2 = rbf_dot(Y, t_X, params.sig);
+witness_X = sum(K1, 1)' / m - sum(K2, 1)' / n;
+K1 = rbf_dot(X, t_Y, params.sig);
+K2 = rbf_dot(Y, t_Y, params.sig);
+witness_Y = sum(K1, 1)' / m - sum(K2, 1)' / n;
+
+raster = [];
+one_line = [];
+[~, i] = sort(witness_Y, 'ascend');
+for j = 1:10
+    one_line = [one_line, reshape(Y(i(j),:), 28, 28)'];
+end
+raster = [raster; one_line];
+one_line = [];
+[~, i] = sort(witness_X, 'descend');
+for j = 1:10
+    one_line = [one_line, reshape(X(i(j),:), 28, 28)'];
+end
+raster = [raster; one_line];
+h = figure('Position', [300, 300, 000+size(raster,2), 000+size(raster,1)]);
+imagesc(-raster);
+colormap(bone);
+set(gca, 'YTick', []);
+set(gca, 'XTick', []);
+save2pdf( 'samples.pdf', h, 600, true );
+
+%% Plot some over represented digits - conditional dist
+
+%params.sig = 7;
+
+m = size(X, 1);
+n = size(Y, 1);
+t_X = X;
+t_Y = Y;
+K1 = rbf_dot(X, t_X, params.sig);
+K2 = rbf_dot(Y, t_X, params.sig);
+witness_X = sum(K1, 1)' / m - sum(K2, 1)' / n;
+K1 = rbf_dot(X, t_Y, params.sig);
+K2 = rbf_dot(Y, t_Y, params.sig);
+witness_Y = sum(K1, 1)' / m - sum(K2, 1)' / n;
+
+raster = [];
+one_line = [];
+for digit = 0:9;
+    Y_i = Y(Y_labels==digit,:);
+    witness_Y_i = witness_Y(Y_labels==digit,:);
+    [~, i] = sort(witness_Y_i, 'ascend');
+    one_line = [one_line, reshape(Y_i(i(1),:), 28, 28)'];
+end
+raster = [raster; one_line];
+one_line = [];
+for digit = 0:9;
+    X_i = X(X_labels==digit,:);
+    witness_X_i = witness_X(X_labels==digit,:);
+    [~, i] = sort(witness_X_i, 'descend');
+    one_line = [one_line, reshape(X_i(i(1),:), 28, 28)'];
+end
+raster = [raster; one_line];
+h = figure('Position', [300, 300, 000+size(raster,2), 000+size(raster,1)]);
+imagesc(-raster);
+colormap(bone);
+set(gca, 'YTick', []);
+set(gca, 'XTick', []);
+save2pdf( 'samples.pdf', h, 600, true );
+
+%% Plot some over represented digits - PCA
+
+%params.sig = 7;
+
+m = size(X, 1);
+n = size(Y, 1);
+t_X = X;
+t_Y = Y;
+K1 = rbf_dot(X, t_X, params.sig);
+K2 = rbf_dot(Y, t_X, params.sig);
+witness_X = sum(K1, 1)' / m - sum(K2, 1)' / n;
+K1 = rbf_dot(X, t_Y, params.sig);
+K2 = rbf_dot(Y, t_Y, params.sig);
+witness_Y = sum(K1, 1)' / m - sum(K2, 1)' / n;
+
+[coeff, score, latent] = pca([X;Y]);
+standard_score_1 = score(:,1) / range(score(:,1));
+standard_score_1 = standard_score_1(:,1) - min(standard_score_1) - 0.5;
+standard_witness = [witness_X; witness_Y];
+standard_images = [X; Y];
+
+raster = [];
+one_line = [];
+for position = 1:10;
+    upper = -0.5 + (position * 0.1);
+    lower = upper - 0.1;
+    idx = (standard_score_1 >= lower) & (standard_score_1 <= upper);
+    image_i = standard_images(idx,:);
+    witness_i = standard_witness(idx,:);
+    [~, i] = sort(witness_i, 'ascend');
+    one_line = [one_line, reshape(image_i(i(1),:), 28, 28)'];
+end
+raster = [raster; one_line];
+one_line = [];
+for position = 1:10;
+    upper = -0.5 + (position * 0.1);
+    lower = upper - 0.1;
+    idx = (standard_score_1 >= lower) & (standard_score_1 <= upper);
+    image_i = standard_images(idx,:);
+    witness_i = standard_witness(idx,:);
+    [~, i] = sort(witness_i, 'descend');
+    one_line = [one_line, reshape(image_i(i(1),:), 28, 28)'];
+end
+raster = [raster; one_line];
+h = figure('Position', [300, 300, 000+size(raster,2), 000+size(raster,1)]);
+imagesc(-raster);
+colormap(bone);
+set(gca, 'YTick', []);
+set(gca, 'XTick', []);
+save2pdf( 'samples.pdf', h, 600, true );
 
 %% Do PCA
 
@@ -302,13 +468,13 @@ i = find(witness_X==max(witness_X(standard_score_1(1:m) > 0.4)));
 x = standard_score_1(i);
 y = standard_witness(i);
 imagesc([x-width,x+width],[y+width,y-width], reshape(-X(i,:), 28, 28)');
-for dummy = 1:10;
+for dummy = 1:20;
     i = randi(m);
     x = standard_score_1(i);
     y = standard_witness(i);
     imagesc([x-width,x+width],[y+width,y-width], reshape(-X(i,:), 28, 28)');
 end
-for dummy = 1:10;
+for dummy = 1:20;
     i = randi(size(Y,1));
     x = standard_score_1(i+m);
     y = standard_witness(i+m);
