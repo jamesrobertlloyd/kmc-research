@@ -2,6 +2,7 @@
 
 clear all;
 addpath(genpath('./mmd'));
+addpath(genpath('./util'));
 
 %% Let's try MoG
 
@@ -80,13 +81,14 @@ testStat / thresh
 
 m = size(y1, 1);
 n = size(y1, 1);
-t = (((fullfact([50,50])-0.5) / 25) - 1) * 1;
+t = (((fullfact([200,200])-0.5) / 100) - 1) * 1;
 K1 = rbf_dot(y1, t, params.sig);
 K2 = rbf_dot(y2, t, params.sig);
 witness = sum(K1, 1)' / m - sum(K2, 1)' / n;
 plot3(t(:,1), t(:,2), witness, 'o');
-imagesc(reshape(witness(end:-1:1), 50, 50)');
+imagesc(reshape(witness(end:-1:1), 200, 200)');
 colorbar;
+pause;
 
 sorted_witness = sort(witness);
 plot(y2(:,1), y2(:,2), 'go');

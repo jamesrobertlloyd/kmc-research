@@ -24,7 +24,7 @@
 
 
 
-function [testStat,thresh,params] = mmdTestBoot_jl(X,Y,alpha,params)
+function [testStat,thresh,params,p] = mmdTestBoot_jl(X,Y,alpha,params)
 
     
 m=size(X,1);
@@ -97,6 +97,7 @@ if true
 
   MMDarr = sort(MMDarr);
   thresh = MMDarr(round((1-alpha)*params.shuff));
+  p = sum(testStat < MMDarr) / length(MMDarr);
 
   %save(threshFileName,'thresh','MMDarr');  
 

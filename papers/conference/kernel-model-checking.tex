@@ -114,12 +114,12 @@
 
 % The \icmltitle you define below is probably too long as a header.
 % Therefore, a short form for the running title is supplied here:
-\icmltitlerunning{Kernel posterior predictive checks}
+\icmltitlerunning{Using kernel two sample tests for statistical model assessment}
 
 \begin{document} 
 
 \twocolumn[
-\icmltitle{Kernel posterior predictive checks}
+\icmltitle{Using kernel two sample tests for statistical model assessment}
 
 % It is OKAY to include author information, even for blind
 % submissions: the style file will automatically remove it for you
@@ -180,6 +180,56 @@ Generate lots of data from posterior predictive distribution
 
 \section{Toy examples}
 
+In this section we demonstrate the kernel two sample test as a means of model assessment on two simple datasets.
+
+\subsection{Newcomb's speed of light data}
+
+A histogram of Simon Newcomb's (cite - Stigler 1977 possibly) 66 measurements of the speed of light is shown in figure~\ref{fig:newcomb_hist}.
+We consider fitting a normal distribution to this data by maximum likelihood (66 data points in one dimension is strongly informative, so this will give very similar results to a full Bayesian treatment with noninformative priors).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/newcomb_hist}
+\caption{
+Histogram of Simon Newcomb's speed of light measurements.
+}
+\label{fig:newcomb_hist}
+\end{figure}
+
+We sampled 1000 points from the fitted distribution and performed a kernel two sample test with 1000 bootstrap replications.
+The estimated $p$-value of the test was less than 0.001 \ie a clear disparity between the model and data.
+The data, fitted density estimate (the normal distribution) and witness function are shown in figure~\ref{fig:newcomb_witness_1}.
+The witness function has a trough at the centre of the data and peaks either side.
+This indicates that the fitted model has placed too little mass in the centre and too much mass outside the centre; this is an indication of leptokurtosis of the data.
+So we should try Student-$t$ or removing outliers.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/newcomb_witness_1}
+\caption{
+Histogram of Simon Newcomb's speed of light measurements together with density estimate and MMD witness function.
+}
+\label{fig:newcomb_witness_1}
+\end{figure}
+
+Student-$t$ with two degrees of freedom is ok-ish.
+Probably will be beaten by normal + outlier model - need to check in Church or something like that.
+Model check says ignoring the outliers and fitting a Gaussian is ok - $p$-value near 0.5 (plenty of bootstrap variation).
+New witness function is finding smaller scale discrepancies - but model check says it's ok.
+The witness function is kinda testing for asymmetry - maybe not, hard to tell.
+Maybe compare to the observations in BDA3.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/newcomb_witness_2}
+\caption{
+Histogram of Simon Newcomb's speed of light measurements together with improved density estimate and MMD witness function.
+}
+\label{fig:newcomb_witness_1}
+\end{figure}
+
+Noto bene: MMD not good for identifying outliers - tends to find dense discrepancies.
+
 \subsection{Spot the odd one out}
 
 Data generated from mixture of two Gaussians and a uniform ring.
@@ -202,10 +252,6 @@ Green $\circ$ are data, red $\times$ are locations over-represented by the model
 MMD has successfully identified the incorrectly modelled cluster.
 
 \section{Case studies}
-
-\subsection{Newcomb speed of light data}
-
-A simple 1-$d$ example.
 
 \subsection{What exactly do neural networks dream about?}
 
@@ -293,7 +339,7 @@ It is probably something to do with round numbers using similar features and the
 
 \NA{The model below does not use fine tuning - need to do this}
 
-Trained one DBN with architecture $(784)\rightarrow(500)\rightarrow(500)\leftrightarrow(2000)\leftrightarrow(10)$.
+Trained one DBN with architecture $(784)\leftarrow(500)\leftarrow(500)\leftrightarrow(2000)\leftrightarrow(10)$.
 Again get a minute $p$-value.
 Here are some pictures.
 
@@ -317,19 +363,9 @@ Over (top row) and under (bottom row) represented images by DBN - conditional di
 
 It looks like it is in need of fine tuning - lots of ghosting.
 
-\subsection{Mixture of Gaussians}
+\subsection{Pitman-Yor processes say the darndest things}
 
-\subsection{PCA}
-
-\subsection{GPLVM}
-
-\subsection{Warped mixtures}
-
-\subsection{Alex Matthews latest classification model}
-
-\subsection{GP density model}
-
-\subsection{A generative model for text?}
+Look http://www.sequencememoizer.com/ and http://www.gatsby.ucl.ac.uk/~ucabjga/code.html
 
 \section{Discussion}
 
