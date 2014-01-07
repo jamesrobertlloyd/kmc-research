@@ -141,16 +141,18 @@
 ]
 
 \begin{abstract} 
-We invetigate the utility of the maximum mean discrepancy two sample test as a means of model checking.
-We apply it to several models for unsupervised learning and discover their inaccuracies.
+We invetigate the utility of the maximum mean discrepancy two sample test as a means of statistical model assessment.
+We apply it to several unsupervised learning models and investigate their inaccuracies.
 \end{abstract} 
 
 \allowdisplaybreaks
 
 \section{Introduction}
 
-Model checking is an inevitable part of a complete data analysis.
-It is going to be especially important as probabilistic programming takes off and people build sophisticated models.
+\TBD{Model checking or model assessment?}
+
+Model assessment or checking is an inevitable component of a complete data analysis.
+It is going to be especially important as probabilistic programming takes off and people build complicated custom models.
 
 Usually one chooses statistics of interest and evaluates the extent to which the beliefs of the model and realised value on the data align.
 But how does one generate these statistics?
@@ -160,13 +162,35 @@ However, it would also be interesting to find the statistic that most strongly i
 
 Call to arms about a lack of model checking in machine learning literature - find some quotes where new models come from speculations about the form of data.
 
-\section{Background: Model checking}
+\section{Background: Model assessment via posterior predictive $p$-values}
+
+Suppose we observe data $(y_i)_{i=1\ldots n}$ and we attempt to fit a model $M$ with parameters $\theta$.
+After performing a statistical analysis we will have either an estimate, $\hat\theta$, or an (approximate) posterior, $p(\theta|M,y)$, for the parameters.
+
+The posterior predictive distribution over replicate data $y^\textrm{rep}$ is given by
+\begin{equation}
+p(y^\textrm{rep}|M,y) = \int p(y^\textrm{rep}|M,\theta)p(\theta|M,y)\mathrm{d}\theta
+\end{equation}
+where the posterior distribution for $\theta$ is replaced by a delta function in a frequentist analysis.
+
+Posterior predictive $p$-values (cite Rubin 1984, Meng 1994, Gelman 1996) are defined as follows
+\begin{equation}
+p_b(y) = \mathbb{P}(T(y^\textrm{rep})\geq T(y)|M,y)
+\end{equation}
+where $T$ is a statistic \ie a function of the data.
+
+Posterior predictive $p$-values can be used to assess discrepancies between a statistical model and the observed data as measured by the test statistic $T$.
+They measure if the data are plausible under the posterior predictive distribution.
+
+\TBD{Give an example \eg skewness}
 
 It can either be interpreted as a Bayesian probability statement.
 
 More usefully it can be related to an estimate of utility of a model for predicting a certain quantity.
 
-However, caution : model checking should not replace model comparison and averaging and posterior predictive $p$-values determine \emph{statistical} significance, not \emph{practical} significance.
+\paragraph{Noto bene}
+
+Model checking should not replace model comparison and averaging and posterior predictive $p$-values determine \emph{statistical} significance, not \emph{practical} significance.
 
 \section{Background: Maximum mean discrepancy}
 
@@ -335,7 +359,7 @@ Over (top row) and under (bottom row) represented images by many RBMs - PCA spre
 So what is going wrong?
 It is probably something to do with round numbers using similar features and therefore these features get better developed faster?
 
-\subsubsection{DBNs also prefer rounded numbers}
+\subsubsection{DBNs have nightmares about ghosts}
 
 \NA{The model below does not use fine tuning - need to do this}
 
