@@ -26,8 +26,8 @@ for iter = 1:500
     vis_prob = 1 ./ (1 + exp(-pre_sig));
     vis = (vis_prob > rand(size(vis_prob))) * 1;
     % Clamp
-    %vis(end-9:end) = indicator;
-    find(vis(end-9:end)) - 1
+    vis(end-9:end) = indicator;
+    %find(vis(end-9:end)) - 1
     % Propogate down
     pre_sig = dbn.W1 * vis(1:500) + dbn.v1;
     vis_prob = 1 ./ (1 + exp(-pre_sig));
@@ -96,13 +96,13 @@ labgenbiases = dbn.v2(501:510)';
 hidgenbiases = dbn.v1';
 visgenbiases = dbn.v0';
 
-r = 0.002;
+r = 0.0005;
 epochs = 15;
 numCDiters = 15;
 
 %% Fine tuning
 
-starting_epoch = 6;
+starting_epoch = 1;
 
 for epoch = starting_epoch:epochs
     
@@ -199,15 +199,18 @@ dbn_ft = struct('W2', [pentop; labtop], 'W1', penhid', 'W0', hidvis', ...
             
 %% Sample a digit from the fine tuned dbn
 
-digit = 0;
+digit = 5;
 
 indicator = zeros(10,1);
+%indicator = ones(10,1);
 indicator(digit+1) = 1;
+%indicator(3+1) = 1;
+%indicator(5+1) = 1;
 vis = [(rand(500, 1) > 0.5) * 1; indicator];
 
 % GS in top level
 
-for iter = 1:500
+for iter = 1:1000
     pre_sig = dbn_ft.W2' * vis + dbn_ft.h2;
     hid_prob = 1 ./ (1 + exp(-pre_sig));
     hid = (hid_prob > rand(size(hid_prob))) * 1;
@@ -215,8 +218,8 @@ for iter = 1:500
     vis_prob = 1 ./ (1 + exp(-pre_sig));
     vis = (vis_prob > rand(size(vis_prob))) * 1;
     % Clamp
-    %vis(end-9:end) = indicator;
-    find(vis(end-9:end)) - 1
+    vis(end-9:end) = indicator;
+    %find(vis(end-9:end)) - 1
     % Propogate down
     pre_sig = dbn_ft.W1 * vis(1:500) + dbn_ft.v1;
     vis_prob = 1 ./ (1 + exp(-pre_sig));
@@ -231,3 +234,53 @@ for iter = 1:500
     colormap('bone');
     drawnow;
 end
+
+%% Save many samples from the fine tuned dbn
+
+images = zeros(0, 784);
+labels = zeros(0, 1);
+
+for image_iter = 1:3000
+    
+    fprintf('Generating image %d\n', image_iter);
+    
+    rand_index = randi(size(train_digits, 1));
+    
+    image = train_digits(rand_index,:);
+    indicator = zeros(1,10);
+    indicator(train_labels(rand_index)+1) = 1;
+    
+    vis = [(rand(500, 1) > 0.5) * 1; indicator'];
+
+    % GS in top level
+
+    for gibbs_iter = 1:1000
+        pre_sig = dbn_ft.W2' * vis + dbn_ft.h2;
+        hid_prob = 1 ./ (1 + exp(-pre_sig));
+        hid = (hid_prob > rand(size(hid_prob))) * 1;
+        pre_sig = dbn_ft.W2 * hid + dbn_ft.v2;
+        vis_prob = 1 ./ (1 + exp(-pre_sig));
+        vis = (vis_prob > rand(size(vis_prob))) * 1;
+        % Clamp
+        vis(end-9:end) = indicator';
+    end
+    
+    % Propogate down
+    pre_sig = dbn_ft.W1 * vis(1:500) + dbn_ft.v1;
+    vis_prob = 1 ./ (1 + exp(-pre_sig));
+    vis1 = (vis_prob > rand(size(vis_prob))) * 1;
+
+    pre_sig = dbn_ft.W0 * vis1 + dbn_ft.v0;
+    vis_prob = 1 ./ (1 + exp(-pre_sig));
+
+    % Save
+
+    images = [images; vis_prob']; %#ok<AGROW>
+    labels = [labels; train_labels(rand_index)]; %#ok<AGROW>
+    
+    if mod(image_iter, 100) == 0
+        dlmwrite('images.csv', images, 'precision', '%f');
+        dlmwrite('labels.csv', labels, 'precision', '%d');
+    end
+    
+end;

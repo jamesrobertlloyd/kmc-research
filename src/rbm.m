@@ -51,6 +51,12 @@ num_images = 3000;
 fantasies = csvread('../data/mnist/dbn-500-500-2000/images.csv');
 labels = csvread('../data/mnist/dbn-500-500-2000/labels.csv');
 num_images = 3000;
+
+%% Load dbn 500 500 2000 fine tuned fantasies
+
+fantasies = csvread('../data/mnist/dbn-ft-samples/images.csv');
+labels = csvread('../data/mnist/dbn-ft-samples/labels.csv');
+num_images = 3000;
            
 %% Standardise digit data
 
