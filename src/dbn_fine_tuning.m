@@ -199,7 +199,7 @@ dbn_ft = struct('W2', [pentop; labtop], 'W1', penhid', 'W0', hidvis', ...
             
 %% Sample a digit from the fine tuned dbn
 
-digit = 5;
+digit = 3;
 
 indicator = zeros(10,1);
 %indicator = ones(10,1);
