@@ -96,13 +96,15 @@ labgenbiases = dbn.v2(501:510)';
 hidgenbiases = dbn.v1';
 visgenbiases = dbn.v0';
 
-r = 0.0005;
-epochs = 15;
+start_r = 0.002;
+decay_r = true;
+epochs = 50;
 numCDiters = 15;
 
 %% Fine tuning
 
-starting_epoch = 1;
+starting_epoch = 5;
+r = start_r / starting_epoch;
 
 for epoch = starting_epoch:epochs
     
@@ -187,6 +189,10 @@ for epoch = starting_epoch:epochs
         hidrecbiases = hidrecbiases + r*(sleephidstates-psleephidstates);
     
     end
+    
+    if decay_r
+        r = start_r / (epoch + 1);
+    end
         
 end
 
@@ -210,7 +216,7 @@ vis = [(rand(500, 1) > 0.5) * 1; indicator];
 
 % GS in top level
 
-for iter = 1:1000
+for iter = 1:100
     pre_sig = dbn_ft.W2' * vis + dbn_ft.h2;
     hid_prob = 1 ./ (1 + exp(-pre_sig));
     hid = (hid_prob > rand(size(hid_prob))) * 1;
