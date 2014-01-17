@@ -110,60 +110,176 @@ X_labels = test_labels(1:num_images);
 Y = test_digits(num_images:(num_images+num_images-1),:);
 Y_labels = test_labels(num_images:(num_images+num_images-1));
 
+%% No pre-processing
+
+d = 784;
+X_dr = X;
+Y_dr = Y;
+
 %% Perform PCA preprocessing
 
 d = 2;
 coeff = pca([X;Y]);
-X = X * coeff(:,1:d);
-Y = Y * coeff(:,1:d);
-plot(X(:,1), X(:,2), 'go');
+X_dr = X * coeff(:,1:d);
+Y_dr = Y * coeff(:,1:d);
+plot(X_dr(:,1), X_dr(:,2), 'go');
 hold on;
-plot(Y(:,1), Y(:,2), 'rx');
+plot(Y_dr(:,1), Y_dr(:,2), 'rx');
 hold off;
 
 %% Perform random projection preprocessing
 
 d = 2;
 coeff = randn(size(X,2));
-X = X * coeff(:,1:d);
-Y = Y * coeff(:,1:d);
-plot(X(:,1), X(:,2), 'go');
+X_dr = X_dr * coeff(:,1:d);
+Y_dr = Y_dr * coeff(:,1:d);
+plot(X_dr(:,1), X_dr(:,2), 'go');
 hold on;
-plot(Y(:,1), Y(:,2), 'rx');
+plot(Y_dr(:,1), Y_dr(:,2), 'rx');
 hold off;
 
 %% Calculate some distances for reference
 
-d1 = sqrt(sq_dist(X', X'));
-d2 = sqrt(sq_dist(Y', Y'));
+d1 = sqrt(sq_dist(X_dr', X_dr'));
+d2 = sqrt(sq_dist(Y_dr', Y_dr'));
+Z_dr = [X_dr;X_dr];  %aggregate the sample
+d3 = sq_dist(Z_dr', Z_dr');
 hist([d1(:);d2(:)]);
+
+%% Select a lengthscale
+
+% CV for density estimation
+folds = 5;
+divisions = 50;
+distances = sort([d1(:); d2(:)]);
+%trial_ell = zeros(divisions-1,1);
+trial_ell = zeros(divisions,1);
+for i = 1:(divisions)%-1)
+    %trial_ell(i) = distances(floor(i*numel(distances)/(2*divisions)));
+    trial_ell(i) = i * sqrt(0.5) * distances(floor(0.5*numel(distances))) / divisions;
+end
+m = size(X_dr, 1);
+n = size(Y_dr, 1);
+d = size(X_dr, 2);
+X_perm = X_dr(randperm(m),:);
+Y_perm = Y_dr(randperm(n),:);
+X_f_train = cell(folds,1);
+X_f_test = cell(folds,1);
+Y_f_train = cell(folds,1);
+Y_f_test = cell(folds,1);
+for fold = 1:folds
+    if fold == 1
+        X_f_train{fold} = X_perm(floor(fold*m/folds):end,:);
+        X_f_test{fold} = X_perm(1:(floor(fold*m/folds)-1),:);
+        Y_f_train{fold} = Y_perm(floor(fold*n/folds):end,:);
+        Y_f_test{fold} = Y_perm(1:(floor(fold*n/folds)-1),:);
+    elseif fold == folds
+        X_f_train{fold} = X_perm(1:floor((fold-1)*m/folds),:);
+        X_f_test{fold} = X_perm(floor((fold-1)*m/folds + 1):end,:);
+        Y_f_train{fold} = Y_perm(1:floor((fold-1)*n/folds),:);
+        Y_f_test{fold} = Y_perm(floor((fold-1)*m/folds + 1):end,:);
+    else
+        X_f_train{fold} = [X_perm(1:floor((fold-1)*m/folds),:);
+                           X_perm(floor((fold)*m/folds+1):end,:)];
+        X_f_test{fold} = X_perm(floor((fold-1)*m/folds + 1):floor((fold)*m/folds),:);
+        Y_f_train{fold} = [Y_perm(1:floor((fold-1)*n/folds),:);
+                           Y_perm(floor((fold)*n/folds+1):end,:)];
+        Y_f_test{fold} = Y_perm(floor((fold-1)*n/folds + 1):floor((fold)*n/folds),:);
+    end
+end
+best_ell = trial_ell(1);
+best_log_p = -Inf;
+for ell = trial_ell'
+    log_p = 0;
+    for fold = 1:folds
+        K1 = rbf_dot(X_f_train{fold} , X_f_test{fold}, ell);
+        p_X = (sum(K1, 1)' / m) / (ell^d);
+        log_p = log_p + sum(log(p_X));
+        K2 = rbf_dot(Y_f_train{fold} , Y_f_test{fold}, ell);
+        p_Y = (sum(K2, 1)' / n) / (ell^d);
+        log_p = log_p + sum(log(p_Y));
+    end
+    if log_p > best_log_p
+        best_log_p = log_p;
+        best_ell = ell;
+    end
+end
+params.sig = best_ell;
+% Median
+%params.sig = sqrt(0.5*median(d3(d3>0)));
+% Other things?
+%params.sig = 2;
+
+params.sig
 
 %% Perform MMD test
 
-alpha = 0.01;
-%params.sig = -1;
-params.sig = 2.5;
+alpha = 0.05;
 params.shuff = 100;
-[testStat,thresh,params] = mmdTestBoot_jl(X,Y,alpha,params);
-testStat
-thresh
-params
+[testStat,thresh,params,p] = mmdTestBoot_jl(X_dr,Y_dr,alpha,params);
+p
 
-testStat / thresh
+%% Compute witness function in 2d
+
+if size(X_dr,2) == 2
+    m = size(X_dr, 1);
+    n = size(Y_dr, 1);
+    t = (((fullfact([200,200])-0.5) / 200) - 0) * 1;
+    t = t .* (1.4 * repmat(range([X_dr; Y_dr]), size(t,1), 1));
+    t = t + repmat(min([X_dr; Y_dr]) - 0.2*range([X_dr; Y_dr]), size(t,1), 1);
+    K1 = rbf_dot(X_dr, t, params.sig);
+    K2 = rbf_dot(Y_dr, t, params.sig);
+    witness = sum(K1, 1)' / m - sum(K2, 1)' / n;
+    %plot3(t(:,1), t(:,2), witness, 'bo');
+    %hold on;
+    %plot3(Y_dr(:,1), Y_dr(:,2), repmat(max(max(witness)), size(Y_dr)), 'ro');
+    reshaped = reshape(witness, 200, 200)';
+    imagesc(reshaped(end:-1:1,:));
+    colorbar;
+    %hold off;
+end
+
+%% Compute witness function and show (least) favourite images
+
+m = size(X_dr, 1);
+n = size(Y_dr, 1);
+t_X_dr = X_dr;
+t_Y_dr = Y_dr;
+K1 = rbf_dot(X_dr, t_X_dr, params.sig);
+K2 = rbf_dot(Y_dr, t_X_dr, params.sig);
+witness_X = sum(K1, 1)' / m - sum(K2, 1)' / n;
+K1 = rbf_dot(X_dr, t_Y_dr, params.sig);
+K2 = rbf_dot(Y_dr, t_Y_dr, params.sig);
+witness_Y = sum(K1, 1)' / m - sum(K2, 1)' / n;
+
+[~, i] = sort(witness_Y, 'ascend');
+
+for j = 1:5
+    imagesc(reshape(Y(i(j),:), 28, 28)');
+    drawnow;
+    pause;
+end
+
+[~, i] = sort(witness_X, 'descend');
+
+for j = 1:5
+    imagesc(reshape(X(i(j),:), 28, 28)');
+    drawnow;
+    pause;
+end
 
 %% Find peaks of the witness function on fantasies
 
 close all;
 
-%ell = params.sig;
-ell = 2;
-x_opt_Y = zeros(size(Y));
-witnesses_Y = zeros(size(Y, 1), 1);
+ell = params.sig;
+x_opt_Y = zeros(size(Y_dr));
+witnesses_Y = zeros(size(Y_dr, 1), 1);
 
-for i = 1:size(Y,1)
+for i = 1:size(Y_dr,1)
 
-    x = Y(i,:)';
-    witness = rbf_witness(x, X, Y, ell);
+    x = Y_dr(i,:)';
+    witness = rbf_witness(x, X_dr, Y_dr, ell);
     witnesses_Y(i) = witness;
     fprintf('\nwitness=%f\n', witness);
 
@@ -175,9 +291,9 @@ for i = 1:size(Y,1)
 
     if witness >=0 
         % Maximize
-        x = minimize(x, @(x) neg_rbf_witness(x, X, Y, ell), -50);
+        x = minimize(x, @(x) neg_rbf_witness(x, X_dr, Y_dr, ell), -50);
     else
-        x = minimize(x, @(x) rbf_witness(x, X, Y, ell), -50);
+        x = minimize(x, @(x) rbf_witness(x, X_dr, Y_dr, ell), -50);
     end
     x_opt_Y(i,:) = x';
     %imagesc(reshape(x, 28, 28)');
@@ -191,15 +307,14 @@ end
 
 close all;
 
-%ell = params.sig;
-ell = 2;
-x_opt_X = zeros(size(X));
-witnesses_X = zeros(size(X, 1), 1);
+ell = params.sig;
+x_opt_X = zeros(size(X_dr));
+witnesses_X = zeros(size(X_dr, 1), 1);
 
-for i = 1:size(X,1)
+for i = 1:size(X_dr,1)
 
-    x = X(i,:)';
-    witness = rbf_witness(x, X, Y, ell);
+    x = X_dr(i,:)';
+    witness = rbf_witness(x, X_dr, Y_dr, ell);
     witnesses_X(i) = witness;
     fprintf('\nwitness=%f\n', witness);
 
@@ -211,9 +326,9 @@ for i = 1:size(X,1)
 
     if witness >=0 
         % Maximize
-        x = minimize(x, @(x) neg_rbf_witness(x, X, Y, ell), -50);
+        x = minimize(x, @(x) neg_rbf_witness(x, X_dr, Y_dr, ell), -50);
     else
-        x = minimize(x, @(x) rbf_witness(x, X, Y, ell), -50);
+        x = minimize(x, @(x) rbf_witness(x, X_dr, Y_dr, ell), -50);
     end
     x_opt_X(i,:) = x';
     %imagesc(reshape(x, 28, 28)');
@@ -260,7 +375,8 @@ end
 
 [sorted, idx] = sort(witness_sums, 'ascend');
 
-for c = idx(1:10)'
+for c = idx(1:5)'
+    witness_sums(c)
     [~, idx_c] = sort(witnesses_Y.*(c_Y==c), 'ascend');
     imagesc(reshape(Y(idx_c(1),:), 28, 28)');
     drawnow;
@@ -269,75 +385,13 @@ end
 
 [sorted, idx] = sort(witness_sums, 'descend');
 
-for c = idx(1:10)'
+for c = idx(1:5)'
+    witness_sums(c)
     [~, idx_c] = sort(witnesses_X.*(c_X==c), 'descend');
     imagesc(reshape(X(idx_c(1),:), 28, 28)');
     drawnow;
     pause;
 end
-
-%% Compute witness function and show (least) favourite images
-
-%params.sig = 7;
-
-m = size(X, 1);
-n = size(Y, 1);
-t_X = X;
-t_Y = Y;
-K1 = rbf_dot(X, t_X, params.sig);
-K2 = rbf_dot(Y, t_X, params.sig);
-witness_X = sum(K1, 1)' / m - sum(K2, 1)' / n;
-K1 = rbf_dot(X, t_Y, params.sig);
-K2 = rbf_dot(Y, t_Y, params.sig);
-witness_Y = sum(K1, 1)' / m - sum(K2, 1)' / n;
-
-%i = find(witness_Y<min(witness_Y)*0.8);
-
-[~, i] = sort(witness_Y, 'ascend');
-
-for j = 1:10
-    imagesc(reshape(Y(i(j),:), 28, 28)');
-    drawnow;
-    pause;
-end
-
-[~, i] = sort(witness_X, 'ascend');
-
-for j = 1:10
-    imagesc(reshape(X(i(j),:), 28, 28)');
-    drawnow;
-    pause;
-end
-
-% Average image
-
-% average_image = mean(Y(i(1:200),:),1);
-% imagesc(reshape(average_image, 28, 28)');
-% pause;
-
-[~, i] = sort(witness_X, 'descend');
-
-for j = 1:10
-    imagesc(reshape(X(i(j),:), 28, 28)');
-    drawnow;
-    pause;
-end
-
-[~, i] = sort(witness_Y, 'descend');
-
-for j = 1:10
-    imagesc(reshape(Y(i(j),:), 28, 28)');
-    drawnow;
-    pause;
-end
-
-% average_image = mean(X(i(1:200),:),1);
-% imagesc(reshape(average_image, 28, 28)');
-% pause;
-
-%i = find(witness_X==max(witness_X));
-
-%imagesc(reshape(X(i,:), 28, 28)');
 
 %% Plot some over represented images
 
@@ -345,13 +399,13 @@ end
 
 m = size(X, 1);
 n = size(Y, 1);
-t_X = X;
-t_Y = Y;
-K1 = rbf_dot(X, t_X, params.sig);
-K2 = rbf_dot(Y, t_X, params.sig);
+t_X_dr = X;
+t_Y_dr = Y;
+K1 = rbf_dot(X, t_X_dr, params.sig);
+K2 = rbf_dot(Y, t_X_dr, params.sig);
 witness_X = sum(K1, 1)' / m - sum(K2, 1)' / n;
-K1 = rbf_dot(X, t_Y, params.sig);
-K2 = rbf_dot(Y, t_Y, params.sig);
+K1 = rbf_dot(X, t_Y_dr, params.sig);
+K2 = rbf_dot(Y, t_Y_dr, params.sig);
 witness_Y = sum(K1, 1)' / m - sum(K2, 1)' / n;
 
 raster = [];
@@ -380,13 +434,13 @@ save2pdf( 'samples.pdf', h, 600, true );
 
 m = size(X, 1);
 n = size(Y, 1);
-t_X = X;
-t_Y = Y;
-K1 = rbf_dot(X, t_X, params.sig);
-K2 = rbf_dot(Y, t_X, params.sig);
+t_X_dr = X;
+t_Y_dr = Y;
+K1 = rbf_dot(X, t_X_dr, params.sig);
+K2 = rbf_dot(Y, t_X_dr, params.sig);
 witness_X = sum(K1, 1)' / m - sum(K2, 1)' / n;
-K1 = rbf_dot(X, t_Y, params.sig);
-K2 = rbf_dot(Y, t_Y, params.sig);
+K1 = rbf_dot(X, t_Y_dr, params.sig);
+K2 = rbf_dot(Y, t_Y_dr, params.sig);
 witness_Y = sum(K1, 1)' / m - sum(K2, 1)' / n;
 
 raster = [];
@@ -419,13 +473,13 @@ save2pdf( 'samples.pdf', h, 600, true );
 
 m = size(X, 1);
 n = size(Y, 1);
-t_X = X;
-t_Y = Y;
-K1 = rbf_dot(X, t_X, params.sig);
-K2 = rbf_dot(Y, t_X, params.sig);
+t_X_dr = X;
+t_Y_dr = Y;
+K1 = rbf_dot(X, t_X_dr, params.sig);
+K2 = rbf_dot(Y, t_X_dr, params.sig);
 witness_X = sum(K1, 1)' / m - sum(K2, 1)' / n;
-K1 = rbf_dot(X, t_Y, params.sig);
-K2 = rbf_dot(Y, t_Y, params.sig);
+K1 = rbf_dot(X, t_Y_dr, params.sig);
+K2 = rbf_dot(Y, t_Y_dr, params.sig);
 witness_Y = sum(K1, 1)' / m - sum(K2, 1)' / n;
 
 [coeff, score, latent] = pca([X;Y]);

@@ -103,7 +103,7 @@ numCDiters = 15;
 
 %% Fine tuning
 
-starting_epoch = 5;
+starting_epoch = 45;
 r = start_r / starting_epoch;
 
 for epoch = starting_epoch:epochs
@@ -205,7 +205,7 @@ dbn_ft = struct('W2', [pentop; labtop], 'W1', penhid', 'W0', hidvis', ...
             
 %% Sample a digit from the fine tuned dbn
 
-digit = 3;
+digit = 7;
 
 indicator = zeros(10,1);
 %indicator = ones(10,1);
@@ -216,7 +216,7 @@ vis = [(rand(500, 1) > 0.5) * 1; indicator];
 
 % GS in top level
 
-for iter = 1:100
+for iter = 1:1000
     pre_sig = dbn_ft.W2' * vis + dbn_ft.h2;
     hid_prob = 1 ./ (1 + exp(-pre_sig));
     hid = (hid_prob > rand(size(hid_prob))) * 1;
