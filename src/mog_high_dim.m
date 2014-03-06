@@ -12,10 +12,10 @@ init_rand(seed);
 
 %% Create some high dimensional mixture of Gaussians
 
-n_per_cluster = 500;
+n_per_cluster = 250;
 d = 10;
 effective_d = 4;
-n_clusters = 3;
+n_clusters = 5;
 cluster_sd = 0.2;
 
 basis = randn(d, effective_d);
@@ -48,10 +48,10 @@ plot(Y_pca(:,1), Y_pca(:,2), 'o');
 
 %% Fit MoG and sample
 
-n_centres_mog = 3;
+n_centres_mog = 5;
 
 options = statset('Display','final','MaxIter',1000);
-mog = gmdistribution.fit(Y,n_centres_mog,'Options',options,'Replicates',50);
+mog = gmdistribution.fit(Y,n_centres_mog,'Options',options,'Replicates',100);
 X = mog.random(size(Y,1));
 
 %% Visualise data using PCA
@@ -60,8 +60,10 @@ coeff = pca([X;Y]);
 X_pca = X * coeff(:,1:2);
 Y_pca = Y * coeff(:,1:2);
 
+h = figure;
 plot(X_pca(:,1), X_pca(:,2), 'ro'); hold on;
 plot(Y_pca(:,1), Y_pca(:,2), 'go'); hold off;
+save2pdf( 'temp/pca.pdf', h, 600, true );
 
 %% MMD test after PCA
 
@@ -103,8 +105,10 @@ plot(Y_kpca(:,1), Y_kpca(:,2), 'go'); hold off;
 X_fa = F(1:size(X,1),:);
 Y_fa = F((size(X,1)+1):end,:);
 
+h = figure;
 plot(X_fa(:,1), X_fa(:,2), 'ro'); hold on;
 plot(Y_fa(:,1), Y_fa(:,2), 'go'); hold off;
+save2pdf( 'temp/fa.pdf', h, 600, true );
 
 %% MMD on FA
 
@@ -198,11 +202,17 @@ display(p);
 
 m = size(X_fa, 1);
 n = size(Y_fa, 1);
-t = (((fullfact([200,200])-0.5) / 100) - 1) * 5;
+t = (((fullfact([200,200])-0.5) / 100) - 1) * 2.5;
 K1 = rbf_dot(X_fa, t, params.sig);
 K2 = rbf_dot(Y_fa, t, params.sig);
 witness = sum(K1, 1)' / m - sum(K2, 1)' / n;
 plot3(t(:,1), t(:,2), witness, 'o');
+
+h = figure;
+reshaped = reshape(witness, 200, 200)';
+imagesc(reshaped(end:-1:1,:));
+colorbar;
+save2pdf( 'temp/witness.pdf', h, 600, true );
 
 %% Find peaks of the witness function on fantasies
 
@@ -227,9 +237,9 @@ for i = 1:size(Y_fa,1)
 
     if witness >=0 
         % Maximize
-        x = minimize(x, @(x) neg_rbf_witness(x, X_fa, Y_fa, ell), -50);
+        x = minimize_quiet(x, @(x) neg_rbf_witness(x, X_fa, Y_fa, ell), -50);
     else
-        x = minimize(x, @(x) rbf_witness(x, X_fa, Y_fa, ell), -50);
+        x = minimize_quiet(x, @(x) rbf_witness(x, X_fa, Y_fa, ell), -50);
     end
     x_opt_Y(i,:) = x';
     %imagesc(reshape(x, 28, 28)');
@@ -262,9 +272,9 @@ for i = 1:size(X_fa,1)
 
     if witness >=0 
         % Maximize
-        x = minimize(x, @(x) neg_rbf_witness(x, X_fa, Y_fa, ell), -50);
+        x = minimize_quiet(x, @(x) neg_rbf_witness(x, X_fa, Y_fa, ell), -50);
     else
-        x = minimize(x, @(x) rbf_witness(x, X_fa, Y_fa, ell), -50);
+        x = minimize_quiet(x, @(x) rbf_witness(x, X_fa, Y_fa, ell), -50);
     end
     x_opt_X(i,:) = x';
     %imagesc(reshape(x, 28, 28)');

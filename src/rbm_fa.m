@@ -118,14 +118,15 @@ Y_dr = Y;
 
 %% Perform PCA preprocessing
 
-d = 2;
+d = 5;
 coeff = pca([X;Y]);
 X_dr = X * coeff(:,1:d);
 Y_dr = Y * coeff(:,1:d);
-plot(X_dr(:,1), X_dr(:,2), 'go');
-hold on;
-plot(Y_dr(:,1), Y_dr(:,2), 'rx');
-hold off;
+
+h = figure;
+plot(X_dr(:,1), X_dr(:,2), 'go'); hold on;
+plot(Y_dr(:,1), Y_dr(:,2), 'rx'); hold off;
+save2pdf('temp/pca.pdf', h, 600, true );
 
 %% Perform random projection preprocessing
 
@@ -247,8 +248,11 @@ if size(X_dr,2) == 2
     %hold on;
     %plot3(Y_dr(:,1), Y_dr(:,2), repmat(max(max(witness)), size(Y_dr)), 'ro');
     reshaped = reshape(witness, 200, 200)';
+    
+    h = figure;
     imagesc(reshaped(end:-1:1,:));
     colorbar;
+    save2pdf('temp/witness.pdf', h, 600, true );
     %hold off;
 end
 
@@ -376,32 +380,101 @@ end
 
 max_c = c-1;
 witness_sums = zeros(max_c,1);
+witness_signs = zeros(max_c,1);
 c_XY = [c_X; c_Y];
 witnesses_XY = [witnesses_X; witnesses_Y];
 for c = 1:max_c
     % TODO - these need to be weighted if m <> n
     witness_sums(c) = sum(witnesses_X(c_X==c)) - sum(witnesses_Y(c_Y==c));
     if sum(witnesses_XY(c_XY==c)) < 0
-        witness_sums(c) = -witness_sums(c);
+        witness_signs(c) = -1;
+        %witness_sums(c) = -witness_sums(c);
+    else
+        witness_signs(c) = 1;
     end
 end
 
+MMD = sum(witness_sums);
+
+if any(witness_sums < 0)
+    warning('Uh oh!');
+else
+    witness_sums = witness_sums .* witness_signs;
+end
+
+rows = 2;
+cols = 10;
+raster = [];
+one_line = [];
+
+
 [sorted, idx] = sort(witness_sums, 'ascend');
 
-for c = idx(1:5)'
-    witness_sums(c)
+for c = idx(1:cols)'
+    display(witness_sums(c) / MMD);
     [~, idx_c] = sort(witnesses_Y.*(c_Y==c), 'ascend');
-    imagesc(reshape(Y(idx_c(1),:), 28, 28)');
-    drawnow;
-    pause;
+    %imagesc(reshape(Y(idx_c(1),:), 28, 28)');
+    %drawnow;
+    %pause;
+    one_line = [one_line, reshape(Y(idx_c(1),:), 28, 28)'];
 end
+
+raster = [raster; one_line];
+one_line = [];
 
 [sorted, idx] = sort(witness_sums, 'descend');
 
-for c = idx(1:5)'
-    witness_sums(c)
+for c = idx(1:cols)'
+    display(witness_sums(c) / MMD);
     [~, idx_c] = sort(witnesses_X.*(c_X==c), 'descend');
-    imagesc(reshape(X(idx_c(1),:), 28, 28)');
-    drawnow;
-    pause;
+%     imagesc(reshape(X(idx_c(1),:), 28, 28)');
+%     drawnow;
+%     pause;
+    one_line = [one_line, reshape(X(idx_c(1),:), 28, 28)'];
 end
+
+raster = [raster; one_line];
+
+h = figure('Position', [300, 300, 000+size(raster,2), 000+size(raster,1)]);
+imagesc(-raster);
+colormap(bone);
+set(gca, 'YTick', []);
+set(gca, 'XTick', []);
+save2pdf( 'temp/witness_peaks.pdf', h, 600, true );
+
+%% Plot some over represented digits - conditional dist
+
+m = size(X_dr, 1);
+n = size(Y_dr, 1);
+t_X_dr = X_dr;
+t_Y_dr = Y_dr;
+K1 = rbf_dot(X_dr, t_X_dr, params.sig);
+K2 = rbf_dot(Y_dr, t_X_dr, params.sig);
+witness_X = sum(K1, 1)' / m - sum(K2, 1)' / n;
+K1 = rbf_dot(X_dr, t_Y_dr, params.sig);
+K2 = rbf_dot(Y_dr, t_Y_dr, params.sig);
+witness_Y = sum(K1, 1)' / m - sum(K2, 1)' / n;
+
+raster = [];
+one_line = [];
+for digit = 0:9;
+    Y_i = Y(Y_labels==digit,:);
+    witness_Y_i = witness_Y(Y_labels==digit,:);
+    [~, i] = sort(witness_Y_i, 'ascend');
+    one_line = [one_line, reshape(Y_i(i(1),:), 28, 28)'];
+end
+raster = [raster; one_line];
+one_line = [];
+for digit = 0:9;
+    X_i = X(X_labels==digit,:);
+    witness_X_i = witness_X(X_labels==digit,:);
+    [~, i] = sort(witness_X_i, 'descend');
+    one_line = [one_line, reshape(X_i(i(1),:), 28, 28)'];
+end
+raster = [raster; one_line];
+h = figure('Position', [300, 300, 000+size(raster,2), 000+size(raster,1)]);
+imagesc(-raster);
+colormap(bone);
+set(gca, 'YTick', []);
+set(gca, 'XTick', []);
+save2pdf('temp/cond.pdf', h, 600, true );

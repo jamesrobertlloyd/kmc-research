@@ -353,6 +353,54 @@ The witness function has clearly identified the uniform ring of data points as b
 
 \TBD{Follow up could be trying to fit this with more Gaussians - how many do we need to patch it up - will there always be discrepancies or will they become too small to notice?}
 
+\subsection{High dimensional data}
+
+\TBD{These are notes\ldots}
+
+High dimensional means high enough for kernel density estimation to be foolish.
+I imagine one can say something fairly sensible about how much data is required in how many dimensions.
+
+I generated synthetic data as follows.
+A mixture of isotropic Gaussians in 10 dimensional space.
+The centres were drawn from a random 4 dimensional subspace.
+4 clusters were Gaussian.
+A fifth cluster was $t$-distributed with 2 degrees of freedom.
+
+I then fit a mixture of Gaussians with 5 centres to the data and then generated samples from the fitted distribution.
+
+I experimented with PCA, factor analysis, kernel PCA and Fisher's linear discriminant analysis.
+Kernel PCA did not produce useful dimensionality reductions and is slow.
+Factor analysis and PCA work well - PCA is slightly faster which is useful on very large datasets.
+Fisher's linear discriminant analysis only produces one projection dimension.
+
+Ideally, one would attempt to find a (nonlinear) projection that most accentuates any differences between the distributions - as measured \eg by MMD.
+This would be computationally costly.
+
+I selected a lengthscale by cross validation using predictive likelihood of the kernel density estimate as a criterion.
+I used this since the interpretability of the method relies on intepretation as a kernel density estimate even though MMD tests work in high dimensions when this interpretation is no longer valid.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/high_mog_fa}
+\caption{
+A caption.
+}
+\label{fig:high_mog_fa}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/high_mog_witness}
+\caption{
+A caption.
+}
+\label{fig:high_mog_fa}
+\end{figure}
+
+The difference is significant as measured by MMD and can be clearly seen to be identifying one cluster in particular by the witness function.
+
+This can be remedied by using 10 clusters in the fitted mixture of Gaussians.
+
 \section{Case studies}
 
 \subsection{What exactly do neural networks dream about?}
@@ -381,6 +429,173 @@ Samples from an RBM (actually the mean activations).
 }
 \label{fig:rbm_samples}
 \end{figure}
+
+PCA (factor analysis too slow) shows clear discrepancy between fitted and true distribution.
+Fancy stats not really required.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/rbm_pca}
+\caption{
+A caption.
+}
+\label{fig:rbm_pca}
+\end{figure}
+
+But we can summarise the difference using the peaks of the witness function, ordering them by their contribution to the MMD (left to right).
+On the top we have 29\%, 23\%, 11\%, 6\%, 3\%\ldots and on the bottom we have 5\%, 2\%, 2\%, 2\%, 2\%.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/rbm_witness_peaks}
+\caption{
+A caption.
+}
+\label{fig:rbm_witness_peaks}
+\end{figure}
+
+These percentages indicate that the MMD is mostly coming from dense regions of the fantasy digits whearas the true distribution is more spread out.
+
+Now we look at samples from many RBMs.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/many_rbm_pca}
+\caption{
+A caption.
+}
+\label{fig:many_rbm_pca}
+\end{figure}
+
+This is better but by eye some discrepancies are still visible and the MMD is still significant.
+Witness function shows the density discrepancies more clearly.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/many_rbm_witness}
+\caption{
+A caption.
+}
+\label{fig:many_rbm_witness}
+\end{figure}
+
+Now the summary of peaks and troughs.
+20\%, 14\%, 6\%, 4\%, 3\% and 16\%, 8\%, 7\%, 5\%, 3\%.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/many_rbm_witness_peaks}
+\caption{
+A caption.
+}
+\label{fig:many_rbm_witness_peaks}
+\end{figure}
+
+It is a bit more balanced.
+Hard to understand exactly what is happening / what these digits mean.
+
+Actually it prefers zero for some reason, looking at peaks and troughs of conditional distributions we get.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/many_rbm_cond}
+\caption{
+A caption.
+}
+\label{fig:many_rbm_cond}
+\end{figure}
+
+That is, it really likes zero!
+
+DBN PCA.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/dbn_pca}
+\caption{
+A caption.
+}
+\label{fig:dbn_pca}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/dbn_witness_peaks}
+\caption{
+A caption.
+}
+\label{fig:dbn_witness_peaks}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/dbn_cond}
+\caption{
+A caption.
+}
+\label{fig:dbn_cond}
+\end{figure}
+
+DBN with fine tuning.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/dbn_ft_pca}
+\caption{
+A caption.
+}
+\label{fig:dbn_ft_pca}
+\end{figure}
+
+Clearly it is getting closer to being a good model.
+But MMD still detects a significant difference.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/dbn_ft_witness_peaks}
+\caption{
+A caption.
+}
+\label{fig:dbn_ft_witness_peaks}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/dbn_ft_cond}
+\caption{
+A caption.
+}
+\label{fig:dbn_ft_cond}
+\end{figure}
+
+Looks like it is suffering from ghosting.
+
+But if we go into 3 dimensions our conclusions might change.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/dbn_ft_3_witness_peaks}
+\caption{
+A caption.
+}
+\label{fig:dbn_ft_witness_peaks}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\columnwidth]{figures/dbn_ft_3_cond}
+\caption{
+A caption.
+}
+\label{fig:dbn_ft_cond}
+\end{figure}
+
+In 5 dimensions we get way too many peaks and troughs to be useful.
+
+But a consistent thing is that it likes the `1' that it sometimes thinks is a `4'.
+This looks like the zero thing but less extreme.
+
+\TBD{OLD MATERIAL BELOW}
 
 Performing a kernel two sample test using the median length scale heuristic resulted in an estimated $p$-value less than 0.001 \ie a clear discrepancy between the model and the data.
 We can investigate this discrepancy by examining the images at which the witness function is extremised.
