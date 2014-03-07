@@ -117,19 +117,6 @@ X_labels = test_labels(1:num_images);
 Y = fantasies(1:num_images,:);
 Y_labels = labels(1:num_images);
 
-%% Extract digits - null hypothesis
-
-X = test_digits(1:num_images,:);
-X_labels = test_labels(1:num_images);
-Y = test_digits(num_images:(num_images+num_images-1),:);
-Y_labels = test_labels(num_images:(num_images+num_images-1));
-
-%% No pre-processing
-
-d = 784;
-X_dr = X;
-Y_dr = Y;
-
 %% Perform PCA preprocessing
 
 d = 2;
@@ -256,7 +243,7 @@ for digit = 0:9
     %% Perform MMD test
 
     alpha = 0.05;
-    params.shuff = 100;
+    params.shuff = 1000;
     [testStat,thresh,params,p] = mmdTestBoot_jl(X_dr,Y_dr,alpha,params);
     display(p);
     pause;
