@@ -65,3 +65,4 @@ src/picloud_misc_credentials.py
 data/mnist/many-rbm-samples/temp/
 data/mnist/dbn-500-500-2000/dbn-500-500-200.pkl
 src/samples.pdf
+src/temp/
