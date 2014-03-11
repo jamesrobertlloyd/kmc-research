@@ -110,6 +110,26 @@ set(gca, 'YTick', []);
 set(gca, 'XTick', []);
 save2pdf( 'temp/cond_fantasies.pdf', h, 600, true );
 
+%% Test the p values that come under null distribution
+
+perm = randperm(size(test_digits, 1));
+test_digits = test_digits(perm,:);
+test_labels = test_labels(perm,:);
+X = test_digits(1:num_images,:);
+Y = test_digits(num_images:(num_images+num_images-1),:);
+
+%d = 2;
+d =28 * 28;
+[coeff] = pca([X;Y]);
+X_dr = X * coeff(:,1:d);
+Y_dr = Y * coeff(:,1:d);
+
+alpha = 0.05;
+params.shuff = 50;
+params.sig = -1;
+[testStat,thresh,params,p] = mmdTestBoot_jl(X_dr,Y_dr,alpha,params);
+display(p);
+
 %% Extract digits
     
 X = test_digits(1:num_images,:);
@@ -117,10 +137,18 @@ X_labels = test_labels(1:num_images);
 Y = fantasies(1:num_images,:);
 Y_labels = labels(1:num_images);
 
+%% A stability test
+
+% Doing PCA will affect the sampling distribution and the bootstrap
+% distribution - does this matter empirically - perhaps something
+% theoretical about decrease in power can be shown perhaps - or I should
+% write a version of the test that takes this into account
+
 %% Perform PCA preprocessing
 
 d = 2;
-coeff = pca([X;Y]);
+[coeff,~,latent] = pca([X;Y]);
+%coeff = pca(X);
 X_dr = X * coeff(:,1:d);
 Y_dr = Y * coeff(:,1:d);
 
@@ -137,6 +165,7 @@ for digit = 0:9
     X_cond = X(X_labels==digit,:);
     Y_cond = Y(Y_labels==digit,:);
     coeff = pca([X_cond;Y_cond]);
+    %coeff = pca(X_cond);
     X_cond_dr{digit+1} = X_cond * coeff(:,1:d);
     Y_cond_dr{digit+1} = Y_cond * coeff(:,1:d);
 
@@ -153,6 +182,12 @@ end
 close all;
 
 %% Big for loop
+
+cond_raster_1 = [];
+cond_raster_2 = []; 
+
+cond_raster_alt_1 = [];
+cond_raster_alt_2 = []; 
 
 for digit = 0:9
 
@@ -246,7 +281,7 @@ for digit = 0:9
     params.shuff = 1000;
     [testStat,thresh,params,p] = mmdTestBoot_jl(X_dr,Y_dr,alpha,params);
     display(p);
-    pause;
+    %pause;
 
     %% Compute witness function in 2d
 
@@ -405,6 +440,11 @@ for digit = 0:9
         %drawnow;
         %pause;
         one_line = [one_line, reshape(Y_full(idx_c(1),:), 28, 28)'];
+        if c == idx(1)
+            cond_raster_1 = [cond_raster_1, reshape(Y_full(idx_c(1),:), 28, 28)'];
+        elseif c == idx(2)
+            cond_raster_2 = [cond_raster_2, reshape(Y_full(idx_c(1),:), 28, 28)'];
+        end
         % Find the nearest neighbour in true data
         d = sq_dist(Y_full(idx_c(1),:)', X_full');
         nn_i = [nn_i, find(d==min(d))];
@@ -431,6 +471,11 @@ for digit = 0:9
     %     drawnow;
     %     pause;
         one_line = [one_line, reshape(X_full(idx_c(1),:), 28, 28)'];
+        if c == idx(1)
+            cond_raster_alt_1 = [cond_raster_alt_1, reshape(X_full(idx_c(1),:), 28, 28)'];
+        elseif c == idx(2)
+            cond_raster_alt_2 = [cond_raster_alt_2, reshape(X_full(idx_c(1),:), 28, 28)'];
+        end
         % Find the nearest neighbour in fantasy data
         d = sq_dist(X_full(idx_c(1),:)', Y_full');
         nn_i = [nn_i, find(d==min(d))];
@@ -452,3 +497,21 @@ for digit = 0:9
     set(gca, 'XTick', []);
     save2pdf( 'temp/witness_peaks.pdf', h, 600, true );
 end
+
+cond_raster = [cond_raster_1; cond_raster_2];    
+
+h = figure('Position', [400, 400, 000+size(cond_raster,2), 000+size(cond_raster,1)]);
+imagesc(-cond_raster);
+colormap(bone);
+set(gca, 'YTick', []);
+set(gca, 'XTick', []);
+save2pdf('temp/cond_witness_troughs.pdf', h, 600, true );
+
+cond_raster_alt = [cond_raster_alt_1; cond_raster_alt_2];    
+
+h = figure('Position', [200, 200, 000+size(cond_raster_alt,2), 000+size(cond_raster_alt,1)]);
+imagesc(-cond_raster_alt);
+colormap(bone);
+set(gca, 'YTick', []);
+set(gca, 'XTick', []);
+save2pdf('temp/cond_witness_peaks.pdf', h, 600, true );
