@@ -118,8 +118,8 @@ test_labels = test_labels(perm,:);
 X = test_digits(1:num_images,:);
 Y = test_digits(num_images:(num_images+num_images-1),:);
 
-%d = 2;
-d =28 * 28;
+d = 2;
+%d =28 * 28;
 [coeff] = pca([X;Y]);
 X_dr = X * coeff(:,1:d);
 Y_dr = Y * coeff(:,1:d);
