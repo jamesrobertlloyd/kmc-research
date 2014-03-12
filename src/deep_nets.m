@@ -137,6 +137,13 @@ X_labels = test_labels(1:num_images);
 Y = fantasies(1:num_images,:);
 Y_labels = labels(1:num_images);
 
+%% Extract digits - null hypothesis
+
+X = test_digits(1:num_images,:);
+X_labels = test_labels(1:num_images);
+Y = test_digits(num_images:(num_images+num_images-1),:);
+Y_labels = test_labels(num_images:(num_images+num_images-1));
+
 %% A stability test
 
 % Doing PCA will affect the sampling distribution and the bootstrap
@@ -283,6 +290,15 @@ for digit = 0:9
     display(p);
     %pause;
 
+    %% Do PCA MMD
+
+%     alpha = 0.05;
+%     params.shuff = 100;
+%     [testStat,thresh,params,p] = mmdTestBoot_pca_jl(X(X_labels==digit,:),...
+%                                                     Y(Y_labels==digit,:),...
+%                                                     alpha,params,d);
+%     display(p);
+    
     %% Compute witness function in 2d
 
     if size(X_dr,2) == 2
@@ -405,8 +421,7 @@ for digit = 0:9
     c_XY = [c_X; c_Y];
     witnesses_XY = [witnesses_X; witnesses_Y];
     for c = 1:max_c
-        % TODO - these need to be weighted if m <> n
-        witness_sums(c) = sum(witnesses_X(c_X==c)) - sum(witnesses_Y(c_Y==c));
+        witness_sums(c) = (1/m) * sum(witnesses_X(c_X==c)) - (1/n) * sum(witnesses_Y(c_Y==c));
         if sum(witnesses_XY(c_XY==c)) < 0
             witness_signs(c) = -1;
             %witness_sums(c) = -witness_sums(c);
