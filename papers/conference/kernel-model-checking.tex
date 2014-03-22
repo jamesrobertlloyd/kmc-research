@@ -1,10 +1,8 @@
-% Use the following line _only_ if you're still using LaTeX 2.09.
-%\documentstyle[icml2014,epsf,natbib]{article}
-% If you rely on Latex2e packages, like most modern people use this:
-\documentclass{article}
+\documentclass{article} % For LaTeX2e
+\usepackage{format/nips14submit_e,times}
+\usepackage{hyperref}
+\usepackage{url}
 
-% use Times
-\usepackage{times}
 % For figures
 \usepackage{graphicx} % more modern
 %\usepackage{epsfig} % less modern
@@ -17,28 +15,6 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 
-% As of 2011, we use the hyperref package to produce hyperlinks in the
-% resulting PDF.  If this breaks your system, please commend out the
-% following usepackage line and replace \usepackage{icml2014} with
-% \usepackage[nohyperref]{icml2014} above.
-\usepackage{hyperref}
-
-% Packages hyperref and algorithmic misbehave sometimes.  We can fix
-% this with the following command.
-\newcommand{\theHalgorithm}{\arabic{algorithm}}
-
-% Employ the following version of the ``usepackage'' statement for
-% submitting the draft version of the paper for review.  This will set
-% the note in the first column to ``Under review.  Do not distribute.''
-\usepackage{format/icml2014} 
-% Employ this version of the ``usepackage'' statement after the paper has
-% been accepted, when creating the final version.  This will set the
-% note in the first column to ``Proceedings of the...''
-%\usepackage[accepted]{icml2014}
-
-\usepackage{times}
-\usepackage{hyperref}
-\usepackage{url}
 \usepackage{color}
 \usepackage{preamble}
 \definecolor{mydarkblue}{rgb}{0,0.08,0.45}
@@ -69,37 +45,43 @@
 \let\oldemptyset\emptyset
 \let\emptyset\varnothing
 
-%\author{
-%James Robert Lloyd\\
-%University of Cambridge\\
-%Department of Engineering\\
-%\texttt{jrl44@cam.ac.uk}
-%\And
-%David Duvenaud\\
-%University of Cambridge \\
-%Department of Engineering \\
-%\texttt{dkd23@cam.ac.uk}
-%\And
-%Roger Grosse\\
-%M.I.T.\\
-%Brain and Cognitive Sciences \\
-%\texttt{rgrosse@mit.edu}
-%\And
-%Joshua B. Tenenbaum\\
-%M.I.T.\\
-%Brain and Cognitive Sciences \\
-%\texttt{jbt@mit.edu}
-%\And
-%Zoubin Ghahramani\\
-%University of Cambridge \\
-%Department of Engineering \\
-%\texttt{zoubin@eng.cam.ac.uk}
-%}
+\title{Using kernel two sample tests for\\statistical-model checking}
+
+\author{
+David S.~Hippocampus\thanks{ Use footnote for providing further information
+about author (webpage, alternative address)---\emph{not} for acknowledging
+funding agencies.} \\
+Department of Computer Science\\
+Cranberry-Lemon University\\
+Pittsburgh, PA 15213 \\
+\texttt{hippo@cs.cranberry-lemon.edu} \\
+\And
+Coauthor \\
+Affiliation \\
+Address \\
+\texttt{email} \\
+\AND
+Coauthor \\
+Affiliation \\
+Address \\
+\texttt{email} \\
+\And
+Coauthor \\
+Affiliation \\
+Address \\
+\texttt{email} \\
+\And
+Coauthor \\
+Affiliation \\
+Address \\
+\texttt{email} \\
+(if needed)\\
+}
 
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
 
-\setlength{\marginparwidth}{0.6in}
+\setlength{\marginparwidth}{1in}
 \input{include/commenting.tex}
 
 %% For submission, make all render blank.
@@ -111,58 +93,42 @@
 %\renewcommand{\fPROBLEM}[1]{}
 %\renewcommand{\NA}[1]{#1}  % Note, NA's pass through!
 
-
-% The \icmltitle you define below is probably too long as a header.
-% Therefore, a short form for the running title is supplied here:
-\icmltitlerunning{Using kernel two sample tests for statistical-model checking}
-
 \begin{document} 
 
-\twocolumn[
-\icmltitle{Using kernel two sample tests for statistical-model checking}
-
-% It is OKAY to include author information, even for blind
-% submissions: the style file will automatically remove it for you
-% unless you've provided the [accepted] option to the icml2014
-% package.
-\icmlauthor{Your Name}{email@yourdomain.edu}
-\icmladdress{Your Fantastic Institute,
-            314159 Pi St., Palo Alto, CA 94306 USA}
-\icmlauthor{Your CoAuthor's Name}{email@coauthordomain.edu}
-\icmladdress{Their Fantastic Institute,
-            27182 Exp St., Toronto, ON M6H 2T1 CANADA}
-
-% You may provide any keywords that you 
-% find helpful for describing your paper; these are used to populate 
-% the "keywords" metadata in the PDF but will not be shown in the document
-\icmlkeywords{}
-
-\vskip 0.3in
-]
+\maketitle
 
 \begin{abstract} 
-We invetigate the utility of the maximum mean discrepancy two sample test as a means of statistical model assessment.
-We apply it to several unsupervised learning models and investigate their inaccuracies.
+We investigate the utility of the maximum mean discrepancy (MMD) two sample test as a means of statistical-model checking.
+MMD two sample tests not only provide a means for hypothesis testing, but also show where any discrepancies are most extreme via the witness function.
+We demonstrate on synthetic data that the witness function can be used to identify where a statistical model most misrepresents the data it was trained on.
+We then demonstrate the procedure on real data using restricted Boltzmann machines, deep belief networks and [something else] and demonstrate the ways in which these models are failing to capture the properties of the data they are trained on.
 \end{abstract} 
 
 \allowdisplaybreaks
 
 \section{Introduction}
 
-\TBD{Model checking or model assessment? Gelman et amici use 'checking'}
+Model checking, assessment or criticism is an important part of a complete statistical analysis.
+For example, when one fits a linear model to a data set via least squares a complete analysis includes computing Cook's distances (\NA{cite}) to identify influential points and plotting residuals against fitted values to identify non-linearity or heteroscedasticity.
+Similarly, modern approaches to Bayesian modelling (\NA{cite BDA}) view model checking as in important components of an iterative cycle of model construction, inference and checking.
 
-Model assessment or checking is an inevitable component of a complete data analysis.
-It is going to be especially important as probabilistic programming takes off and people build complicated custom models.
+As statistical models become more complex and diverse in response to the challenges of modern data sets there will be an increasing need for a greater range of model checking procedures that are either automatic or generally applicable.
+This will be especially true as automatic modelling methods (\NA{cite Roger, us and some automatic data mining if I can find it}) and probabilistic programming (\NA{cite}) mature.
 
-Usually one chooses statistics of interest and evaluates the extent to which the beliefs of the model and realised value on the data align.
-But how does one generate these statistics?
-Ideally one chooses statistics that are of practical importance.
+Model checking typically proceeds by choosing a statistic of interest, computing it on data and comparing this to a suitable null distribution or posterior predictive distribution.
+Ideally these statistics are chosen to assess the utility of the statistical model under consideration but this can require considerable expertise on the part of the modeller.
 
-However, it would also be interesting to find the statistic that most strongly indicates a discrepancy; enter MMD.
+We propose an alternative to this approach by using a statistic defined as a supremum over a broad class of measures of discrepancy between two distributions, the maximum mean discrepancy (MMD)  (\NA{cite}).
+The advantage of this approach is that the discrepancy measure attaining the supremum automatically identifies regions of the data which are least well represented by the statistical model fit to the data.
 
-Call to arms about a lack of model checking in machine learning literature - find some quotes where new models come from speculations about the form of data.
+We demonstrate this approach to model checking on synthetic data sets and two real world examples.
+\NA{Some sort of call to arms about a lack of model checking in the machine learning literature}.
 
-\section{Background: Model checking via posterior predictive $p$-values}
+\section{Background: Model checking and maximum mean discrepancy}
+
+In this section we relate poster predictive $p$-values with maximum mean discrepancy (MMD)  statistics.
+
+\subsection{Posterior predictive $p$-values}
 
 Suppose we observe data $Y = (y_i)_{i=1\ldots n}$ and we attempt to fit a model $M$ with parameters $\theta$.
 After performing a statistical analysis we will have either an estimate, $\hat\theta$, or an (approximate) posterior, $p(\theta|M,Y)$, for the parameters.
@@ -172,7 +138,7 @@ The posterior predictive distribution over replicate data $Y^\textrm{rep}$ is gi
 p(Y^\textrm{rep}|M,Y) = \int p(Y^\textrm{rep}|M,\theta)p(\theta|M,Y)\mathrm{d}\theta
 \end{equation}
 where the posterior distribution for $\theta$ is replaced by a delta function in a frequentist analysis.
-In a Bayesian context this represents the belief over potential future data sets generated by the same mechanism as the first data set.
+In a Bayesian context this represents the belief over potential future data sets generated by the same mechanism as the first data set after having observed the first data set.
 
 Posterior predictive $p$-values (cite Rubin 1984, Meng 1994, Gelman 1996) are defined by\fTBD{check notation is up to date}
 \begin{equation}
@@ -182,23 +148,60 @@ where $T$ is a statistic \ie a function of the data.
 This is the posterior probability that a potential future data set will be more extreme than the observed data as measured by the statistic $T$.
 Small $p$-values indicate that the observed data is extreme compared to the posterior predictive distribution, indicating a lack of fit between the posterior distribution and the data.
 
-\TBD{Alternatively it can be related to an estimate of utility of a model for predicting a certain quantity - I think - at least some Swedes claim this.}
+\subsection{Posterior predictive $p$-values for exchangeable data and their connection with mean discrepancy}
 
-For example, if $T$ is the sample skewness\fTBD{Worth including? Actually show a synthetic data example?}
+We now consider the situation where we can assume that our data $Y$ are $\iid$ samples from some distribution.
+This is appropriate whenever we are invariant to the order of our data \ie when the data is exchangeable (\NA{cite deFinetti, Savage possibly and Dan + Peter}).
+
+To demonstrate the connection between posterior predictive $p$-values and maximum mean discrepancy measures we rewrite the $p$-value as an expectation
 \begin{equation}
-T(Y) = \frac{\frac{1}{n}\sum (y_i-\bar y)^3}{\big(\frac{1}{n}\sum (y_i- \bar y)^2\big)^{3/2}}
+\mathbb{E}(\mathbb{I}[T(Y^\textrm{rep}) - T(Y) > 0]).
 \end{equation}
-then a small $p$-value based on this statistic would indicate that the data was more positively skewed than expected by the posterior predictive distribution.
-This would happen if \eg one tried to model positively skewed data using a symmetric distribution.
+We now remove the indicator function from this expression
+\begin{equation}
+  \mathbb{E}(T(Y^\textrm{rep})) - T(Y)
+\end{equation}
+yielding a measure of how the posterior mean of the statistic compares to the statistic evaluated on the data.
+If we assume that our statistic $T$ is of the form $T(Y) = \sum t(y_i)$ (this includes \eg all empirical moments) then
+\begin{equation}
+\mathbb{E}(T(Y^\textrm{rep})) - T(Y) = \sum \mathbb{E}(t(y_i^\textrm{rep})) - \sum t(y_i) = \mathbb{E}(t(y^\textrm{rep})) - \mathbb{E}(t(y))
+\end{equation}
+where $y$ and $y^\textrm{rep}$ are distributed according to the empirical distribution of the data and the posterior-predictive distribution over single data points respectively.
+This quantity is called a mean discrepancy between the distribution of $y$ and $y^\textrm{rep}$.
 
-In practice, statistics are chosen to measure aspects of the data that are of relevance to the analysis being performed.
-Whilst there are numerous examples (cite some applied papers) of sensible choices for standard models, there is little work on exploratory model assessment.
+In the practical application of posterior-predictive $p$-values, statistics are chosen to measure aspects of the data that are of relevance to the analysis being performed.
+Whilst there are numerous examples (\NA{cite some applied papers}) of sensible choices for standard models, there is little work on exploratory model checking.
+The benefit of considering mean discrepancies is that we can analytically maximise over a large space of different statistics.
 
-\section{Background: Maximum mean discrepancy}
+\TBD{
+Can we relate any of this to utility theory.
+Using scoring rules to justify the use of the posterior predictive.
+There are potentially relations to scoring rules.
+}
+
+\subsubsection{Alternative maths}
+
+In this setting it is natural to replace the posterior predictive distribution over data sets with the posterior predictive distribution over data points
+\begin{equation}
+p(y^\textrm{rep}|M,Y) = \int p(y^\textrm{rep}|M,\theta)p(\theta|M,Y)\mathrm{d}\theta.
+\end{equation}
+We then define posterior predictive $p$-values as
+\begin{equation}
+  p_\textrm{x}(Y) = \mathbb{P}_{y\sim \hat{Y}}(T(y^\textrm{rep})\geq T(y)|M,Y) = \mathbb{E}_{y\sim \hat{Y}}(\mathbb{I}[T(y^\textrm{rep}) - T(y) > 0])
+\end{equation}
+where $\hat{Y}$ if the empirical distribution of the data.
+This is a measure of how extreme the data is compared to the posterior predictive distribution over data points.
+If we remove the indicator function in the above equation we get
+\begin{equation}
+  \mathbb{E}(T(y^\textrm{rep})) - \mathbb{E}(T(y))
+\end{equation}
+which measures the mean discrepancy between the posterior predictive distribution and the data as measured by the statistic $T$.
+
+\subsection{Maximum mean discrepancy}
 
 Consider the two sample problem \ie given samples $X = (x_i)_{i=1\ldots m}$ and $Y = (y_i)_{i=1\ldots n}$ drawn \iid from distributions $p$ and $q$ respectively, can we determine if $p \neq q$?
 
-This can be answered by considering maximum mean discrepancy (MMD) (cite Gretton) statistics (also called integral probability metrics by Mueller 1997)
+An answer to this problem is to consider maximum mean discrepancy (MMD) (cite Gretton) statistics (also called integral probability metrics by Mueller 1997)
 \begin{equation}
 \textrm{MMD}(\mathcal{F},p,q) = \sup_{f \in \mathcal{F}}(\mathbb{E}_{x\sim p}[f(x)] - \mathbb{E}_{y\sim q}[f(y)])
 \end{equation}
@@ -211,17 +214,23 @@ f(x) = \mathbb{E}_{x'\sim p}[k(x,x')] - \mathbb{E}_{x'\sim q}[k(x,x')]
 \end{equation}
 where $k$ is the kernel of the RKHS.
 Consequently the MMD can be expressed without the supremum as
-\begin{eqnarray}
-\textrm{MMD}^2(\mathcal{F},p,q) & = & \phantom{-2}\mathbb{E}_{x,x'\sim p}[k(x,x')] \nonumber\\
-&& - 2\mathbb{E}_{x\sim p,y\sim p}[k(x,y)] \nonumber\\
-&& + \phantom{2}\mathbb{E}_{y,y'\sim q}[k(y,y')]
-\end{eqnarray}
-for which one can form a simple biased estimate\fTBD{Maybe cut equation given length}
-\begin{eqnarray}
-\textrm{MMD}_b^2(\mathcal{F},X,Y) & = & \phantom{+}\frac{1}{m^2}\sum_{i,j=1}^{m}k(x_i,x_j) \nonumber\\
-&& - \frac{2}{mn}\sum_{i,j=1}^{m,n}k(x_i,y_j) \nonumber\\
-&& + \frac{1}{n^2}\sum_{i,j=1}^{n}k(y_i,y_j)
-\end{eqnarray}
+%\begin{eqnarray}
+%\textrm{MMD}^2(\mathcal{F},p,q) & = & \phantom{-2}\mathbb{E}_{x,x'\sim p}[k(x,x')] \nonumber\\
+%&& - 2\mathbb{E}_{x\sim p,y\sim p}[k(x,y)] \nonumber\\
+%&& + \phantom{2}\mathbb{E}_{y,y'\sim q}[k(y,y')]
+%\end{eqnarray}
+\begin{equation}
+  \textrm{MMD}^2(\mathcal{F},p,q) = \mathbb{E}_{x,x'\sim p}[k(x,x')] + 2\mathbb{E}_{x\sim p,y\sim p}[k(x,y)] + \mathbb{E}_{y,y'\sim q}[k(y,y')]
+\end{equation}
+for which one can form a simple biased estimate
+%\begin{eqnarray}
+%\textrm{MMD}_b^2(\mathcal{F},X,Y) & = & \phantom{+}\frac{1}{m^2}\sum_{i,j=1}^{m}k(x_i,x_j) \nonumber\\
+%&& - \frac{2}{mn}\sum_{i,j=1}^{m,n}k(x_i,y_j) \nonumber\\
+%&& + \frac{1}{n^2}\sum_{i,j=1}^{n}k(y_i,y_j)
+%\end{eqnarray}
+\begin{equation}
+  \textrm{MMD}_b^2(\mathcal{F},X,Y) = \frac{1}{m^2}\sum_{i,j=1}^{m}k(x_i,x_j) - \frac{2}{mn}\sum_{i,j=1}^{m,n}k(x_i,y_j) + \frac{1}{n^2}\sum_{i,j=1}^{n}k(y_i,y_j)
+\end{equation}
 with which one can construct statistical tests of whether or not $p=q$.
 
 The witness function can be estimated from finite samples similarly
@@ -231,44 +240,42 @@ The witness function can be estimated from finite samples similarly
 
 From this final equation we can see that the empirical witness function is the difference of two kernel density estimates (cite Nadaraya and Watson probably).
 
-\section{Kernel MMD for posterior predictive checking}
+\section{MMD for posterior predictive checking}
 
-Posterior predictive $p$-values ask the question 'Is the data extreme compared to my posterior as measured by a particular statistic?'.
-Instead we ask the question 'Is it plausible that the data could have been generated by my posterior?'; we use kernel two sample tests to answer this question.
+In the previous section we demonstrated that posterior-predictive $p$-values are closely related to the mean discrepancy between the posterior-predictive distribution and empirical distribution of the data.
+We therefore propose using kernel MMD two-sample tests as a means of statistical-model checking.
 
-We phrase this as a two sample problem.
-Suppose we have samples $\theta_i \dist p(\theta|M,Y)$ from our (approximate) posterior distribution, either from MCMC or sampling from a fitted distribution.
-We then generate replicate data
-\begin{equation}
-Y^\textrm{rep} = (y^\textrm{rep}_i \dist p(y^\textrm{rep}_i|M,\theta_i))_{i=1\ldots m}
-\end{equation}
-from the predictive distribution for each sample of the parameters.
+The appeal of using kernel two sample tests is that we get a $p$-value determining statistical significance of observed discrepancies, but we also get an estimate of the witness function, which shows us where the two distributions differ most, allowing a more exploratory form of model checking.
 
-We then ask whether or not $Y^\textrm{rep}$ and $Y$ come from the same distribution using a kernel MMD test.
-The appeal of using kernel two sample tests is that we get a $p$-value determining statistical significance, but we also get an estimate of the witness function, which shows us where the two distributions differ most, allowing a more exploratory form of model checking.
-
-In the rest of this manuscript we demonstrate how kernel MMD tests can be used to check fitted models and how the witness function can be used to identify any discrepancies between a model and data.
+As a reminder, posterior predictive $p$-values ask the question `Is the data extreme compared to my posterior as measured by a particular statistic?'.
+Instead we are asking the question `Is it plausible that the data could have been generated by my posterior?'.
 
 \subsection{Kernel choice}
 
-Normal stuff that RBF is a common default.
-Matern might be better in higher dimensions.
-Fancier stuff needed for \eg string, graphs.
+The nature of the two sample test defined by the kernel MMD depends on the choice of the kernel.
+In this paper we use the radial basis function kernel, also known as the squared exponential or exponentiated quadratic (\NA{cite standard things}).
+\NA{Say what this kernel encodes for and assumes and mention that alternatives exist}.
 
+\NA{
 Lengthscale also important, discuss the median distance heuristic and other possible methods (and relation of MMD to average discrepancy under GP prior).
+Also discuss the idea of using the lengthscale that results in the best kernel density estimates.
+}
 
 \subsection{Estimation of null distribution}
 
+\NA{
 We use the bootstrap.
 But fancier methods exist when one has lots of data (cite the latest machinery).
+}
 
 \paragraph{Noto bene}
 
 \TBD{
 Model checking should not replace model comparison and averaging and posterior predictive $p$-values determine \emph{statistical} significance, not \emph{practical} significance.
+Maybe this can become a larger philosophy section.
 }
 
-\section{Toy examples}
+\section{Examples on synthetic data}
 
 \subsection{Newcomb's speed of light data}
 
@@ -280,11 +287,15 @@ We consider fitting a normal distribution to this data by maximum likelihood\foo
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.98\columnwidth]{figures/newcomb_hist}
+\includegraphics[width=0.32\columnwidth]{figures/newcomb_hist}
+\includegraphics[width=0.32\columnwidth]{figures/newcomb_witness_1}
+\includegraphics[width=0.32\columnwidth]{figures/newcomb_witness_2}
 \caption{
-Histogram of Simon Newcomb's speed of light measurements.
+Left: Histogram of Simon Newcomb's speed of light measurements.
+Middle: Histogram of Simon Newcomb's speed of light measurements together with density estimate (red solid line) and MMD witness function (green dashed line).
+Right: Histogram of Simon Newcomb's speed of light measurements together with improved density estimate (red solid line) and MMD witness function (green dashed line).
 }
-\label{fig:newcomb_hist}
+\label{fig:newcomb}
 \end{figure}
 
 We sampled 1000 points from the fitted distribution and performed a kernel two sample test with 1000 bootstrap replications.
@@ -292,15 +303,6 @@ The estimated $p$-value of the test was less than 0.001 \ie a clear disparity be
 The data, fitted density estimate (the normal distribution) and witness function are shown in figure~\ref{fig:newcomb_witness_1}.
 The witness function has a trough at the centre of the data and peaks either side.
 This indicates that the fitted model has placed too little mass in its centre and too much mass outside its centre; this indicates that the data is more leptokurtic or has smaller variance than the fitted model.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/newcomb_witness_1}
-\caption{
-Histogram of Simon Newcomb's speed of light measurements together with density estimate (red solid line) and MMD witness function (green dashed line).
-}
-\label{fig:newcomb_witness_1}
-\end{figure}
 
 This suggests that we should modify our model by either allowing for heavy tails or explicitly modelling the possibility of outliers (which could have resulted in the variance being over-estimated).
 \TBD{
@@ -310,15 +312,6 @@ Model check says ignoring the outliers and fitting a Gaussian is ok - $p$-value 
 New witness function is finding smaller scale discrepancies - but model check says it's ok.
 The witness function is kinda testing for asymmetry - maybe not, hard to tell.
 }
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/newcomb_witness_2}
-\caption{
-Histogram of Simon Newcomb's speed of light measurements together with improved density estimate (red solid line) and MMD witness function (green dashed line).
-}
-\label{fig:newcomb_witness_1}
-\end{figure}
 
 \paragraph{Noto bene}
 \TBD{
@@ -615,77 +608,6 @@ To test that this was not just a poorly trained single RBM, we trained 1500 RBMs
 The estimated $p$-value was 0.005.
 We show the over/under represented images in figure~\ref{fig:many_rbm_over_under}.
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/many_rbm_over_under}
-\caption{
-Over (top row) and under (bottom row) represented images by many RBMs.
-}
-\label{fig:many_rbm_over_under}
-\end{figure}
-
-Again, a rounded number is over-represented whilst slanted digits are under-represented.
-\TBD{
-To better probe the round / slanty hypothesis further lets look at conditional distributions.
-Figure~\ref{fig:many_rbm_over_under_digit} shows that the RBMs are mislabeling on average - the digits 2 and 5 are close.
-}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/many_rbm_over_under_digit}
-\caption{
-Over (top row) and under (bottom row) represented images by many RBMs - conditional distributions.
-}
-\label{fig:many_rbm_over_under_digit}
-\end{figure}
-
-\TBD{
-Now separating by PCA in figure~\ref{fig:many_rbm_over_under_pca}.
-It is still mostly curvy against slanty.
-}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/many_rbm_over_under_pca}
-\caption{
-Over (top row) and under (bottom row) represented images by many RBMs - PCA spread.
-}
-\label{fig:many_rbm_over_under_pca}
-\end{figure}
-
-\TBD{
-So what is going wrong?
-It is probably something to do with round numbers using similar features and therefore these features get better developed faster?
-}
-
-\subsubsection{DBNs have nightmares about ghosts}
-
-\TBD{Experimentation with fine tuning after pre-training work in progress}
-
-\TBD{
-Trained one DBN with architecture $(784)\leftarrow(500)\leftarrow(500)\leftrightarrow(2000)\leftrightarrow(10)$.
-Again get a tiny $p$-value.
-Here are some pictures.
-}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/dbn_over_under}
-\caption{
-Over (top row) and under (bottom row) represented images by DBN.
-}
-\label{fig:dbn_over_under}
-\end{figure}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/dbn_over_under_digit}
-\caption{
-Over (top row) and under (bottom row) represented images by DBN - conditional distributions.
-}
-\label{fig:dbn_over_under_digit}
-\end{figure}
-
 \TBD{
 The over-represented images are somewhat 'ghosted' - \ie it looks like multiple images on top of each other.
 In contrast therefore the under-represented images are fat and bold.
@@ -701,7 +623,14 @@ I am currently trying to generatively fine tune the dbn using a CD algorithm pro
 
 Look http://www.sequencememoizer.com/ and http://www.gatsby.ucl.ac.uk/~ucabjga/code.html
 
-\section{Discussion}
+\subsection{Related work and discussion of model checking}
+
+We may base our work on model checks but they are not accepted by all.
+
+Philosophy of model checking.
+If one has a strongly informative prior and weakly informative data then we do not expect our posterior to always look like the data - this criticism applies equally to posterior predictive checks.
+
+\section{Conclusions and future work}
 
 Do you know what your model is up to right now?
 Maybe you should check it is ok.

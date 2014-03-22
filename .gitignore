@@ -66,3 +66,5 @@ data/mnist/many-rbm-samples/temp/
 data/mnist/dbn-500-500-2000/dbn-500-500-200.pkl
 src/samples.pdf
 src/temp/
+
+papers/conference/format/nips2014.pdf
