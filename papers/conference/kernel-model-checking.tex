@@ -99,7 +99,7 @@ Address \\
 
 \begin{abstract} 
 We investigate the utility of the maximum mean discrepancy (MMD) two sample test as a means of statistical-model checking.
-MMD two sample tests not only provide a means for hypothesis testing, but also show where any discrepancies are most extreme via their witness function.
+MMD two sample tests not only provide a hypothesis test, but also show where any discrepancies are most extreme via their witness function.
 We demonstrate on synthetic data that the witness function can be used to identify where a statistical model most misrepresents the data it was trained on.
 We then demonstrate the procedure on real data using restricted Boltzmann machines, deep belief networks and [something else] and demonstrate the ways in which these models are failing to capture the properties of the data they are trained on.
 \end{abstract} 
@@ -110,7 +110,7 @@ We then demonstrate the procedure on real data using restricted Boltzmann machin
 
 Model checking, assessment or criticism is an important part of a complete statistical analysis.
 For example, when one fits a linear model to a data set via least squares a complete analysis includes computing Cook's distances (\NA{cite}) to identify influential points and plotting residuals against fitted values to identify non-linearity or heteroscedasticity.
-Similarly, modern approaches to Bayesian modelling (\NA{cite BDA}) view model checking as in important components of an iterative cycle of model construction, inference and checking.
+Similarly, modern approaches to Bayesian modelling (\NA{cite BDA}) view model checking as in important component of an iterative cycle of model construction, inference and checking.
 
 As statistical models become more complex and diverse in response to the challenges of modern data sets there will be an increasing need for a greater range of model checking procedures that are either automatic or generally applicable.
 This will be especially true as automatic modelling methods (\NA{cite Roger, us and some automatic data mining if I can find it}) and probabilistic programming (\NA{cite}) mature.
@@ -121,7 +121,7 @@ Ideally these statistics are chosen to assess the utility of the statistical mod
 We propose an alternative to this approach by using a statistic defined as a supremum over a broad class of measures of discrepancy between two distributions, the maximum mean discrepancy (MMD)  (\NA{cite}).
 The advantage of this approach is that the discrepancy measure attaining the supremum automatically identifies regions of the data which are least well represented by the statistical model fit to the data.
 
-We demonstrate this approach to model checking on synthetic data sets and two real world examples.
+We demonstrate this approach to model checking on toy data sets and two real world examples.
 \NA{Some sort of call to arms about a lack of model checking in the machine learning literature}.
 
 \section{Background: Model checking and maximum mean discrepancy}
@@ -238,16 +238,16 @@ The witness function can be estimated from finite samples similarly
 \end{equation}
 
 From this final equation we can see that the empirical witness function is the difference of two kernel density estimates (cite Nadaraya and Watson probably).
-\TBD{Say more about this for interpretability.}
+This means that we can interpret the witness function as showing where the estimated densities of $p$ and $q$ are most different.
 
 \section{MMD for posterior predictive checking}
 
 In the previous section we demonstrated that posterior-predictive $p$-values are related to the mean discrepancy between the posterior-predictive distribution and empirical distribution of the data.
-We therefore propose using kernel MMD two-sample tests as a means of statistical-model checking.
+We therefore propose using kernel MMD two-sample tests as an alternative means of statistical-model checking.
 
-The appeal of using kernel two sample tests is that we get a $p$-value determining statistical significance of observed discrepancies, but we also get an estimate of the witness function, which shows us where the two distributions differ most, allowing a more exploratory form of model checking.
+The appeal of using kernel two sample tests is that we not only get a $p$-value determining statistical significance of observed discrepancies, but we also get an estimate of the witness function, which shows us where the two distributions differ most, allowing a more exploratory form of model checking.
 
-To summarise the difference of approaches, the posterior predictive $p$-values ask the question `Is the data extreme compared to my posterior as measured by a particular statistic?'.
+To summarise the difference of approaches, posterior predictive $p$-values ask the question `Is the data extreme compared to my posterior as measured by a particular statistic?'.
 Instead we are asking the question `Is it plausible that the data could have been generated by my posterior?'.
 \NA{We discuss the philosophy behind asking these questions in a later section.}
 
@@ -269,14 +269,7 @@ We use the bootstrap.
 But fancier methods exist when one has lots of data (cite the latest machinery).
 }
 
-\paragraph{Noto bene}
-
-\TBD{
-Model checking should not replace model comparison and averaging and posterior predictive $p$-values determine \emph{statistical} significance, not \emph{practical} significance.
-Maybe this can become a larger philosophy section.
-}
-
-\section{Examples on synthetic data}
+\section{Examples on toy data}
 
 \subsection{Newcomb's speed of light data}
 
@@ -355,6 +348,7 @@ In sum, the data is a mixture of Gaussians and a $t$-distribution.
 
 We then fit a mixture of Gaussians with 5 centres to the data and then generated samples from the fitted distribution in order to perform an MMD two sample test.
 To ensure that the witness function can be safely interpreted as the difference of two density estimates we reduced the dimensionality of the data using principal component analysis (PCA), selecting the first two principal components.
+To ensure that the MMD test remains well calibrated we include the PCA dimensionality reduction within the bootstrap estimation of the null distribution.
 The data and posterior predictive samples are plotted on the left of figure~\ref{fig:high_mog}.
 While we can see that one cluster is different from the rest, it is difficult to assess by eye if these distributions are different due in part to the difficulty of plotting two sets of samples on top of each other.
 
@@ -394,7 +388,7 @@ Subsequently, as well as computing estimates of marginal likelihoods and testing
 When trained on the MNIST handwritten digit data, the samples certainly look like digits, but it is hard to detect any systematic anomalies purely by visual inspection.
 We now use the kernel two-sample test to investigate how faithfully RBMs and DBNs can capture the probability distribution over handwritten digits.
 
-\subsubsection{RBMs something something something}
+\subsubsection{RBMs mistake the identity of digits}
 
 We trained an RBM with architecture $(784)\leftrightarrow(500)\leftrightarrow(10)$\footnotemark~using 15 epochs of persistent contrastive divergence PCD-15 (\NA{cite something}), a batch size of [something] and a learning rate of 0.1 (\ie we used the same settings as the code available at \NA{cite deep learning tutorial}).
 \footnotetext{That is, 784 input pixels and 10 indicators of the class label are connected to 500 hidden neurons.}
@@ -411,221 +405,77 @@ A priori the answer to this question is almost certainly no, but it is not immed
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.48\columnwidth]{figures/rbm_samples}
+\includegraphics[width=0.48\columnwidth]{figures/rbm_witness_troughs}
+\\
+\includegraphics[width=0.48\columnwidth]{figures/many_rbm_cond_witness_troughs}
+\includegraphics[width=0.48\columnwidth]{figures/dbn_ft_cond_witness_troughs}
+\\
+\includegraphics[width=0.48\columnwidth]{figures/many_rbm_cond_witness_peaks}
+\includegraphics[width=0.48\columnwidth]{figures/dbn_ft_cond_witness_peaks}
 \caption{
 Top left: Random samples from an RBM.
-Top right: RBM.
-Bottom left: Many RBM.
-Bottom right: DBN.
+Top right: Troughs of the witness function for the RBM (digits that are over-represented by the model).
+Middle left: Troughs of the witness function for samples from several RBMs.
+Middle right: Troughs of the witness function for the DBN.
+Bottom left: Peaks (digits that are under-represented by the model) of the witness function for samples from several RBMs.
+Bottom right: Peaks of the witness function for the DBN.
 }
 \label{fig:digits}
 \end{figure}
 
-PCA (factor analysis too slow) shows clear discrepancy between fitted and true distribution.
-Fancy stats not really required.
+Since we generated digits from the class conditional distributions we compare each class separately.
+Rather than show plots of the witness function for each digit we summarise the witness function by examples of digits closest to the peaks and troughs of the witness function (the witness function estimate is differentiable so we can easily find the peaks and troughs by gradient based optimisation).
+We apply the MMD two-sample test to each class conditional distribution, using PCA to reduce to 2 dimensions and selecting the lengthscale via cross validation as in the previous example.
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/rbm_pca}
-\caption{
-A caption.
+The top right box of figure~\ref{fig:digits} shows the digits closest to the two most extreme troughs\footnotemark~of the witness function for each class; the troughs indicate where the fitted distribution over-represents the distribution of true digits.
+\footnotetext{
+The exact ordering of the peaks and troughs is as follows.
+We partition the space by grouping samples where the witness function has the same sign and gradient based optimisation of the witness function starting from each sample would reach the same peak or trough.
+The contribution of the MMD from each of these groups is used to order the peaks and troughs.
 }
-\label{fig:rbm_pca}
-\end{figure}
+The estimated $p$-value for all tests was less than 0.001.
+The most obvious error with these digits is that the first 2s and 3s look quite similar.
 
-But we can summarise the difference using the peaks of the witness function, ordering them by their contribution to the MMD (left to right).
-On the top we have 29\%, 23\%, 11\%, 6\%, 3\%\ldots and on the bottom we have 5\%, 2\%, 2\%, 2\%, 2\%.
+To test that this was not just a poorly trained single RBM, we trained 1500 RBMs (with differently initialised pseudo random number generators) and generated one sample from each and performed the same tests.
+The estimated $p$-values were [something - significant] and the summaries of the troughs of the witness function are shown in the middle left box of figure~\ref{fig:digits}.
+On the first toy data example we observed that the MMD statistic does not highlight outliers and therefore we can conclude that RBMs are making consistent mistakes \eg generating a 0 from the 7 distribution or a 5 when it should have been generating an 8.\fTBD{Do we want to try to say more? Speculate why?}
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/rbm_witness_peaks}
-\caption{
-A caption.
-}
-\label{fig:rbm_witness_peaks}
-\end{figure}
+\subsubsection{DBNs have nightmares about ghosts}
 
-These percentages indicate that the MMD is mostly coming from dense regions of the fantasy digits whearas the true distribution is more spread out.
+We know test the effectiveness of deep learning to represent the distribution of MNIST digits.
+In particular, we fit a DBN with architecture $(784)\leftarrow(500)\leftarrow(500)\leftrightarrow(2000)\leftrightarrow(10)$ using RBM pre-training and generative fine tuning algorithm proposed in (\NA{cite Geoff again}).
+Performing the same tests with 3000 samples results in estimated $p$-values of [some values, not all significant] and summaries of the witness function troughs are shown in the middle right box of figure~\ref{fig:digits}.
 
-Now we look at samples from many RBMs.
+The witness function no longer shows any class label mistakes (except perhaps for the digit 1 which looks very peculiar) but the 2, 3, 7 and 8 appear `ghosted' \ie the digits fade in and out.
+For comparison the bottom right box of figure~\ref{fig:digits} shows digits closest to the peaks of the witness function; there is no trace of ghosting.
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/many_rbm_pca}
-\caption{
-A caption.
-}
-\label{fig:many_rbm_pca}
-\end{figure}
-
-This is better but by eye some discrepancies are still visible and the MMD is still significant.
-Witness function shows the density discrepancies more clearly.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/many_rbm_witness}
-\caption{
-A caption.
-}
-\label{fig:many_rbm_witness}
-\end{figure}
-
-Now the summary of peaks and troughs.
-20\%, 14\%, 6\%, 4\%, 3\% and 16\%, 8\%, 7\%, 5\%, 3\%.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/many_rbm_witness_peaks}
-\caption{
-A caption.
-}
-\label{fig:many_rbm_witness_peaks}
-\end{figure}
-
-It is a bit more balanced.
-Hard to understand exactly what is happening / what these digits mean.
-
-Actually it prefers zero for some reason, looking at peaks and troughs of conditional distributions we get.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/many_rbm_cond}
-\caption{
-A caption.
-}
-\label{fig:many_rbm_cond}
-\end{figure}
-
-That is, it really likes zero!
-
-DBN PCA.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/dbn_pca}
-\caption{
-A caption.
-}
-\label{fig:dbn_pca}
-\end{figure}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/dbn_witness_peaks}
-\caption{
-A caption.
-}
-\label{fig:dbn_witness_peaks}
-\end{figure}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/dbn_cond}
-\caption{
-A caption.
-}
-\label{fig:dbn_cond}
-\end{figure}
-
-DBN with fine tuning.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/dbn_ft_pca}
-\caption{
-A caption.
-}
-\label{fig:dbn_ft_pca}
-\end{figure}
-
-Clearly it is getting closer to being a good model.
-But MMD still detects a significant difference.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/dbn_ft_witness_peaks}
-\caption{
-A caption.
-}
-\label{fig:dbn_ft_witness_peaks}
-\end{figure}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/dbn_ft_cond}
-\caption{
-A caption.
-}
-\label{fig:dbn_ft_cond}
-\end{figure}
-
-Looks like it is suffering from ghosting.
-
-But if we go into 3 dimensions our conclusions might change.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/dbn_ft_3_witness_peaks}
-\caption{
-A caption.
-}
-\label{fig:dbn_ft_witness_peaks}
-\end{figure}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/dbn_ft_3_cond}
-\caption{
-A caption.
-}
-\label{fig:dbn_ft_cond}
-\end{figure}
-
-In 5 dimensions we get way too many peaks and troughs to be useful.
-
-But a consistent thing is that it likes the `1' that it sometimes thinks is a `4'.
-This looks like the zero thing but less extreme.
-
-\TBD{OLD MATERIAL BELOW}
-
-Performing a kernel two sample test using the median length scale heuristic resulted in an estimated $p$-value less than 0.001 \ie a clear discrepancy between the model and the data.
-We can investigate this discrepancy by examining the images at which the witness function is extremised.
-The most over/under represented images are displayed in figure~\ref{fig:rbm_over_under}.
-The RBM appears to over-represent rounded 2/3/9 whilst it under-represents slanted 3, 5 and 8.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.98\columnwidth]{figures/rbm_over_under}
-\caption{
-Over (top row) and under (bottom row) represented images by the RBM.
-}
-\label{fig:rbm_over_under}
-\end{figure}
-
-To test that this was not just a poorly trained single RBM, we trained 1500 RBMs and generated one sample from each and performed the same tests.
-The estimated $p$-value was 0.005.
-We show the over/under represented images in figure~\ref{fig:many_rbm_over_under}.
+Returning to the RBMs, we do not see ghosting, but the digits nearest the witness function troughs are somewhat blurred (see bottom left box for comparison with peaks).
+Assuming that the top level associative memory of the DBN also suffers from blurring, this will result in occasionally incorrect neurons in the second hidden layer on the DBN.
+These incorrect bits will then propagate down the DBN resulting in spurious features in several visible neurons.
 
 \TBD{
-The over-represented images are somewhat 'ghosted' - \ie it looks like multiple images on top of each other.
-In contrast therefore the under-represented images are fat and bold.
-This is prabably due to 'mistakes' in the sampling process in higher levels resulting in incorrect activations of several neurons in lower levels.
-Not entirely sure how to best probe this - to be discussed.
+Speculate on fixes.
+Thresholding of some sort?
+Different architectures to discourage mistakes from propagating?
 }
 
-\TBD{
-I am currently trying to generatively fine tune the dbn using a CD algorithm proposed by Geoff Hinton - need to have a very small learning rate - work in progress.
-}
+\subsection{Something about LDA}
 
-\subsection{Pitman-Yor processes say the darndest things}
+\TBD{Something about LDA}
 
-Look http://www.sequencememoizer.com/ and http://www.gatsby.ucl.ac.uk/~ucabjga/code.html
-
-\subsection{Related work and discussion of model checking}
+\section{Related work and discussion of model checking}
 
 We may base our work on model checks but they are not accepted by all.
 
 Philosophy of model checking.
 If one has a strongly informative prior and weakly informative data then we do not expect our posterior to always look like the data - this criticism applies equally to posterior predictive checks.
+
+\paragraph{Noto bene}
+
+\TBD{
+Model checking should not replace model comparison and averaging and posterior predictive $p$-values determine \emph{statistical} significance, not \emph{practical} significance.
+Maybe this can become a larger philosophy section.
+}
 
 \section{Conclusions and future work}
 
