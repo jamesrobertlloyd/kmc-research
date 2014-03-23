@@ -387,29 +387,37 @@ We mention this as a reminder that model checking cannot assess the `truth' of a
 
 \subsection{What exactly do neural networks dream about?}
 
-``To recognize shapes, first learn to generate images'' \cite{Hinton2007}.
-Restricted Boltzmann Machine (RBM) pretraining of neural networks was shown by \cite{Hinton2006} to learn a deep belief network (DBN) (cite) for the training data \ie a generative model.
-Subsequently, as well as computing estimates of marginal likelihood and testing errors, it became standard to demonstrate the effectiveness of a neural network by generating samples from the distribution it had learned\fTBD{cite things}.
+``To recognize shapes, first learn to generate images'' quoth Hinton \citep{Hinton2007}.
+Restricted Boltzmann Machine (RBM) pretraining of neural networks was shown by \cite{Hinton2006} to learn a deep belief network (DBN) (\NA{cite}) for the training data \ie a generative model.
+Subsequently, as well as computing estimates of marginal likelihoods and testing errors, it became standard to demonstrate the effectiveness of a neural network by generating samples from the distribution it had learned\fTBD{cite things}.
 
 When trained on the MNIST handwritten digit data, the samples certainly look like digits, but it is hard to detect any systematic anomalies purely by visual inspection.
 We now use the kernel two-sample test to investigate how faithfully RBMs and DBNs can capture the probability distribution over handwritten digits.
 
-\subsubsection{RBMs prefer rounded numbers}
+\subsubsection{RBMs something something something}
 
-We trained an RBM with architecture $(784)\leftrightarrow(500)\leftrightarrow(10)$ using 15 epochs of PCD-15, a batch size of (something) and a learning rate of 0.1 (\ie we used the same settings as the code available at (cite deep learning tutorial)).
-We generated 3000 independent samples from the learned generative model by initialising the network with a random training image and performing 1000 clamped gibbs updates (without clamping the label pixels, the generative distribution is biased towards certain digits) to generate each image (this is standard \eg \cite{Hinton2007}).
+We trained an RBM with architecture $(784)\leftrightarrow(500)\leftrightarrow(10)$\footnotemark~using 15 epochs of persistent contrastive divergence PCD-15 (\NA{cite something}), a batch size of [something] and a learning rate of 0.1 (\ie we used the same settings as the code available at \NA{cite deep learning tutorial}).
+\footnotetext{That is, 784 input pixels and 10 indicators of the class label are connected to 500 hidden neurons.}
+We generated 3000 independent samples from the learned generative model by initialising the network with a random training image and performing 1000 clamped gibbs updates (without clamping the label pixels, the generative distribution is heavily biased towards certain digits) to generate each image (as in \eg \cite{Hinton2007}).
 
-Figure~\ref{fig:rbm_samples} shows the first twenty random samples from this model.
-They look like digits, but has the true distribution over digits been faithfully captured?
+The top left of figure~\ref{fig:digits} shows the twenty random samples\footnotemark~from this model.
+\footnotetext{
+Specifically these are the activations of the pixel neurons before sampling sampling binary values.
+This is an attempt to be consistent with the grayscale input distribution of the images.
+Analogous discrepancies would be discovered if we had instead sampled binary pixel values.}
+They certainly look mostly like digits, but has the true distribution over digits been faithfully captured?
 A priori the answer to this question is almost certainly no, but it is not immediately obvious how the learned distribution will deviate from the true distribution.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.98\columnwidth]{figures/rbm_samples}
+\includegraphics[width=0.48\columnwidth]{figures/rbm_samples}
 \caption{
-Samples from an RBM (actually the mean activations).
+Top left: Random samples from an RBM.
+Top right: RBM.
+Bottom left: Many RBM.
+Bottom right: DBN.
 }
-\label{fig:rbm_samples}
+\label{fig:digits}
 \end{figure}
 
 PCA (factor analysis too slow) shows clear discrepancy between fitted and true distribution.
@@ -629,6 +637,6 @@ Can also apply to Geweke tests.
 Future - graphs, functions\ldots
 
 \bibliography{gpss, library}
-\bibliographystyle{format/icml2014}
+\bibliographystyle{unsrt}
 
 \end{document} 
