@@ -79,13 +79,36 @@ display(labels(i));
 %% Display many random fantasies
 
 rows = 2;
-cols = 15;
+cols = 10;
 raster = [];
 for row = 1:rows
     one_line = [];
     for col = 1:cols
         i = randi(num_images);
         one_line = [one_line, reshape(fantasies(i,:), 28, 28)'];
+    end
+    raster = [raster; one_line];
+end
+h = figure('Position', [300, 300, 000+size(raster,2), 000+size(raster,1)]);
+imagesc(-raster);
+colormap(bone);
+set(gca, 'YTick', []);
+set(gca, 'XTick', []);
+save2pdf( 'samples.pdf', h, 600, true );
+
+%% Display many random conditional fantasies
+
+init_rand(2);
+
+rows = 2;
+cols = 10;
+raster = [];
+for row = 1:rows
+    one_line = [];
+    for col = 1:cols
+        cond_fantasies = fantasies(labels==(col-1),:);
+        i = randi(size(cond_fantasies,1));
+        one_line = [one_line, reshape(cond_fantasies(i,:), 28, 28)'];
     end
     raster = [raster; one_line];
 end
