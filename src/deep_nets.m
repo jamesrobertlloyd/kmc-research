@@ -292,12 +292,12 @@ for digit = 0:9
 
     %% Do PCA MMD
 
-%     alpha = 0.05;
-%     params.shuff = 100;
-%     [testStat,thresh,params,p] = mmdTestBoot_pca_jl(X(X_labels==digit,:),...
-%                                                     Y(Y_labels==digit,:),...
-%                                                     alpha,params,d);
-%     display(p);
+    alpha = 0.05;
+    params.shuff = 100;
+    [testStat,thresh,params,p] = mmdTestBoot_pca_jl(X(X_labels==digit,:),...
+                                                    Y(Y_labels==digit,:),...
+                                                    alpha,params,d);
+    display(p);
     
     %% Compute witness function in 2d
 

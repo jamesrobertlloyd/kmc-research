@@ -81,9 +81,9 @@ for i=1:params.shuff
     MMDarr(i) = (1/m^2) * sum(sum(K)) - (2 / (m * n)) * sum(sum(KL)) + ...
                 (1/n^2) * sum(sum(L)); 
             
-    display(i);
-    p = sum(testStat < MMDarr) / length(MMDarr);
-    display(p);
+%     display(i);
+%     p = sum(testStat < MMDarr) / length(MMDarr);
+%     display(p);
 end 
 
 MMDarr = sort(MMDarr);
