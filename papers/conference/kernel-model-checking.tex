@@ -45,7 +45,7 @@
 \let\oldemptyset\emptyset
 \let\emptyset\varnothing
 
-\title{Using kernel two sample tests for\\statistical-model checking}
+\title{Exploratory statistical model checking\\using kernel two sample tests}
 
 \author{
 David S.~Hippocampus\thanks{ Use footnote for providing further information
@@ -109,11 +109,11 @@ We then demonstrate the procedure on real data using restricted Boltzmann machin
 \section{Introduction}
 
 Model checking, assessment or criticism is an important part of a complete statistical analysis.
-For example, when one fits a linear model to a data set via least squares a complete analysis includes computing Cook's distances (\NA{cite}) to identify influential points and plotting residuals against fitted values to identify non-linearity or heteroscedasticity.
+When one fits a linear model to a data set via least squares a complete analysis includes computing \eg Cook's distances (\NA{cite}) to identify influential points or plotting residuals against fitted values to identify non-linearity or heteroscedasticity.
 Similarly, modern approaches to Bayesian modelling (\NA{cite BDA}) view model checking as in important component of an iterative cycle of model construction, inference and checking.
 
 As statistical models become more complex and diverse in response to the challenges of modern data sets there will be an increasing need for a greater range of model checking procedures that are either automatic or generally applicable.
-This will be especially true as automatic modelling methods (\NA{cite Roger, us and some automatic data mining if I can find it}) and probabilistic programming (\NA{cite}) mature.
+This will be especially true as automatic modelling methods (\NA{cite Roger, us and perhaps AutoWEKA}) and probabilistic programming (\NA{cite STAN, Church and Venture?}) mature.
 
 Model checking typically proceeds by choosing a statistic of interest, computing it on data and comparing this to a suitable null distribution \eg posterior predictive distributions.
 Ideally these statistics are chosen to assess the utility of the statistical model under consideration but this can require considerable expertise on the part of the modeller.
@@ -153,7 +153,7 @@ Posterior predictive $p$-values ask whether or not the data $Y$ is extreme compa
 This can be interpreted as the $p$-value of a hypothesis test with a null hypothesis that ${Y \dist p(Y^\textrm{rep}|M,Y)}$ \ie that the data is a sample from the posterior predictive distribution.
 In the case of exchangeable data this null distribution can be replaced with ${(y_i)_{i=1\ldots n} \simiid p(y^\textrm{rep}|M,Y)}$ \ie that the data are \iid samples from the posterior predictive distribution over data points.
 
-Since our data are \iid samples from some distribution, we can test this null hypothesis using a two sample test (cite something generic).
+Since our data are \iid samples from some distribution, we can test this null hypothesis using a two sample test (\NA{cite something generic}).
 In particular, we have samples of data $(y_i)_{i=1\ldots n}$ and we can generate samples from the posterior predictive distribution $(y_i^\textrm{rep})_{i=1\ldots m}$ and then ask whether or not these samples could have been generated from the same distribution.
 Note that using samples from the posterior predictive distribution allows us to perform tests when we only have access to samples \eg after performing MCMC inference.
 
@@ -202,6 +202,7 @@ for which one can form a simple biased estimate
 %\end{eqnarray}
 \begin{equation}
   \textrm{MMD}_b^2(\mathcal{F},X,Y) = \frac{1}{m^2}\sum_{i,j=1}^{m}k(x_i,x_j) - \frac{2}{mn}\sum_{i,j=1}^{m,n}k(x_i,y_j) + \frac{1}{n^2}\sum_{i,j=1}^{n}k(y_i,y_j)
+\label{eq:MMD_b}
 \end{equation}
 with which one can construct statistical tests of whether or not ${p=q}$ after estimating its null distribution.
 
@@ -216,20 +217,18 @@ This means that we can interpret the witness function as showing where the estim
 \subsection{Kernel choice}
 
 The nature of the two sample test defined by the kernel MMD depends on the choice of the kernel.
-In this paper we use the radial basis function kernel, also known as the squared exponential or exponentiated quadratic (\NA{cite standard things}).
-\NA{Say what this kernel encodes for and assumes and mention that alternatives exist}.
-
+In this paper we use the radial basis function kernel, also known as the squared exponential or exponentiated quadratic.
+This kernel encodes for smooth functions that have a typical lengthscale (\NA{cite GPML}).
+A typical heuristic for selecting the lengthscale is to use the median distance between all points as the lengthscale (\NA{cite something}.
 \NA{
-Lengthscale also important, discuss the median distance heuristic and other possible methods (and relation of MMD to average discrepancy under GP prior).
-Also discuss the idea of using the lengthscale that results in the best kernel density estimates.
+However, since we interpret the witness function as the difference of two kernel density estimates we also consider selecting the lengthscale which gives the best density estimates.
 }
 
 \subsection{Estimation of null distribution}
 
-\NA{
-We use the bootstrap.
-But fancier methods exist when one has lots of data (cite the latest machinery).
-}
+In some cases the null distribution of the test statistic in equation~\ref{eq:MMD_b} can be approximated analytically (\NA{cite}).
+There are also efficient approximations that can be used when one has a large quantity of data (\NA{cite latest machinery}).
+We use a bootstrap procedure (\NA{cite}) for its simplicity and general applicability.
 
 \section{Examples on toy data}
 
@@ -265,7 +264,7 @@ This suggests that we should modify our model by either allowing for heavy tails
 However, to demonstrate some of the properties of the MMD statistic we make an unusual choice of fitting a Gaussian by maximum likelihood, but ignoring the two outliers in the data.
 The new fitted density estimate (the normal distribution) and witness function of an MMD test are shown on the right of figure~\ref{fig:newcomb}.
 The estimated $p$-value associated with the MMD two sample test is close to 0.5, despite the fitted model being a very poor explanation of the outliers.
-This demonstrates that the MMD test using a radial basis function kernel can identify dense discrepancies, rather than outliers.
+This demonstrates that the MMD test using a radial basis function kernel identifies dense discrepancies, rather than outliers.
 However, methods that are not robust to outliers (\eg fitting a Gaussian by maximum likelihood) will likely show dense discrepancies that will be identified by the test.
 
 %\subsection{Spotting an unusual cluster}
