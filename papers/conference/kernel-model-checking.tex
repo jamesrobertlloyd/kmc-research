@@ -99,25 +99,27 @@ Address \\
 
 \begin{abstract} 
 We propose an exploratory approach to statistical model criticism using maximum mean discrepancy (MMD) two sample tests.
-MMD tests not only provide a hypothesis test, but also show where any discrepancies are most extreme via their witness function.
-We demonstrate on synthetic data that the witness function can be used to identify where a statistical model most misrepresents the data it was trained on.
-We then demonstrate the procedure on real data using restricted Boltzmann machines, deep belief networks and [something else] and demonstrate the ways in which these models are failing to capture the properties of the data they are trained on.
+Typical approaches to model criticism require a practitioner to select a statistic by which to measures discrepancies between data and a statistical model.
+MMD two sample tests are instead constructed as an analytic maximisation over a large space of possible statistics and therefore automatically select an appropriate statistic.
+We demonstrate on synthetic data that the selected statistic, called the witness function, can be used to identify where a statistical model most misrepresents the data it was trained on.
+We then demonstrate the procedure on real data where the models being assessed are restricted Boltzmann machines, deep belief networks and [something else] and demonstrate the ways in which these models are failing to capture the properties of the data they are trained on.
 \end{abstract} 
 
 \allowdisplaybreaks
 
 \section{Introduction}
 
-Model checking, assessment or criticism is an important part of a complete statistical analysis.
-When one fits a linear model to a data set via least squares a complete analysis includes computing \eg Cook's distances (\NA{cite}) to identify influential points or plotting residuals against fitted values to identify non-linearity or heteroscedasticity.
-Similarly, modern approaches to Bayesian modelling (\NA{cite BDA}) view model checking as in important component of an iterative cycle of model construction, inference and checking.
+Statistical model checking or criticism\footnotemark is an important part of a complete statistical analysis.
+When one fits a linear model to a data set via least squares a complete analysis includes computing \eg Cook's distances \cite{Cook1982-eq} to identify influential points or plotting residuals against fitted values to identify non-linearity or heteroscedasticity.
+Similarly, modern approaches to Bayesian statistics view model criticism as in important component of an iterative cycle of model construction, inference and criticism \citep{Gelman2013-st}.
+\footnotetext{We prefer the term `model criticism' for similar reasons to O'Hagan \citep{OHagan2003-bc}.}
 
 As statistical models become more complex and diverse in response to the challenges of modern data sets there will be an increasing need for a greater range of model checking procedures that are either automatic or generally applicable.
-This will be especially true as automatic modelling methods (\NA{cite Roger, us and perhaps AutoWEKA}) and probabilistic programming (\NA{cite STAN, Church and Venture?}) mature.
+This will be especially true as automatic modelling methods \citep[e.g.][]{Grosse2012-zf, Lloyd2014-nz, Thornton2013-zg} and probabilistic programming \citep[e.g.][]{Goodman2012-pf, stan-software:2014} mature.
 
-Model checking typically proceeds by choosing a statistic of interest, computing it on data and comparing this to a suitable null distribution \eg posterior predictive distributions.
-Ideally these statistics are chosen to assess the utility of the statistical model under consideration (see applied example \eg \NA{cite Meulders 1998 and others}) but this can require considerable expertise on the part of the modeller.
-We propose an alternative to this approach by using a statistic defined as a supremum over a broad class of measures of discrepancy between two distributions, the maximum mean discrepancy (MMD)  (\NA{cite}).
+Model criticism typically proceeds by choosing a statistic of interest, computing it on data and comparing this to a suitable null distribution.
+Ideally these statistics are chosen to assess the utility of the statistical model under consideration (see applied examples \citep[e.g.][]{Meulders1998-xo}\fTBD{This is an obscure citation - need to find better examples}) but this can require considerable expertise on the part of the modeller.
+We propose an alternative to this approach by using a statistic defined as a supremum over a broad class of measures of discrepancy between two distributions, the maximum mean discrepancy (MMD) \citep[e.g.][]{Gretton2008-ik}\fTBD{I should cite some earlier references as well}).
 The advantage of this approach is that the discrepancy measure attaining the supremum automatically identifies regions of the data which are most poorly represented by the statistical model fit to the data.
 
 We demonstrate this approach to model checking on toy data sets and two real world examples.
@@ -506,7 +508,7 @@ This includes Geweke tests of markov chain sampler validity (\NA{cite}) and mark
 The two sample tests used in this work apply to exchangeable data, but model checking techniques should of course apply to models with other symmetries (\eg logitudinal data, graphs, functions\ldots).
 While two sample tests exist for data with different symmetries (\NA{cite something related to functional two sample testing}) it is unclear whether maximum mean discrepancy measures can be naturally extended to these classes.
 
-\bibliography{gpss, library}
+\bibliography{experiment}
 \bibliographystyle{unsrt}
 
 \end{document} 
