@@ -7,6 +7,7 @@ addpath(genpath('./util'));
 %% Load newcomb data
 
 Y = csvread('../data/newcomb/newcomb.csv', 1, 1);
+% This is the scaling that appears in Bayesian data analysis
 Y = (Y - 24.8)*1000;
 
 %% Plot data
@@ -14,8 +15,8 @@ Y = (Y - 24.8)*1000;
 h = figure();
 hold on;
 hist(Y, 35);
-xlabel('Deviations from 24,800 nanseconds')
-ylabel('Count');
+xlabel('Deviations from 24,800 nanseconds', 'FontSize', 15)
+ylabel('Count', 'FontSize', 15);
 hold off;
 save2pdf('newcomb_hist.pdf', h, 600, true);
 
@@ -81,15 +82,15 @@ hold on;
 bar(hist_X,hist_N/(66*(hist_X(2)-hist_X(1))));
 xlim([-50,60]);
 [AX,H1,H2] = plotyy(t,exp(-(t-mu).^2./(2*sd^2)) / sqrt(2*pi*sd^2),t,witness,'plot');
-set(get(AX(1),'Ylabel'),'String','Density estimate') 
-set(get(AX(2),'Ylabel'),'String','Witness function')
+set(get(AX(1),'Ylabel'),'String','Density estimate','FontSize',15) 
+set(get(AX(2),'Ylabel'),'String','Witness function','FontSize',15)
 set(AX(1), 'ylim', [-0.15,0.15]) 
 set(AX(2), 'ylim', [-0.25,0.25]) 
 set(H1,'LineStyle','-')
 set(H1,'Color','r')
 set(H2,'LineStyle','--')
-set(H1,'LineWidth',2)
-set(H2,'LineWidth',2)
-xlabel('Deviations from 24,800 nanseconds')
+set(H1,'LineWidth',4)
+set(H2,'LineWidth',4)
+xlabel('Deviations from 24,800 nanseconds','FontSize',15)
 hold off
-save2pdf('newcomb_witness_1.pdf', h, 600, true);
+save2pdf('newcomb_witness_2.pdf', h, 600, true);

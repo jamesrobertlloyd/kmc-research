@@ -82,8 +82,8 @@ for i=1:params.shuff
                 (1/n^2) * sum(sum(L)); 
             
 %     display(i);
-%     p = sum(testStat < MMDarr) / length(MMDarr);
-%     display(p);
+    p = sum(testStat < MMDarr) / length(MMDarr);
+    display(p);
 end 
 
 MMDarr = sort(MMDarr);
