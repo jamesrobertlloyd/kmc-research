@@ -15,7 +15,7 @@ Y = (Y - 24.8)*1000;
 h = figure();
 hold on;
 hist(Y, 35);
-xlabel('Deviations from 24,800 nanseconds', 'FontSize', 15)
+xlabel('Deviations from 24,800 nanoseconds', 'FontSize', 15)
 ylabel('Count', 'FontSize', 15);
 hold off;
 save2pdf('newcomb_hist.pdf', h, 600, true);
