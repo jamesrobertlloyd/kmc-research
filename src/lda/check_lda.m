@@ -1,10 +1,10 @@
-% Latent Dirichlet Allocation applied to the KOS dataset
+%% Latent Dirichlet Allocation applied to the KOS dataset
 
-% ADVICE: consider doing clear, close all
-
-clear all
-close all
 load kos_doc_data.mat
+addpath(genpath('../mmd'));
+addpath(genpath('../util'));
+
+%% Run LDA
 
 W = max([A(:,2); B(:,2)]);  % number of unique words
 D = max(A(:,1));            % number of documents in A
@@ -78,91 +78,6 @@ for iter = 1:Gibbs_Samples     % This can take a couple of minutes to run
   %posterior_topics(:, iter) = posterior_topics(:, iter) + sk;
 end
 
-%Plot evolution of posterior
-
-[sorted, sort_indices] = sort (posterior_topics(:, end)', 'descend');
-
-h = figure;
-hold on;
-for i = 1:10
-  c = (10 - i) / 10;
-  plot (1:K, posterior_topics(sort_indices, i) / sum(posterior_topics(:, i)), '+', 'Color', [c c c]);
-end
-xlabel ({'Topics'}, 'FontSize', 15, 'Interpreter', 'latex');
-ylabel ({'Posterior probability'}, 'FontSize', 15, 'Interpreter', 'latex');
-title  ({'Posterior probabilities of topics - sorted'}, 'FontSize', 15,...
-         'Interpreter', 'latex');
-hold off;
-save2pdf('Part_i_topics.pdf', h, 150);
-
-%Plot evolution of entropies
-
-h = figure;
-hold on;
-for i = 1:10
-  c = (10 - i) / 10;
-  plot (1:K, posterior_entropies(sort_indices, i), '+', 'Color', [c c c]);
-end
-xlabel ({'Topics'}, 'FontSize', 15, 'Interpreter', 'latex');
-ylabel ({'Posterior entropy'}, 'FontSize', 15, 'Interpreter', 'latex');
-title  ({'Posterior entropies of topic models'}, 'FontSize', 15,...
-         'Interpreter', 'latex');
-hold off;
-save2pdf('Part_i_entropies.pdf', h, 150);
-
-% compute the perplexity for all words in the test set B
-% We need the new Skd matrix, derived from corpus B
-lp = 0; nd = 0;
-for d = unique(B(:,1))'  % loop over all documents in B
-  display (max (unique(B(:,1))) - d)
-  % randomly assign topics to each word in test document d
-  z = zeros(W,K);
-  for w = B(B(:,1)==d,2)'   % w are the words in doc d
-    for i=1:Swd(w,d)
-      k = ceil(K*rand());
-      z(w,k) = z(w,k) + 1;
-    end
-  end
-  Skd = sum(z,1)';
-  Sk = sk + Skd;  
-  % perform some iterations of Gibbs sampling for test document d
-  for iter = 1:10
-    for w = B(B(:,1)==d,2)' % w are the words in doc d
-      a = z(w,:); % number of times word w is assigned to each topic in doc d
-      ka = find(a); % topics with non-zero counts for word d in document d
-      for k = ka(randperm(length(ka)))
-        for i = 1:a(k)
-          z(w,k) = z(w,k) - 1;   % remove word from count matrix for doc d
-          Skd(k) = Skd(k) - 1;
-          b = (alpha + Skd) .* (gamma + swk(w,:)') ./ (W*gamma + sk);
-          kk = sampDiscrete(b);
-          z(w,kk) = z(w,kk) + 1; % add word with new topic to count matrix for doc d
-          Skd(kk) = Skd(kk) + 1;
-        end
-      end
-    end
-  end
-  b=(alpha+Skd')/sum(alpha+Skd)*bsxfun(@rdivide,gamma+swk',W*gamma+sk);  
-  w=B(B(:,1)==d,2:3);
-  lp = lp + log(b(w(:,1)))*w(:,2);   % log probability, doc d
-  nd = nd + sum(w(:,2));             % number of words, doc d
-end
-perplexity = exp(-lp/nd)   % perplexity
-
-%%
-
-% this code allows looking at top I words for each mixture component
-I = 5;
-for k=sort_indices, [i ii] = sort(-swk(:,k)); ZZ(k,1:I)=ii(1:I); end
-for i=1:I, for k=sort_indices, fprintf('%-15s',V{ZZ(k,i)}); end; fprintf('\n'); end
-
-%% Some extra analysis
-
-[sorted, sort_indices] = sort (posterior_topics(:, end)', 'descend');
-topic_probs = posterior_topics(sort_indices, end) / sum(posterior_topics(:, end));
-
-topic_probs = skd ./ repmat(sum(skd, 1), K, 1);
-
 %% PCA visualisation of the original data
 
 fdw = full(swd)';
@@ -174,7 +89,9 @@ fdw_probs_dr = fdw_probs * coeff(:,1:d);
 
 plot(fdw_probs_dr(:,1), fdw_probs_dr(:,2), 'go');
 
-%% Generate some data from the posterior
+%% Generate some data from the posterior - same shape as original
+
+%%%% Posterior probs is not actually the posterior - to be updated
 
 n_words = full(sum(swd, 1))';
 
@@ -195,7 +112,7 @@ for i = 1:D
     end
 end
 
-%% PCA
+%% PCA on generated data
 
 post_docs_probs = posterior_docs ./ repmat(sum(posterior_docs, 2), 1, size(posterior_docs, 2));
 
@@ -207,10 +124,128 @@ plot(post_docs_probs_dr(:,1), post_docs_probs_dr(:,2), 'ro');
 
 %% Joint PCA - consider a random projection first for speed
 
-d = 2;
-[coeff,~,latent] = pca([fdw_probs;post_docs_probs]);
-fdw_probs_dr = fdw_probs * coeff(:,1:d);
-post_docs_probs_dr = post_docs_probs * coeff(:,1:d);
+X = fdw_probs;
+Y = post_docs_probs;
 
-plot(fdw_probs_dr(:,1), fdw_probs_dr(:,2), 'go'); hold on;
-plot(post_docs_probs_dr(:,1), post_docs_probs_dr(:,2), 'ro'); hold off;
+% Random projection
+
+rand_proj = randn(W, 1000);
+X = X * rand_proj;
+Y = Y * rand_proj;
+
+% PCA
+
+d = 2;
+[coeff,~,latent] = pca([X;Y]);
+X_dr = X * coeff(:,1:d);
+Y_dr = Y * coeff(:,1:d);
+
+plot(X_dr(:,1), X_dr(:,2), 'go'); hold on;
+plot(Y_dr(:,1), Y_dr(:,2), 'ro'); hold off;
+
+%% Calculate some distances for reference
+
+d1 = sqrt(sq_dist(X_dr', X_dr'));
+d2 = sqrt(sq_dist(Y_dr', Y_dr'));
+Z_dr = [X_dr;X_dr];  %aggregate the sample
+d3 = sq_dist(Z_dr', Z_dr');
+figure;
+hist([d1(:);d2(:)]);
+    
+%% Select a lengthscale
+
+% CV for density estimation
+folds = 5;
+divisions = 50;
+distances = sort([d1(:); d2(:)]);
+%trial_ell = zeros(divisions-1,1);
+trial_ell = zeros(divisions,1);
+for i = 1:(divisions)%-1)
+    %trial_ell(i) = distances(floor(i*numel(distances)/(2*divisions)));
+    trial_ell(i) = i * sqrt(0.5) * distances(floor(0.5*numel(distances))) / divisions;
+end
+m = size(X_dr, 1);
+n = size(Y_dr, 1);
+d = size(X_dr, 2);
+X_perm = X_dr(randperm(m),:);
+Y_perm = Y_dr(randperm(n),:);
+X_f_train = cell(folds,1);
+X_f_test = cell(folds,1);
+Y_f_train = cell(folds,1);
+Y_f_test = cell(folds,1);
+for fold = 1:folds
+    if fold == 1
+        X_f_train{fold} = X_perm(floor(fold*m/folds):end,:);
+        X_f_test{fold} = X_perm(1:(floor(fold*m/folds)-1),:);
+        Y_f_train{fold} = Y_perm(floor(fold*n/folds):end,:);
+        Y_f_test{fold} = Y_perm(1:(floor(fold*n/folds)-1),:);
+    elseif fold == folds
+        X_f_train{fold} = X_perm(1:floor((fold-1)*m/folds),:);
+        X_f_test{fold} = X_perm(floor((fold-1)*m/folds + 1):end,:);
+        Y_f_train{fold} = Y_perm(1:floor((fold-1)*n/folds),:);
+        Y_f_test{fold} = Y_perm(floor((fold-1)*m/folds + 1):end,:);
+    else
+        X_f_train{fold} = [X_perm(1:floor((fold-1)*m/folds),:);
+                           X_perm(floor((fold)*m/folds+1):end,:)];
+        X_f_test{fold} = X_perm(floor((fold-1)*m/folds + 1):floor((fold)*m/folds),:);
+        Y_f_train{fold} = [Y_perm(1:floor((fold-1)*n/folds),:);
+                           Y_perm(floor((fold)*n/folds+1):end,:)];
+        Y_f_test{fold} = Y_perm(floor((fold-1)*n/folds + 1):floor((fold)*n/folds),:);
+    end
+end
+best_ell = trial_ell(1);
+best_log_p = -Inf;
+for ell = trial_ell'
+    display(ell);
+    log_p = 0;
+    for fold = 1:folds
+        K1 = rbf_dot(X_f_train{fold} , X_f_test{fold}, ell);
+        p_X = (sum(K1, 1)' / m) / (ell^d);
+        log_p = log_p + sum(log(p_X));
+        K2 = rbf_dot(Y_f_train{fold} , Y_f_test{fold}, ell);
+        p_Y = (sum(K2, 1)' / n) / (ell^d);
+        log_p = log_p + sum(log(p_Y));
+    end
+    if log_p > best_log_p
+        best_log_p = log_p;
+        best_ell = ell;
+    end
+end
+params.sig = best_ell;
+% Median
+%params.sig = sqrt(0.5*median(d3(d3>0)));
+% Other things?
+%params.sig = 2;
+
+display(params.sig);
+
+%% MMD on PCA reduced variables
+
+alpha = 0.05;
+params.shuff = 100;
+[testStat,thresh,params,p] = mmdTestBoot_jl(X_dr,Y_dr,alpha,params);
+display(p);
+%pause;
+
+%% Compute witness function in 2d
+
+if size(X_dr,2) == 2
+    m = size(X_dr, 1);
+    n = size(Y_dr, 1);
+    t = (((fullfact([200,200])-0.5) / 200) - 0) * 1;
+    t = t .* (1.4 * repmat(range([X_dr; Y_dr]), size(t,1), 1));
+    t = t + repmat(min([X_dr; Y_dr]) - 0.2*range([X_dr; Y_dr]), size(t,1), 1);
+    K1 = rbf_dot(X_dr, t, params.sig);
+    K2 = rbf_dot(Y_dr, t, params.sig);
+    witness = sum(K1, 1)' / m - sum(K2, 1)' / n;
+    %plot3(t(:,1), t(:,2), witness, 'bo');
+    %hold on;
+    %plot3(Y_dr(:,1), Y_dr(:,2), repmat(max(max(witness)), size(Y_dr)), 'ro');
+    reshaped = reshape(witness, 200, 200)';
+
+    h = figure;
+    imagesc(reshaped(end:-1:1,:));
+    colorbar;
+    save2pdf('../temp/witness.pdf', h, 600, true );
+    %hold off;
+end
