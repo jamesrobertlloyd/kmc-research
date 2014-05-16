@@ -210,7 +210,7 @@ for digit = 0:9
 
     d1 = sqrt(sq_dist(X_dr', X_dr'));
     d2 = sqrt(sq_dist(Y_dr', Y_dr'));
-    Z_dr = [X_dr;X_dr];  %aggregate the sample
+    Z_dr = [X_dr;Y_dr];  %aggregate the sample
     d3 = sq_dist(Z_dr', Z_dr');
     figure;
     hist([d1(:);d2(:)]);
