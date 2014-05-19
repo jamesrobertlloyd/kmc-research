@@ -149,30 +149,6 @@ y = y ./ repmat(std(y), size(y, 1), 1);
 
 %% Fit a GP to this
 
-% if numel(y) > 500
-%     % Subset of data approx
-%     sub_sample = randsample(1:numel(y), 500);
-%     X_train = X(sub_sample,:);
-%     y_train = y(sub_sample);
-% else
-%     X_train = X;
-%     y_train = y;
-% end
-% 
-% hyp.cov = [0,0];
-% hyp.mean = [];
-% hyp.lik = 0;
-% 
-% cov_fn = @covSEiso;
-% mean_fn = @meanZero;
-% lik_fn = @likGauss;
-% 
-% inf = @infExact;
-% 
-% hyp_opt = minimize(hyp, @gp, -500, inf, mean_fn, cov_fn, lik_fn, X_train, y_train);
-
-%% Fit a spectral mixture
-
 if numel(y) > 500
     % Subset of data approx
     sub_sample = randsample(1:numel(y), 500);
@@ -183,21 +159,45 @@ else
     y_train = y;
 end
 
-hyp.cov = randn(1,5*4);
+hyp.cov = [0,0];
 hyp.mean = [];
 hyp.lik = 0;
 
-cov_fn = {@covSum, {{@covProd, {@covCos, @covSEiso}}, ...
-                    {@covProd, {@covCos, @covSEiso}}, ...
-                    {@covProd, {@covCos, @covSEiso}}, ...
-                    {@covProd, {@covCos, @covSEiso}}, ...
-                    {@covProd, {@covCos, @covSEiso}}}};
+cov_fn = @covSEiso;
 mean_fn = @meanZero;
 lik_fn = @likGauss;
 
 inf = @infExact;
 
-hyp_opt = minimize(hyp, @gp, -200, inf, mean_fn, cov_fn, lik_fn, X_train, y_train);
+hyp_opt = minimize(hyp, @gp, -500, inf, mean_fn, cov_fn, lik_fn, X_train, y_train);
+
+%% Fit a spectral mixture
+
+% if numel(y) > 500
+%     % Subset of data approx
+%     sub_sample = randsample(1:numel(y), 500);
+%     X_train = X(sub_sample,:);
+%     y_train = y(sub_sample);
+% else
+%     X_train = X;
+%     y_train = y;
+% end
+% 
+% hyp.cov = randn(1,5*4);
+% hyp.mean = [];
+% hyp.lik = 0;
+% 
+% cov_fn = {@covSum, {{@covProd, {@covCos, @covSEiso}}, ...
+%                     {@covProd, {@covCos, @covSEiso}}, ...
+%                     {@covProd, {@covCos, @covSEiso}}, ...
+%                     {@covProd, {@covCos, @covSEiso}}, ...
+%                     {@covProd, {@covCos, @covSEiso}}}};
+% mean_fn = @meanZero;
+% lik_fn = @likGauss;
+% 
+% inf = @infExact;
+% 
+% hyp_opt = minimize(hyp, @gp, -200, inf, mean_fn, cov_fn, lik_fn, X_train, y_train);
 
 %% Fit SEard to this
 
@@ -250,31 +250,46 @@ hyp_opt = minimize(hyp, @gp, -200, inf, mean_fn, cov_fn, lik_fn, X_train, y_trai
 % 
 % hyp_opt = minimize(hyp, @gp, -500, inf, mean_fn, cov_fn, lik_fn, X_train, y_train);
 
-%% Sample from GP - compare to data graphically
+%% Sample from GP - compare to data graphically - this version is conservative
 
-[ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X);
+% [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X);
+% 
+% X_post = [];
+% y_post = [];
+% 
+% for i = 1:1
+%   X_post = [X_post; X]; %#ok<AGROW>
+%   y_post = [y_post; ymu + sqrt(ys2) .* randn(size(ys2))]; %#ok<AGROW>
+% end
+% 
+% 
+% plot(X_post, y_post, 'ro'); hold on;
+% plot(X, y, 'go'); hold off;
 
-X_post = [];
-y_post = [];
+%% Sample from GP - compare to data graphically - this version is conservative
 
-for i = 1:1
-  X_post = [X_post; X]; %#ok<AGROW>
-  y_post = [y_post; ymu + sqrt(ys2) .* randn(size(ys2))]; %#ok<AGROW>
-end
+X_post = randsample(X,length(X), true);
 
+[ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X_post);
+
+y_post = ymu + sqrt(ys2) .* randn(size(ys2));
+
+rand_indices = randsample(length(X), length(X), true);
+X_data = X(rand_indices);
+y_data = y(rand_indices);
 
 plot(X_post, y_post, 'ro'); hold on;
-plot(X, y, 'go'); hold off;
+plot(X_data, y_data, 'go'); hold off;
 
 %% Get ready for two sample test
 
-A = [X, y];
+A = [X_data, y_data];
 B = [X_post, y_post];
 
 %% Standardise data
 
+B = B ./ repmat(std(A), size(A, 1), 1);
 A = A ./ repmat(std(A), size(A, 1), 1);
-B = B ./ repmat(std(B), size(B, 1), 1);
 
 %% Calculate some distances for reference
 
@@ -361,13 +376,13 @@ display(p);
 %pause;
 
 %% Expand lengthscale
-
-while p < 0.05
-    params.sig = params.sig * 1.1;
-    [testStat,thresh,params,p] = mmdTestBoot_jl(A,B,alpha,params);
-    display(p);
-end
-params.sig = params.sig / 1.1;
+% 
+% while p < 0.05
+%     params.sig = params.sig * 1.1;
+%     [testStat,thresh,params,p] = mmdTestBoot_jl(A,B,alpha,params);
+%     display(p);
+% end
+% params.sig = params.sig / 1.1;
 
 %% Compute witness function in 2d
 
