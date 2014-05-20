@@ -68,5 +68,6 @@ src/samples.pdf
 src/temp/
 src/lda/4f13
 src/gps/temp
+*.pkl
 
 papers/conference/format/nips2014.pdf
