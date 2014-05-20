@@ -148,13 +148,14 @@ This is the posterior probability that a potential future data set will be more 
 Small $p$-values indicate that the observed data is extreme compared to the posterior predictive distribution, indicating a lack of fit between the posterior distribution and the data.
 
 \section{Model criticism for exchangeable data using maximum mean discrepancy}
+\label{sec:model-crit}
 
 We now consider the situation where we can assume that our data $Y$ are \iid samples from some (unknown) distribution.
 This is appropriate whenever we are invariant to the order of our data \ie when the data is exchangeable \citep[e.g.][]{Orbanz2013-cm}\fTBD{Is there a less intimidating / more canonical reference?}.
 
 Posterior predictive $p$-values ask whether or not the data $Y$ is extreme compared to the posterior predictive distribution $p(Y^\textrm{rep}|M,Y)$.
 This can be interpreted as the $p$-value of a hypothesis test with a null hypothesis that ${Y \dist p(Y^\textrm{rep}|M,Y)}$ \ie that the data is a sample from the posterior predictive distribution.
-In the case of exchangeable data this null distribution can be replaced with ${(y_i)_{i=1\ldots n} \simiid p(y^\textrm{rep}|M,Y)}$ \ie that the data are \iid samples from the posterior predictive distribution over data points.
+In the case of exchangeable\fTBD{Make a forward pointer to how this can be applied to non-exchangeable data} data this null distribution can be replaced with ${(y_i)_{i=1\ldots n} \simiid p(y^\textrm{rep}|M,Y)}$ \ie that the data are \iid samples from the posterior predictive distribution over data points.
 
 We can test this null hypothesis using a two sample test \citep[e.g.][]{Friedman1979-ur, Bickel1969-ao, Hotelling1951-jd}.
 In particular, we have samples of data $(y_i)_{i=1\ldots n}$ and we can generate samples from the posterior predictive distribution $(y_i^\textrm{rep})_{i=1\ldots m}$ and then ask whether or not these samples could have been generated from the same distribution\footnotemark.
@@ -429,9 +430,100 @@ Do we discuss whether or not this could have been concluded without the tests?
 Different architectures to discourage mistakes from propagating?
 }
 
-\subsection{Something about LDA}
+\subsection{How much can be modelled using normal distributions?}
 
-\TBD{Something about LDA}
+\TBD{This section is proto-draft quality}
+
+We now show how we can use the kernel two sample test to check models of functional data.
+In particular we test Gaussian process (\TBD{cite Rasmussen + Williams}) regression models.
+In this setting our data consists of (input, output) pairs $(x_i, y_i)$ and our goal is to model the conditional distribution $\mathbb{P}(y\given x)$.
+The $(y_i)_{i=1\ldots N}$ are typically not exchangeable, but the pairs $(x_i, y_i)$ are.
+The distribution of the inputs $(x_i)_{i=1\ldots N}$ are typically not modelled, but we can estimate the distribution of the inputs using their empirical distribution, and then model the joint distribution as $\mathbb{P}(y\given x)\mathbb{P}(x)$.
+We can therefore test a regression model by sampling from the posterior or fitted distribution for $\mathbb{P}(y\given x)\mathbb{P}(x)$ and comparing this to a bootstrap sample of the original data.
+
+\subsubsection{Detecting heteroscedasticity and non-normality non-parametrically}
+
+We first apply the two sample test to 13 time series and 4 algorithms analysed in \TBD{cite AAAI work}.
+In this work the authors compare a number of different methods for constructing Gaussian process models.
+While it is clear that a simple smoothing method will almost always fail to capture the rich structure in these data sets, it is not clear if the more advance methods are capturing all relevant aspects of the data.
+
+Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 model construction methods.
+This table shows that it is only the method ABCD that is not consistently failing the MMD model check --- we should note however that SP and TCI perform well at extrapolation and interpolation.
+
+\begin{table}[ht]
+\center
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Dataset & ABCD & SP & TCI & SE \\
+\hline
+Airline        & 0.47 & 0.14 & {\bf0.00} & {\bf0.00} \\
+Solar          & 0.34 & {\bf0.00} & {\bf0.01} & {\bf0.00} \\
+Mauna          & 0.84 & 0.56 & 0.24 & 0.49\\
+Wheat          & 0.48 & 0.20 & 0.24 & {\bf0.00} \\
+Temperature    & {\bf0.00} & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+Internet       & 0.34 & {\bf0.03} & {\bf0.01} & {\bf0.00} \\
+Call centre    & 0.52 & {\bf0.02} & {\bf0.00} & 0.08 \\
+Radio          & 0.42 & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+Gas production & 0.18 & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+Sulphuric      & 0.28 & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+Unemployment   & 0.08 & {\bf0.00} & {\bf0.01} & {\bf0.00} \\
+Births         & {\bf0.00} & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+Wages          & 0.68 & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+\hline
+\end{tabular}
+\caption{Two sample test $p$-values applied to 13 time series and }
+\label{table:ABCD-p-values}
+\end{table}
+
+We now look at the type of discrepancies found by this test by looking at the witness function.
+Figure~\ref{fig:time-series-witness} shows two data sets and the fit of SE two them.
+Below are the witness functions of the MMD test which clearly identifies regions of lack of model fit; in both of these examples it is identifying heteroscedasticity.
+This explains why it is only ABCD that is able to pass the test since most of the data sets display extreme heteroscedasticity and ABCD is the only method that can express heteroscedasticity.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.22\columnwidth]{figures/02-solar-witness}
+\includegraphics[width=0.22\columnwidth]{figures/02-solar-witness}
+\includegraphics[width=0.22\columnwidth]{figures/09-gas-production-witness}
+\includegraphics[width=0.22\columnwidth]{figures/09-gas-production-witness}
+\caption{
+Top left: Solar data.
+Top right: Gas prodcution data.
+Bottom left: Witness function on solar data for SE method.
+Bottom right: Witness function on gas production data for SE method.
+}
+\label{fig:time-series-witness}
+\end{figure}
+
+However, all methods would appear to be an inappropriate model for the temperature and births data (and there is some cause for suspicion on the gas production data).
+Figure~\ref{fig:temperature-witness} shows the data, model fit of ABCD (all methods produce a similar fit to this data).
+\TBD{Mention why we increase the lengthscale of the test}.
+The witness function is showing that the left hand side of data is more concentrated in the centre than the posterior and vice versa on the right hand side of the data.
+This could be a suggestion of heteroscedasticity, but that is not apparent in the data.
+If we were to take slices of the witness function at the left hand side and right hand side of the data, we would get a similar shape of a peak with two troughs (and the vertical reflection) much like the speed of light data.
+With this in mind we can indeed see that the left hand side of the data is prone to outliers at the peaks and troughs of data.
+In contrast no outliers are apparent on the right hand side of data.
+This usefully shows that it would not be sufficient to improve this model just by replacing the Gaussian distributed residuals with a heavy tailed distribution --- the variance or degree of heavy tailed ness would also have to change with the input variable.
+That is, if I had just done a test for outliers I would not have discovered the full story.
+\TBD{I can test this assertion by fitting a $t$-distribution manually}.
+Similar discrepancies were observed on the births and gas production data.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.30\columnwidth]{figures/05-temperature-detailed-witness}
+\includegraphics[width=0.30\columnwidth]{figures/05-temperature-detailed-witness}
+\includegraphics[width=0.30\columnwidth]{figures/05-temperature-witness}
+\caption{
+Left: Temperature data with ABCD model fit.
+Middle: Witness function for this data and ABCD model with lengthscale chosen by cross validation.
+Right: Witness function for this data and ABCD model with longer lengthscale.
+}
+\label{fig:temperature-witness}
+\end{figure}
+
+\subsubsection{Something high dimensional}
+
+\TBD{Maybe}
 
 \section{Discussion of model criticism and related work}
 
@@ -447,7 +539,7 @@ Note however that some proponents of posterior predictive $p$-values prefer to i
 
 A more classical null hypothesis associated with model criticism is that the data was generated from a probability distribution of a certain form but with unknown parameters (\eg all normal distributions).
 Posterior $p$-values are uncalibrated for this composite hypothesis test \citep{Robins2000-oz} - under broad assumptions posterior predictive $p$-values are asymptotically conservative (the null distribution is concentrated towards values of 0.5).
-Robins et alia \citep{Robins2000-oz} shows that alternatives proposed by Bayarri \& Berger \citep{Bayarri1999-ty}, and prior predictive $p$-values of Box \citep{Box1980-ud} among others are appropriately calibrated.
+Robins et alia \citep{Robins2000-oz} shows that alternatives proposed by Bayarri \& Berger \citep{Bayarri1999-ty}, and prior predictive $p$-values of Box \citep{Box1980-ud} among others are appropriately calibrated\fTBD{Check this assertion about prior predictive}.
 Further examples of tests that are calibrated for this composite null hypothesis incude \citep[e.g.][]{Dey1998-dn, Johnson2004-ej}
 
 However, in our first real data example we are not interested in the question `do MNIST digits come from some deep belief network?'.
@@ -480,7 +572,7 @@ In doing so they also proposed an omnibus test discrepancy measure
 \end{equation}
 which resembles a classical $\chi^2$ statistic.
 While this statistic can be useful in a number of different models, regression models especially, it would have failed to detect any discrepancies in our two toy data examples.
-In the case of exchangeable data (and a model that respects this symmetry) this statistic only measures how well the mean and variance of the data has been captured.
+In the case of exchangeable data (and a model that respects this symmetry) this statistic only measures how well the mean and variance of the data has been captured\fTBD{It is a function of the sufficient statistics and hence we do not expect deviations}.
 In our two toy data examples the mean and variance of the data were fit (near) directly by the proposed models.\fTBD{Check that this statement is true}
 
 \subsection{Other methods for evaluating statistical models}
@@ -502,7 +594,7 @@ We demonstrated how this method of model criticism can be applied to neural netw
 We have demonstrated how kernel MMD two sample tests can be applied to model criticism, but they can be applied to any aspect of statistical modelling where two sample tests are useful.
 This includes for example, Geweke's tests of markov chain posterior sampler validity \citep{Geweke2004-yx} and tests of markov chain convergence\fTBD{I presume this is a thing?}.
 
-The two sample tests proposed in this paper apply to exchangeable data, but model criticism techniques should of course apply to models with other symmetries (\eg logitudinal data, graphs, functions\ldots).
+The two sample tests proposed in this paper apply to exchangeable data\fTBD{Update me in light of functional data}, but model criticism techniques should of course apply to models with other symmetries (\eg logitudinal data, graphs, functions\ldots).
 While two sample tests exist for data with different symmetries (\NA{cite something related to functional two sample testing}) it is unclear whether maximum mean discrepancy measures can be naturally extended to these classes; investigating such extensions would be a profitable area for future study.
 
 \TBD{Repeat of the call to arms about a lack of model checking in machine learning. Do you know what your model is up to right now? Maybe you should check it is ok.}
