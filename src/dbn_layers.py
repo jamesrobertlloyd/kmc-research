@@ -121,6 +121,9 @@ def train_and_sample_from_dbn_layers(random_seed=1,
             vis = (vis_prob > np.random.rand(vis_prob.shape[0], vis_prob.shape[1])) * 1
 
         vis_image = vis_prob
+        if len(rbms) == 1:
+            # Remove the labels from the image
+            vis_image = vis_image[:,:-10]
 
         images = np.vstack((images, vis_image))
         labels = np.vstack((labels, y_list[train_idx]))
