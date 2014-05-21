@@ -52,7 +52,7 @@ for main_loop_i = 1:numel(filenames)
         y_train = y;
     end
 
-    hyp.cov = [0,0];
+    hyp.cov = [-2,0];
     hyp.mean = [];
     hyp.lik = 0;
 
@@ -81,23 +81,54 @@ for main_loop_i = 1:numel(filenames)
     
     %% Sample from GP - compare to data graphically
 
-    % This version uses random 50 / 50 partition
+    % This version partitions into training and test
     
     N = numel(y);
     cut_off = floor(N/2);
     
     rand_indices = randsample(length(X), length(X), false);
-    X_post = X(rand_indices(1:cut_off));
+    X_train = X(rand_indices(1:cut_off));
+    y_train = y(rand_indices(1:cut_off));
+    X_test = X(rand_indices((cut_off + 1):end));
+    y_test = y(rand_indices((cut_off + 1):end));
 
-    [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X_post);
+    [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X_train, y_train, X_test);
 
-    y_post = ymu + sqrt(ys2) .* randn(size(ys2));
-    
-    X_data = X(rand_indices((cut_off + 1):end));
-    y_data = y(rand_indices((cut_off + 1):end));
+    X_post = [];
+    y_post = [];
+
+    for i = 1:1
+      X_post = [X_post; X_test]; %#ok<AGROW>
+      y_post = [y_post; ymu + sqrt(ys2) .* randn(size(ys2))]; %#ok<AGROW>
+    end
+
+    X_data = X_test;
+    y_data = y_test;
 
     plot(X_post, y_post, 'ro'); hold on;
     plot(X_data, y_data, 'go'); hold off;
+    
+    %% Sample from GP - compare to data graphically
+
+%     % This version uses random 50 / 50 partition
+%     
+%     N = numel(y);
+%     cut_off = floor(N/2);
+%     
+%     rand_indices = randsample(length(X), length(X), false);
+%     X_post = X(rand_indices(1:cut_off));
+% 
+%     [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X_post);
+% 
+%     y_post = ymu + sqrt(ys2) .* randn(size(ys2));
+%     
+%     X_data = X(rand_indices((cut_off + 1):end));
+%     y_data = y(rand_indices((cut_off + 1):end));
+% 
+%     plot(X_post, y_post, 'ro'); hold on;
+%     plot(X_data, y_data, 'go'); hold off;
+
+    %% Make sure to draw
     
     drawnow;
 
@@ -191,7 +222,8 @@ for main_loop_i = 1:numel(filenames)
 
     alpha = 0.05;
     params.shuff = 1000;
-    [testStat,thresh,params,p] = mmdTestBoot_jl(A,B,alpha,params);
+%     [testStat,thresh,params,p] = mmdTestBoot_jl(A,B,alpha,params);
+    [testStat,thresh,params,p] = mmdTestBoot_strat_jl(A,B,alpha,params);
     display(p);
     %pause;
     

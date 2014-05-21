@@ -155,7 +155,7 @@ This is appropriate whenever we are invariant to the order of our data \ie when 
 
 Posterior predictive $p$-values ask whether or not the data $Y$ is extreme compared to the posterior predictive distribution $p(Y^\textrm{rep}|M,Y)$.
 This can be interpreted as the $p$-value of a hypothesis test with a null hypothesis that ${Y \dist p(Y^\textrm{rep}|M,Y)}$ \ie that the data is a sample from the posterior predictive distribution.
-In the case of exchangeable\fTBD{Make a forward pointer to how this can be applied to non-exchangeable data} data this null distribution can be replaced with ${(y_i)_{i=1\ldots n} \simiid p(y^\textrm{rep}|M,Y)}$ \ie that the data are \iid samples from the posterior predictive distribution over data points.
+In the case of exchangeable\fTBD{Make a forward pointer to how this can be applied to non-exchangeable data} data this null distribution can be replaced with ${(y_i)_{i=1\ldots n} \simiid p(y^\textrm{rep}|M,Y)}$ \ie that the data are \iid samples from the posterior predictive distribution over data points.\fTBD{This is not quite correct - the posterior is a joint distribution - this is correct for the plug in distribution but for posterior we would technically need a different bootstrap scheme. This is true when doing point estimation or MAP estimation}
 
 We can test this null hypothesis using a two sample test \citep[e.g.][]{Friedman1979-ur, Bickel1969-ao, Hotelling1951-jd}.
 In particular, we have samples of data $(y_i)_{i=1\ldots n}$ and we can generate samples from the posterior predictive distribution $(y_i^\textrm{rep})_{i=1\ldots m}$ and then ask whether or not these samples could have been generated from the same distribution\footnotemark.

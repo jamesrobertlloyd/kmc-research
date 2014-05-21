@@ -5,7 +5,7 @@ addpath(genpath('../mmd'));
 addpath(genpath('../util'));
 addpath(genpath('../gpml'));
 
-init_rand(1);
+init_rand(2);
 
 repeats = 100;
 p_values = zeros(repeats, 1);
@@ -69,6 +69,32 @@ for main_iter = 1:repeats
 % 
 %     plot(X_post, y_post, 'ro'); hold on;
 %     plot(X, y, 'go'); hold off;
+
+    %% Sample from GP - compare to data graphically
+
+    % This version partitions into training and test
+    
+    rand_indices = randsample(length(X), length(X), false);
+    X_train = X(rand_indices(1:(N/2)));
+    y_train = y(rand_indices(1:(N/2)));
+    X_test = X(rand_indices((N/2 + 1):end));
+    y_test = y(rand_indices((N/2 + 1):end));
+
+    [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X_train, y_train, X_test);
+
+    X_post = [];
+    y_post = [];
+
+    for i = 1:1
+      X_post = [X_post; X_test]; %#ok<AGROW>
+      y_post = [y_post; ymu + sqrt(ys2) .* randn(size(ys2))]; %#ok<AGROW>
+    end
+
+    X_data = X_test;
+    y_data = y_test;
+
+    plot(X_post, y_post, 'ro'); hold on;
+    plot(X_data, y_data, 'go'); hold off;
 
     %% Sample from GP - compare to data graphically
 
@@ -144,18 +170,18 @@ for main_iter = 1:repeats
 
     % This version uses random 50 / 50 partition
     
-    rand_indices = randsample(length(X), length(X), false);
-    X_post = X(rand_indices(1:(N/2)));
-
-    [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X_post);
-
-    y_post = ymu + sqrt(ys2) .* randn(size(ys2));
-    
-    X_data = X(rand_indices((N/2 + 1):end));
-    y_data = y(rand_indices((N/2 + 1):end));
-
-    plot(X_post, y_post, 'ro'); hold on;
-    plot(X_data, y_data, 'go'); hold off;
+%     rand_indices = randsample(length(X), length(X), false);
+%     X_post = X(rand_indices(1:(N/2)));
+% 
+%     [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X_post);
+% 
+%     y_post = ymu + sqrt(ys2) .* randn(size(ys2));
+%     
+%     X_data = X(rand_indices((N/2 + 1):end));
+%     y_data = y(rand_indices((N/2 + 1):end));
+% 
+%     plot(X_post, y_post, 'ro'); hold on;
+%     plot(X_data, y_data, 'go'); hold off;
 
     %% Check
     
@@ -244,7 +270,8 @@ for main_iter = 1:repeats
 
     alpha = 0.05;
     params.shuff = 100;
-    [testStat,thresh,params,p] = mmdTestBoot_jl(A,B,alpha,params);
+%     [testStat,thresh,params,p] = mmdTestBoot_jl(A,B,alpha,params);
+    [testStat,thresh,params,p] = mmdTestBoot_strat_jl(A,B,alpha,params);
     display(p);
     %pause;
     
