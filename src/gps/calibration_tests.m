@@ -1,50 +1,36 @@
 %% Clear and load mmd tools and gpml
 
-clear all;
+% clear all;
 addpath(genpath('../mmd'));
 addpath(genpath('../util'));
 addpath(genpath('../gpml'));
 
-init_rand(42);
+init_rand(1);
 
-%% Setup
+repeats = 100;
+p_values = zeros(repeats, 1);
 
-filenames = {'01-airline', ...
-             '02-solar', ...
-             '03-mauna', ...
-             '04-wheat', ...
-             '05-temperature', ...
-             '06-internet', ...
-             '07-call-centre', ...
-             '08-radio', ...
-             '09-gas-production', ...
-             '10-sulphuric', ...
-             '11-unemployment', ...
-             '12-births', ...
-             '13-wages'};
-         
-p_values = zeros(numel(filenames), 1);
+%% Main loop
 
-%% Loop
+for main_iter = 1:repeats
 
-for main_loop_i = 1:numel(filenames)
-    
-    filename = filenames{main_loop_i};
-    load(filename);
+    %% Generate some data
 
-    %% Standardise data
+    N = 50;
 
-    X = X - repmat(mean(X), size(X, 1), 1);
-    y = y - repmat(mean(y), size(y, 1), 1);
+    X = linspace(0, 1, N)';
+    K = covSEiso([0,0], X);
+    K = K + 0.1 * eye(size(K));
 
-    X = X ./ repmat(std(X), size(X, 1), 1);
-    y = y ./ repmat(std(y), size(y, 1), 1);
+    y = chol(K)' * randn(N, 1);
+
+    plot(X, y, 'o');
 
     %% Fit a GP to this
 
-    if numel(y) > 1000
+    if numel(y) > 500
         % Subset of data approx
-        sub_sample = randsample(1:numel(y), 1000);
+        sub_sample = randsample(1:numel(y), 500);
         X_train = X(sub_sample,:);
         y_train = y(sub_sample);
     else
@@ -52,7 +38,7 @@ for main_loop_i = 1:numel(filenames)
         y_train = y;
     end
 
-    hyp.cov = [0,0];
+    hyp.cov = [-2,0];
     hyp.mean = [];
     hyp.lik = 0;
 
@@ -62,9 +48,31 @@ for main_loop_i = 1:numel(filenames)
 
     inf = @infExact;
 
-    hyp_opt = minimize(hyp, @gp, -500, inf, mean_fn, cov_fn, lik_fn, X_train, y_train);
+    hyp_opt = minimize(hyp, @gp, -100, inf, mean_fn, cov_fn, lik_fn, X_train, y_train);
 
     %% Sample from GP - compare to data graphically
+
+    % This version uses X as given
+
+%     [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X);
+% 
+%     X_post = [];
+%     y_post = [];
+% 
+%     for i = 1:1
+%       X_post = [X_post; X]; %#ok<AGROW>
+%       y_post = [y_post; ymu + sqrt(ys2) .* randn(size(ys2))]; %#ok<AGROW>
+%     end
+% 
+%     X_data = X;
+%     y_data = y;
+% 
+%     plot(X_post, y_post, 'ro'); hold on;
+%     plot(X, y, 'go'); hold off;
+
+    %% Sample from GP - compare to data graphically
+
+    % This version uses with replacement bootstrap X
 
 %     X_post = randsample(X,length(X), true);
 % 
@@ -78,28 +86,83 @@ for main_loop_i = 1:numel(filenames)
 % 
 %     plot(X_post, y_post, 'ro'); hold on;
 %     plot(X_data, y_data, 'go'); hold off;
-    
+
+    %% Sample from GP - compare to data graphically
+
+    % This version uses subsampling bootstrap
+
+%     X_post = randsample(X,length(X)/5, true);
+% 
+%     [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X_post);
+% 
+%     y_post = ymu + sqrt(ys2) .* randn(size(ys2));
+% 
+%     rand_indices = randsample(length(X), 5*length(X), true);
+%     X_data = X(rand_indices);
+%     y_data = y(rand_indices);
+% 
+%     plot(X_post, y_post, 'ro'); hold on;
+%     plot(X_data, y_data, 'go'); hold off;
+
+    %% Sample from GP - compare to data graphically
+
+    % This version uses subsampling bootstrap - subsampling actual data
+
+%     rand_indices = randsample(length(X), length(X)/2, true);
+%     X_post = X(rand_indices);
+%     y_post = y(rand_indices);
+% 
+%     rand_indices = randsample(length(X), length(X)/2, true);
+%     X_data = X(rand_indices);
+%     y_data = y(rand_indices);
+% 
+%     plot(X_post, y_post, 'ro'); hold on;
+%     plot(X_data, y_data, 'go'); hold off;
+
+    %% Sample from GP - compare to data graphically
+
+    % This version uses KDE bootstrap
+
+%     bandwidth = 0.1;
+%     
+%     rand_indices = randsample(length(X), length(X), true);
+%     X_post = X(rand_indices) + bandwidth * randn(size(X));
+% 
+%     [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X_post);
+% 
+%     y_post = ymu + sqrt(ys2) .* randn(size(ys2));
+% 
+%     rand_indices = randsample(length(X), length(X), true);
+%     
+%     X_data = X(rand_indices) + bandwidth * randn(size(X));
+%     y_data = y(rand_indices) + bandwidth * randn(size(y));
+% 
+%     plot(X_post, y_post, 'ro'); hold on;
+%     plot(X_data, y_data, 'go'); hold off;
+
     %% Sample from GP - compare to data graphically
 
     % This version uses random 50 / 50 partition
     
-    N = numel(y);
-    cut_off = floor(N/2);
-    
     rand_indices = randsample(length(X), length(X), false);
-    X_post = X(rand_indices(1:cut_off));
+    X_post = X(rand_indices(1:(N/2)));
 
     [ymu, ys2, ~, ~] = gp(hyp_opt, inf, mean_fn, cov_fn, lik_fn, X, y, X_post);
 
     y_post = ymu + sqrt(ys2) .* randn(size(ys2));
     
-    X_data = X(rand_indices((cut_off + 1):end));
-    y_data = y(rand_indices((cut_off + 1):end));
+    X_data = X(rand_indices((N/2 + 1):end));
+    y_data = y(rand_indices((N/2 + 1):end));
 
     plot(X_post, y_post, 'ro'); hold on;
     plot(X_data, y_data, 'go'); hold off;
+
+    %% Check
     
-    drawnow;
+%     X_data = randn(size(X));
+%     y_data = randn(size(y));
+%     X_post = randn(size(X));
+%     y_post = randn(size(y));
 
     %% Get ready for two sample test
 
@@ -115,11 +178,6 @@ for main_loop_i = 1:numel(filenames)
 
     d1 = sqrt(sq_dist(A', A'));
     d2 = sqrt(sq_dist(B', B'));
-    C = [A;B];  %aggregate the sample
-    d3 = sq_dist(C', C');
-    % figure;
-    % hist([d1(:);d2(:)]);
-
     %% Select a lengthscale
 
     % CV for density estimation
@@ -164,7 +222,7 @@ for main_loop_i = 1:numel(filenames)
     best_ell = trial_ell(1);
     best_log_p = -Inf;
     for ell = trial_ell'
-%         display(ell);
+        display(ell);
         log_p = 0;
         for fold = 1:folds
             K1 = rbf_dot(X_f_train{fold} , X_f_test{fold}, ell);
@@ -180,46 +238,20 @@ for main_loop_i = 1:numel(filenames)
         end
     end
     params.sig = best_ell;
-    % Median
-    %params.sig = sqrt(0.5*median(d3(d3>0)));
-    % Other things?
-    %params.sig = 2;
-
-%     display(params.sig);
+    display(params.sig);
 
     %% Perform MMD test
 
     alpha = 0.05;
-    params.shuff = 1000;
+    params.shuff = 100;
     [testStat,thresh,params,p] = mmdTestBoot_jl(A,B,alpha,params);
     display(p);
     %pause;
     
-    p_values(main_loop_i) = p;
+    %% Record p
 
-    %% Compute witness function in 2d
+    p_values(main_iter) = p;
 
-    if size(A,2) == 2
-        m = size(A, 1);
-        n = size(B, 1);
-        t = (((fullfact([200,200])-0.5) / 200) - 0) * 1;
-        t = t .* (1.4 * repmat(range([A; B]), size(t,1), 1));
-        t = t + repmat(min([A; B]) - 0.2*range([A; B]), size(t,1), 1);
-        K1 = rbf_dot(A, t, params.sig);
-        K2 = rbf_dot(B, t, params.sig);
-        witness = sum(K1, 1)' / m - sum(K2, 1)' / n;
-        %plot3(t(:,1), t(:,2), witness, 'bo');
-        %hold on;
-        %plot3(B(:,1), B(:,2), repmat(max(max(witness)), size(B)), 'ro');
-        reshaped = reshape(witness, 200, 200)';
-
-        h = figure;
-        imagesc(reshaped(end:-1:1,:));
-        colorbar;
-        save2pdf(['temp/' filename '-witness.pdf'], h, 900, true);
-        hold off;
-    end
-    
 end
 
-display(p_values);
+hist(p_values);
