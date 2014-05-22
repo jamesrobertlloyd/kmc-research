@@ -102,84 +102,110 @@ We propose an exploratory approach to statistical model criticism using maximum 
 Typical approaches to model criticism require a practitioner to select a statistic by which to measures discrepancies between data and a statistical model.
 MMD two sample tests are instead constructed as an analytic maximisation over a large space of possible statistics and therefore automatically select an appropriate statistic.
 We demonstrate on synthetic data that the selected statistic, called the witness function, can be used to identify where a statistical model most misrepresents the data it was trained on.
-We then demonstrate the procedure on real data where the models being assessed are restricted Boltzmann machines, deep belief networks and [something else] and demonstrate the ways in which these models are failing to capture the properties of the data they are trained on.
+We then demonstrate the procedure on real data where the models being assessed are restricted Boltzmann machines, deep belief networks and Gaussian process regression and demonstrate the ways in which these models are failing to capture the properties of the data they are trained on.
 \end{abstract} 
 
 \allowdisplaybreaks
 
 \section{Introduction}
 
-\TBD{Some things to put in. Model checking useful because it is an open world method ('am I wrong') useful in the iterative process of model building and gives confidence in predictions from a model.}
-
 Statistical model checking or criticism\footnotemark is an important part of a complete statistical analysis.
 When one fits a linear model to a data set via least squares a complete analysis includes computing \eg Cook's distances \cite{Cook1982-eq} to identify influential points or plotting residuals against fitted values to identify non-linearity or heteroscedasticity.
 Similarly, modern approaches to Bayesian statistics view model criticism as in important component of an iterative cycle of model construction, inference and criticism \citep{Gelman2013-st}.
-\footnotetext{We prefer the term `model criticism' for similar reasons to O'Hagan \citep{OHagan2003-bc}.}
+\footnotetext{We follow Box \citep{Box1980-ud} using the term `model criticism' for similar reasons to O'Hagan \citep{OHagan2003-bc}.}
 
 As statistical models become more complex and diverse in response to the challenges of modern data sets there will be an increasing need for a greater range of model checking procedures that are either automatic or generally applicable.
-This will be especially true as automatic modelling methods \citep[e.g.][]{Grosse2012-zf, Lloyd2014-ABCD, Thornton2013-zg} and probabilistic programming \citep[e.g.][]{Goodman2012-pf, stan-software:2014} mature.
+This will be especially true as automatic modelling methods \citep[e.g.][]{Grosse2012-zf, Thornton2013-zg, Lloyd2014-ABCD} and probabilistic programming \citep[e.g.][]{Goodman2012-pf, stan-software:2014} mature.
 
 Model criticism typically proceeds by choosing a statistic of interest, computing it on data and comparing this to a suitable null distribution.
 Ideally these statistics are chosen to assess the utility of the statistical model under consideration (see applied examples \citep[e.g.][]{Meulders1998-xo}\fTBD{This is an obscure citation - need to find better examples}) but this can require considerable expertise on the part of the modeller.
 We propose an alternative to this approach by using a statistic defined as a supremum over a broad class of measures of discrepancy between two distributions, the maximum mean discrepancy (MMD) \citep[e.g.][]{Gretton2008-ik}\fTBD{I should cite some earlier references as well}).
 The advantage of this approach is that the discrepancy measure attaining the supremum automatically identifies regions of the data which are most poorly represented by the statistical model fit to the data.
 
-We demonstrate this approach to model checking on toy data sets and two real world examples.
-\NA{Some sort of call to arms about a lack of model checking in the machine learning literature}.
+We demonstrate this approach to model criticism on toy data sets, restricted Boltzmann machines\fTBD{Add canonical references} and deep belief networks trained on MNIST digits and Gaussian process regression models trained on several time series.
+Our proposed method identifies discrepancies between the data and fitted models that would not be apparent from the predictive performance focused metrics one typically finds in a machine learning paper.
+Consequently\fTBD{Need to work on wording} it is our belief that more effort shoud be expended on attempting to falsify models fitted to data, using model criticism techniques or otherwise.
+Not only will this aid research in targeting areas for improvement but it should give greater confidence in any conclusions drawn from the models.
 
-\section{Model criticism with posterior predictive $p$-values}
+\section{Model criticism}
 
-Suppose we observe data $Y = (y_i)_{i=1\ldots n}$ and we attempt to fit a model $M$ with parameters $\theta$.
-After performing a statistical analysis we will have either an estimate, $\hat\theta$, or an (approximate) posterior, $p(\theta|M,Y)$, for the parameters.
+Suppose we observe data $Y^\textrm{obs} = (y_i)_{i=1\ldots n}$ and we attempt to fit a model $M$ with parameters $\theta$.
+After performing a statistical analysis we will have either an estimate, $\hat\theta$, or an (approximate) posterior, $p(\theta \given Y^\textrm{obs}, M)$, for the parameters.
+How can we check the validity of this analysis?
 
-The posterior predictive distribution over replicate data\fTBD{ZG: Be more gentle} $Y^\textrm{rep}$ is given by
+\subsection{Criticising prior assumptions}
+
+The classical approach to model criticism is to attempt to falsify the null hypothesis that the data could have been generated by the model $M$ for some value of the parameters $\theta$ \ie $Y^\textrm{obs} \sim p(Y \given \theta, M)$.
+This is typically performed by constructing a statistic $T$ of the data whose distribution does not depend on the parameters $\theta$ \ie a pivotal quantity.
+The extent to which the observed data $Y^\textrm{obs}$ differs from expectations under the model $M$ can then be quantified with a $p$-value
 \begin{equation}
-p(Y^\textrm{rep}|M,Y) = \int p(Y^\textrm{rep}|M,\theta)p(\theta|M,Y)\mathrm{d}\theta
+  p_\textrm{freq}(Y^\textrm{obs}) = \mathbb{P}(T(Y)\geq T(Y^\textrm{obs})) \quad \textrm{where} \quad Y \sim p(Y \given \theta, M) \quad \textrm{for any } \theta.
+  \label{eq:freq-p-value}
 \end{equation}
-where the posterior distribution for $\theta$ may be replaced by a point mass in a frequentist analysis \ie a plug-in predictive distribution\fTBD{Write equation}.
-In a Bayesian context this\fTBD{Reference equation} represents the belief over potential future data sets, $Y^\textrm{rep}$, generated by the same mechanism as the first data set after having observed $Y$.
 
-Posterior predictive $p$-values \citep{Rubin1984-tw} are defined by
+Analogous quantities in a Bayesian context are the prior predictive $p$-values of Box \citep{Box1980-ud}.
+The null hypothesis is replaced with the claim that the data could have been generated from the prior predictive distribution $Y^\textrm{obs} \sim \int p(Y \given \theta, M)p(\theta \given M) \mathrm{d}\theta$.
+A $p$-value can then be constructed for any statistic $T$ of the data
 \begin{equation}
-p_\textrm{post}(Y) = \mathbb{P}(T(Y^\textrm{rep})\geq T(Y)|M,Y)
+  p_\textrm{prior}(Y^\textrm{obs}) = \mathbb{P}(T(Y)\geq T(Y^\textrm{obs})) \quad \textrm{where} \quad Y \sim \int p(Y \given \theta, M)p(\theta \given M) \mathrm{d}\theta.
+  \label{eq:prior-p-value}
 \end{equation}
-where $T$ is a statistic \ie a function of the data.
-This is the posterior probability that a potential future data set will be more extreme than the observed data as measured by the statistic $T$.
-Small $p$-values indicate that the observed data, $Y$, is extreme compared to the posterior predictive distribution, indicating a lack of fit between the posterior distribution and the data.
 
-\section{Model criticism for exchangeable data using maximum mean discrepancy}
+Both of these procedures quantify how surprised one should be after observing data $Y^\textrm{obs}$ having expected it to have been generated by the `model'.
+The difference in methodologies comes from the differen use of the word `model'.
+To a frequentist a model is a class of probability distributions over data indexed by parameters.
+In contrast, a Bayesian model is a joint probability distribution over data and parameters.
+
+\subsection{Criticising estimated models or posterior distributions}
+
+A constrasting method of Bayesian model criticism is the calculation of posterior predictive $p$-values \citep[e.g.][]{Rubin1984-tw}\fTBD{Find older references - Dempster perhaps} where the prior predictive distribution in the null hypothesis is replaced with the posterior predictive distribution
+\begin{equation}
+  p_\textrm{post}(Y^\textrm{obs}) = \mathbb{P}(T(Y)\geq T(Y^\textrm{obs})) \quad \textrm{where} \quad Y \sim \int p(Y \given \theta, M)p(\theta \given Y^\textrm{obs}, M) \mathrm{d}\theta.
+  \label{eq:post-p-value}
+\end{equation}
+
+The corresponding test for an analysis resulting in a point estimate of the parameters $\hat\theta$ would replace the posterior predictive distribution with the plug-in predictive distribution $p(Y \given \hat\theta, M)$ to form the plug-in $p$-value $p_\textrm{plug}$.
+These $p$-values quantify how surprised one should be if, after performing inference after observing data $Y^\textrm{obs}$, one were to observe new data whose value of the statistic $T$ was equal to that of the original data.
+
+\subsection{Which type of model criticism should be used?}
+
+Different forms of model criticism are appropriate in different contexts, but we believe that posterior predictive and plug-in $p$-values will be most often useful for the types of statistical model considered in machine learning.
+For example, suppose one is fitting a nonparametric or otherwise very flexible model to data \eg a deep belief network.
+Classical and prior predictive $p$-values would assume the null hypothesis that the data could have been generated from some deep belief network.
+Since the space of possible deep belief networks is very large it will be difficult to ever falsify this hypothesis.
+A more interesting null hypothesis to test in this context is whether or not our particular trained deep belief network can faithfully mimick the distribution it was trained on.
+
+\section{Model criticism for \iid data using two sample tests}
 \label{sec:model-crit}
 
-We now consider the situation where we can assume that our data $Y$ are \iid samples from some (unknown) distribution.
-
-Posterior predictive $p$-values ask whether or not the data $Y$ is extreme compared to the posterior predictive distribution $p(Y^\textrm{rep}|M,Y)$.
-This can be interpreted as the $p$-value of a hypothesis test with a null hypothesis that ${Y \dist p(Y^\textrm{rep}|M,Y)}$ \ie that the data is a sample from the posterior predictive distribution.
-In the case of exchangeable\fTBD{Seriously - what was I smoking!?}\fTBD{Make a forward pointer to how this can be applied to non-exchangeable data} data this null distribution can be replaced with ${(y_i)_{i=1\ldots n} \simiid p(y^\textrm{rep}|M,Y)}$ \ie that the data are \iid samples from the posterior predictive distribution over data points.\fTBD{This is not quite correct - the posterior is a joint distribution - this is correct for the plug in distribution but for posterior we would technically need a different bootstrap scheme. This is true when doing point estimation or MAP estimation}
+We now consider the situation where we can assume that our data $Y$ are \iid samples from some unknown distribution $(y_i)_{i=1\ldots n} \simiid p(y\given \theta, M)$.
+The null hypothesis associated with a plug-in $p$-value is then $(y^\textrm{obs}_i)_{i=1\ldots n} \simiid p(y \given \hat\theta, M)$.
 
 We can test this null hypothesis using a two sample test \citep[e.g.][]{Friedman1979-ur, Bickel1969-ao, Hotelling1951-jd}.
-In particular, we have samples of data $(y_i)_{i=1\ldots n}$ and we can generate samples from the posterior predictive distribution $(y_i^\textrm{rep})_{i=1\ldots m}$ and then ask whether or not these samples could have been generated from the same distribution\footnotemark.
-\footnotetext{Note that using samples from the posterior predictive distribution allows us to perform tests when we only have access to samples \eg after performing MCMC inference.}
+In particular, we have samples of data $(y_i)_{i=1\ldots n}$ and we can generate samples from the plug-in predictive distribution $(y_i^\textrm{rep})_{i=1\ldots m}$ and then ask whether or not these samples could have been generated from the same distribution.
 
-Much like posterior predictive $p$-values we can answer this question using a statistic $t$ to measure the discrepancy between the two distributions.
-In particular, we consider the mean discrepancy between the two samples:
+The methods for constructing $p$-values in the previous section all started with a statistic $T$ of the entire data.
+This however is not necessary; a $p$-value is simply a random variable which has a uniform distribution under the null hypothesis.
+Instead of computing a statistic $T(Y^\textrm{obs})$ of the entire data we consider statistics of data points $t(y)$ and then consider the mean discrepancy between the two samples
 \begin{equation}
 \mathbb{E}(t(y^\textrm{rep})) - \mathbb{E}(t(y)).
 \end{equation}
 
 This quantity measures how different the two distributions are on average as measured by the statistic $t$.
-This is in contrast with posterior predictive $p$-values which ask if the data is extreme as measured by a statistic.
+This is in contrast with the $p$-values introduced thus far which ask if the data is extreme as measured by a statistic $T$.
 The benefit of mean discrepancy measures is that we can analytically maximise the discrepancy over a large class of statistics $t$, allowing us to find the statistic that most shows any discrepancy between the two distributions.
 
 \section{Kernel maximum mean discrepancy (MMD) two sample tests}
 
-Consider the two sample problem. We are given samples $X = (x_i)_{i=1\ldots m}$ and $Y = (y_i)_{i=1\ldots n}$ drawn \iid from distributions $p$ and $q$ respectively. can we determine if $p \neq q$?
+Consider the two sample problem. We are given samples $X = (x_i)_{i=1\ldots m}$ and $Y = (y_i)_{i=1\ldots n}$ drawn \iid from distributions $p$ and $q$ respectively.
+Can we determine if $p \neq q$?
 
 An answer to this problem is to consider maximum mean discrepancy (MMD) \citep{Gretton2008-ik} statistics (also called integral probability metrics \citep{Muller1997-vs})
 \begin{equation}
 \textrm{MMD}(\mathcal{F},p,q) = \sup_{f \in \mathcal{F}}(\mathbb{E}_{x\sim p}[f(x)] - \mathbb{E}_{y\sim q}[f(y)])
 \end{equation}
 where $\mathcal{F}$ is a set of functions.
-These types of statistics are of interest since they are computed at the function that extremises the discrepancy between two distributions.
+These types of statistics are of interest since they are computed at a function that extremises the mean discrepancy between two distributions.
 When $\mathcal{F}$ is a reproducing kernel Hilbert space (RKHS) the function attaining the supremum can be derived analytically and is called the witness function
 \begin{equation}
 f(x) = \mathbb{E}_{x'\sim p}[k(x,x')] - \mathbb{E}_{x'\sim q}[k(x,x')]
@@ -211,7 +237,7 @@ The witness function can be estimated from finite samples similarly
 \hat{f}(x) = \frac{1}{m}\sum_{i=1}^{m}k(x,x_i) - \frac{1}{n}\sum_{i=1}^{n}k(x,y_i).
 \end{equation}
 
-From this final equation we can see that the empirical witness function is the difference of two kernel density estimates (cite Nadaraya and Watson probably).
+From this final equation we can see that the empirical witness function is the difference of two kernel density estimates\fTBD{Cite Nadaraya and Watson}.
 This means that we can interpret the witness function as showing where the estimated densities of $p$ and $q$ are most different.
 
 \subsection{Kernel choice}
@@ -622,10 +648,10 @@ If we assume that our statistic $T$ is of the form $T(Y) = \sum t(y_i)$ (this in
 \begin{equation}
 \mathbb{E}(T(Y^\textrm{rep})) - T(Y) = \sum \mathbb{E}(t(y_i^\textrm{rep})) - \sum t(y_i) = \mathbb{E}(t(y^\textrm{rep})) - \mathbb{E}(t(y))
 \end{equation}
-where $y$ and $y^\textrm{rep}$ are distributed according to the empirical distribution of the data and the posterior-predictive distribution over single data points respectively.
+where $y$ and $y^\textrm{rep}$ are distributed according to the empirical distribution of the data and the posterior predictive distribution over single data points respectively.
 This quantity is called a mean discrepancy between the distribution of $y$ and $y^\textrm{rep}$.
 
-In the practical application of posterior-predictive $p$-values, statistics are chosen to measure aspects of the data that are of relevance to the analysis being performed.
+In the practical application of posterior predictive $p$-values, statistics are chosen to measure aspects of the data that are of relevance to the analysis being performed.
 Whilst there are numerous examples (\NA{cite some applied papers}) of sensible choices for standard models, there is little work on exploratory model checking.
 The benefit of considering mean discrepancies is that we can analytically maximise over a large space of different statistics.
 
@@ -651,3 +677,23 @@ If we remove the indicator function in the above equation we get
   \mathbb{E}(T(y^\textrm{rep})) - \mathbb{E}(T(y))
 \end{equation}
 which measures the mean discrepancy between the posterior predictive distribution and the data as measured by the statistic $T$.
+
+\section{Model criticism with posterior predictive $p$-values}
+
+Suppose we observe data $Y = (y_i)_{i=1\ldots n}$ and we attempt to fit a model $M$ with parameters $\theta$.
+After performing a statistical analysis we will have either an estimate, $\hat\theta$, or an (approximate) posterior, $p(\theta|M,Y)$, for the parameters.
+
+The posterior predictive distribution over replicate data\fTBD{ZG: Be more gentle} $Y^\textrm{rep}$ is given by
+\begin{equation}
+p(Y^\textrm{rep}|M,Y) = \int p(Y^\textrm{rep}|M,\theta)p(\theta|M,Y)\mathrm{d}\theta
+\end{equation}
+where the posterior distribution for $\theta$ may be replaced by a point mass in a frequentist analysis \ie a plug-in predictive distribution\fTBD{Write equation}.
+In a Bayesian context this\fTBD{Reference equation} represents the belief over potential future data sets, $Y^\textrm{rep}$, generated by the same mechanism as the first data set after having observed $Y$.
+
+Posterior predictive $p$-values \citep{Rubin1984-tw} are defined by
+\begin{equation}
+p_\textrm{post}(Y) = \mathbb{P}(T(Y^\textrm{rep})\geq T(Y)|M,Y)
+\end{equation}
+where $T$ is a statistic \ie a function of the data.
+This is the posterior probability that a potential future data set will be more extreme than the observed data as measured by the statistic $T$.
+Small $p$-values indicate that the observed data, $Y$, is extreme compared to the posterior predictive distribution, indicating a lack of fit between the posterior distribution and the data.
