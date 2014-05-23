@@ -196,6 +196,8 @@ cond_raster_2 = [];
 cond_raster_alt_1 = [];
 cond_raster_alt_2 = []; 
 
+p_values = -1 * ones(10,1);
+
 for digit = 0:9
 
     %% Select a digit to analyse
@@ -259,7 +261,7 @@ for digit = 0:9
     best_ell = trial_ell(1);
     best_log_p = -Inf;
     for ell = trial_ell'
-        display(ell);
+%         display(ell);
         log_p = 0;
         for fold = 1:folds
             K1 = rbf_dot(X_f_train{fold} , X_f_test{fold}, ell);
@@ -284,11 +286,11 @@ for digit = 0:9
 
     %% Perform MMD test
 
-    alpha = 0.05;
-    params.shuff = 1000;
-    [testStat,thresh,params,p] = mmdTestBoot_jl(X_dr,Y_dr,alpha,params);
-    display(p);
-    %pause;
+%     alpha = 0.05;
+%     params.shuff = 1000;
+%     [testStat,thresh,params,p] = mmdTestBoot_jl(X_dr,Y_dr,alpha,params);
+%     display(p);
+%     %pause;
 
     %% Do PCA MMD
 
@@ -298,6 +300,8 @@ for digit = 0:9
                                                     Y(Y_labels==digit,:),...
                                                     alpha,params,d);
     display(p);
+    
+    p_values(digit+1) = p;
     
     %% Compute witness function in 2d
 
@@ -335,7 +339,7 @@ for digit = 0:9
         x = Y_dr(i,:)';
         witness = rbf_witness(x, X_dr, Y_dr, ell);
         witnesses_Y(i) = witness;
-        fprintf('\nwitness=%f\n', witness);
+%         fprintf('\nwitness=%f\n', witness);
 
         % Checkgrad
         % options = optimoptions('fminunc','GradObj','on', ...
@@ -353,7 +357,7 @@ for digit = 0:9
         %imagesc(reshape(x, 28, 28)');
         %drawnow;
 
-        fprintf('\ni = %d\n', i);
+%         fprintf('\ni = %d\n', i);
 
     end
 
@@ -370,7 +374,7 @@ for digit = 0:9
         x = X_dr(i,:)';
         witness = rbf_witness(x, X_dr, Y_dr, ell);
         witnesses_X(i) = witness;
-        fprintf('\nwitness=%f\n', witness);
+%         fprintf('\nwitness=%f\n', witness);
 
     %     % Checkgrad
     %     options = optimoptions('fminunc','GradObj','on', ...
@@ -388,7 +392,7 @@ for digit = 0:9
         %imagesc(reshape(x, 28, 28)');
         %drawnow;
 
-        fprintf('\ni = %d\n', i);
+%         fprintf('\ni = %d\n', i);
 
     end
 
@@ -530,3 +534,5 @@ colormap(bone);
 set(gca, 'YTick', []);
 set(gca, 'XTick', []);
 save2pdf('temp/cond_witness_peaks.pdf', h, 600, true );
+
+display(p_values);

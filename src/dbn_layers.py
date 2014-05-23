@@ -34,7 +34,7 @@ def train_and_sample_from_dbn_layers(random_seed=1,
             print 'Training rbm %d' % (i+1)
             (rbm, train_set_x, train_set_y, test_set_x, test_set_y) = train_rbm(learning_rate=0.1, training_epochs=epochs,
                                                                                 n_hidden=n_hidden,
-                                                                                dataset=original_dataset,
+                                                                                dataset=dataset,
                                                                                 random_seed=random_seed,
                                                                                 augment_with_labels=(i==len(architecture)-1))
             rbms.append(rbm)
@@ -66,6 +66,10 @@ def train_and_sample_from_dbn_layers(random_seed=1,
             pseudo_test_set_x.set_value(pseudo_x_test_array)
             dataset = (pseudo_train_set_x, pseudo_train_set_y, pseudo_test_set_x, pseudo_test_set_y)
     print 'Pretraining complete'
+
+    with open(os.path.join(save_folder, 'rbms.pkl'), 'w') as save_file:
+        pickle.dump(rbms, save_file)
+
     # Reload original data
     datasets = load_data(original_dataset)
     train_set_x, train_set_y = datasets[0]
@@ -132,18 +136,16 @@ def train_and_sample_from_dbn_layers(random_seed=1,
         count += 1
         print 'Sampled %d images' % count
 
-    with open(os.path.join(save_folder, 'rbms.pkl'), 'w') as save_file:
-        pickle.dump(rbms, save_file)
-
     return rbms
 
-def main(max_layers=10):
+def main(max_layers=10, start=0):
     rbms = []
     for layers in range(max_layers):
-        architecture = [500] * layers + [2000]
-        save_folder = '../data/mnist/dbn-layers-%s' % '-'.join('%d' % n_neurons for n_neurons in architecture)
-        if not os.path.exists(save_folder):
-            os.makedirs(save_folder)
-        rbms = train_and_sample_from_dbn_layers(architecture=architecture, save_folder=save_folder, samples=3000, epochs=15, starting_rbms=rbms)
-        rbms = rbms[:-1] # Save everything apart from the autoassociative bit
+        if layers == start: # HACK
+            architecture = [500] * layers + [2000]
+            save_folder = '../data/mnist/dbn-layers-%s' % '-'.join('%d' % n_neurons for n_neurons in architecture)
+            if not os.path.exists(save_folder):
+                os.makedirs(save_folder)
+            rbms = train_and_sample_from_dbn_layers(architecture=architecture, save_folder=save_folder, samples=3000, epochs=15, starting_rbms=rbms)
+            rbms = rbms[:-1] # Save everything apart from the autoassociative bit
     

@@ -83,7 +83,7 @@ for i=1:params.shuff
             
 %     display(i);
     p = sum(testStat < MMDarr) / length(MMDarr);
-    display(p);
+%     display(p);
 end 
 
 MMDarr = sort(MMDarr);

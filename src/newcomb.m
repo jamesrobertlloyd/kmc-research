@@ -91,6 +91,6 @@ set(H1,'Color','r')
 set(H2,'LineStyle','--')
 set(H1,'LineWidth',4)
 set(H2,'LineWidth',4)
-xlabel('Deviations from 24,800 nanseconds','FontSize',15)
+xlabel('Deviations from 24,800 nansoeconds','FontSize',15)
 hold off
 save2pdf('newcomb_witness_2.pdf', h, 600, true);
