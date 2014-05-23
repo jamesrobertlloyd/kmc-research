@@ -128,6 +128,7 @@ It is our belief\fTBD{I'm finding it difficult to find the right words here} tha
 Not only will this aid research in targeting areas for improvement but it should give greater confidence in any conclusions drawn from a model.
 
 \section{Model criticism}
+\label{sec:model-crit-general}
 
 Suppose we observe data $Y^\textrm{obs} = (y_i)_{i=1\ldots n}$ and we attempt to fit a model $M$ with parameters $\theta$.
 After performing a statistical analysis we will have either an estimate, $\hat\theta$, or an (approximate) posterior, $p(\theta \given Y^\textrm{obs}, M)$, for the parameters.
@@ -158,7 +159,7 @@ A frequentist model is a class of probability distributions over data indexed by
 
 \subsection{Criticising estimated models or posterior distributions}
 
-A constrasting method of Bayesian model criticism is the calculation of posterior predictive $p$-values \citep[e.g.][]{Rubin1984-tw}\fTBD{Find older references - Dempster perhaps} $p_\textrm{post}$ where the prior predictive distribution in the null hypothesis is replaced with the posterior predictive distribution ${Y \sim \int p(Y \given \theta, M)p(\theta \given Y^\textrm{obs}, M) \mathrm{d}\theta}$.
+A constrasting method of Bayesian model criticism is the calculation of posterior predictive $p$-values \citep[e.g.][]{Rubin1984-tw}\fTBD{Find older references - See Bayarri Berger 2007 - Guttman} $p_\textrm{post}$ where the prior predictive distribution in the null hypothesis is replaced with the posterior predictive distribution ${Y \sim \int p(Y \given \theta, M)p(\theta \given Y^\textrm{obs}, M) \mathrm{d}\theta}$.
 The corresponding test for an analysis resulting in a point estimate of the parameters $\hat\theta$ would use the plug-in predictive distribution ${Y \sim p(Y \given \hat\theta, M)}$ to form the plug-in $p$-value $p_\textrm{plug}$.
 
 These $p$-values quantify how surprised one should be if, after performing inference having observed data $Y^\textrm{obs}$, one were to observe new data whose value of the statistic $T$ was equal to that of the original data.
@@ -177,7 +178,7 @@ This is the null hypothesis of posterior or plug-in $p$-values.
 We now demonstrate a method of constructing plug-in $p$-values for \iid data.
 
 \section{Model criticism for \iid data using two sample tests}
-\label{sec:model-crit}
+\label{sec:model-crit-two-sample}
 
 We assume that our data $Y$ are \iid samples from some unknown distribution ${(y_i)_{i=1\ldots n} \simiid p(y\given \theta, M)}$.
 After performing inference resulting in a point estimate of the parameters $\hat\theta$, the null hypothesis associated with a plug-in $p$-value is ${(y^\textrm{obs}_i)_{i=1\ldots n} \simiid p(y \given \hat\theta, M)}$.
@@ -404,19 +405,42 @@ These incorrect bits will then propagate down the DBN resulting in spurious feat
 
 \subsubsection{Do we need to go deeper?}
 
-\TBD{Currently performing a $p$-values by depth experiment - will hopefully have a nice table of $p$-values}
+\TBD{Currently performing a $p$-values by depth experiment - will hopefully have a nice table of $p$-values but I suspect that inference will break down and we still see much discrepancy}
 
 \subsection{Testing non \iid data}
 
-It is a bit restrictive to stick to \iid.
-Do we have any hope of applying in non \iid case.
-Remember that we only need a $p$-value.
-Regression is kinda on the border line - surely we can do something - let's make a suggestion.
+The test described so far applies when the model being tested has an \iid predictive distribution.
+This is of course restrictive, so we now demonstrate how we can construct a test for a non \iid model which has similar properties to the MMD statistic.
+In particular we consider regression.
 
 \subsubsection{A nonparametric test of heteroscedasticity and non-normality for regression}
 
-Naive thing would be a little slow - requiring a potentially costly estimation of density estimate.
-Let's try something cheaper and see what happens.
+We now assume that our data consists of pairs of inputs and outputs ${(x_i^\textrm{obs}, y_i^\textrm{obs})_{i=1\ldots n}}$.
+A typical formulation of the problem of regression is to estimate the conditional distribution of the outputs given the inputs ${p(y\given x, \theta)}$.
+This is consistent with assuming that input-output pairs are generated \iid from some distribution ${p(y, x \given \theta)}$, but conditioned on observing the particular input values ${(x_i^\textrm{obs})_{i=1\ldots n}}$.
+
+Naively, we might consider generating data from the plug-in predictive distribution ${y_i^\textrm{rep} \dist p(y\given x_i^\textrm{obs}, \hat\theta)}$ and computing the empirical MMD estimate\fTBD{I no longer have the equation} between ${(x_i^\textrm{obs}, y_i^\textrm{obs})_{i=1\ldots n}}$ and ${(x_i^\textrm{obs}, y_i^\textrm{rep})_{i=1\ldots n}}$.
+The null distribution of this statistic can be trivially estimated by sampling several sets of replicate data from the plug-in predictive distribution.
+
+\TBD{Maybe mention less naive things if this is insufficient and we end up trying fancier things}
+
+To demonstrate the utility of this test we apply it to 4 regression algorithms applied to 13 time series analysed in \cite{Lloyd2014-ABCD}.
+In this work the authors compare a number of different methods for constructing Gaussian process regression models.
+While it is clear that a simple smoothing method will almost always fail to capture the rich structure in these data sets, it is not clear if the more advance methods are capturing all relevant aspects of the data.
+
+Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 model construction methods.
+This table shows that it is only the method ABCD that is not consistently failing the MMD model check --- we should note however that SP and TCI perform well at extrapolation and interpolation.
+
+\TBD{TABLE}
+
+We now look at the type of discrepancies found by this test by looking at the witness function.
+Figure~\ref{fig:time-series-witness} shows two data sets and the fit of SE two them.
+Below are the witness functions of the MMD test which clearly identifies regions of lack of model fit; in both of these examples it is identifying heteroscedasticity.
+This explains why it is only ABCD that is able to pass the test since most of the data sets display extreme heteroscedasticity and ABCD is the only method that can express heteroscedasticity.
+
+\TBD{FIGURES}
+
+\TBD{However, presumably ABCD will fail on some data set and we can comment about it}
 
 \subsubsection{Something high dimensional}
 
@@ -424,57 +448,37 @@ Let's try something cheaper and see what happens.
 
 \section{Discussion of model criticism and related work}
 
-\fTBD{ZG: Discussion of related work feels disconnected JL: Needs to be updated anyway}
+\fTBD{ZG: Discussion of related work feels disconnected}
 
 \subsection{Are we criticising a particular model, or class of models?}
 
-To a frequentist, a statistical model is typically a probability distribution over data with some unknown parameters.
-To a Bayesian, the specification of a model is only complete with a prior distribution for those parameters.
-This difference in terminology is perhaps behind some of the confusion in the literature about the validity of certain model criticism techniques which we now discuss.
+In section~\ref{sec:model-crit-general} we interpreted the differences between classical, Bayesian prior/posterior and plug-in $p$-values as corresponding to different null hypotheses and interpretations of the word `model'.
+In particular the classical $p$-value tests a null hypothesis that the data could have been generated by a class of distributions (\eg all normal distributions) whereas all other $p$-values test a particular probability distribution.
 
-Posterior predictive $p$-values and the test proposed here test the null hypothesis that the data was generated from a particular probability distribution - a model with fitted parameters or the posterior predictive distribution\fTBD{ZG: Add in equations}.
-These tests allow us to falsify the hypothesis that a fitted model or posterior predictive distribution is a faithful summary of the data\fTBD{ZG: According to frequentist interpretation}.
-Note however that some proponents of posterior predictive $p$-values prefer to interpret them directly as subjective Bayesian probabilities \citep{Gelman2013-am}.
+Robins, van der Vaart \& Ventura \citep{Robins2000-oz} demonstrated that Bayesian and plug-in $p$-values are not classical $p$-values \ie they do not have a uniform distribution under the relevant null hypothesis.
+However, this was presented as a failure of these methods; in particular they demonstrated that methods proposed by Bayarri \& Berger \citep{Bayarri1999-ty} based on posterior predictive $p$-values are asymptotically classical $p$-values (frequentist $p$-values in their terminology).
 
-A more classical null hypothesis associated with model criticism is that the data was generated from a probability distribution of a certain form but with unknown parameters (\eg all normal distributions).
-Posterior $p$-values are uncalibrated for this composite\fTBD{ZG: define composite} hypothesis test \citep{Robins2000-oz} - under broad assumptions posterior predictive $p$-values are asymptotically conservative (the null distribution is concentrated towards values of 0.5).
-Robins et alia \citep{Robins2000-oz} shows that alternatives proposed by Bayarri \& Berger \citep{Bayarri1999-ty}, and prior predictive $p$-values of Box \citep{Box1980-ud} among others are appropriately calibrated\fTBD{Check this assertion about prior predictive}.
-Further examples of tests that are calibrated for this composite null hypothesis incude \citep[e.g.][]{Dey1998-dn, Johnson2004-ej}
-
-However, in our first real data example we are not interested in the question `do MNIST digits come from some deep belief network?'.
-If we were trying to answer this question, then we should expect any calibrated $p$-value to have very low statistical power since the space of probability distributions that can be represented by a deep belief network is very large indeed.
-Insead it is of more interest for this example to ask whether or not our particular trained neural network can faithfully mimick the distribution it was trained on.
-
-\subsection{When can we ignore a discrepancy between a model and data?}
-
-\fTBD{This can probably be removed - was created when I still had conceptual misunderstandings}
-
-The test proposed in this paper indicates whether or not it is plausible that the data was generated by a fitted model or posterior distribution.
-A significant value of the test statistic does not always indicate that the model was in some sense defective.
-For example, if one had a very strong prior on some model parameter for rational reasons, but that differed from the true generating process, it would take a lot of data for one's posterior distribution to converge to the distribution from which the data was being generated.
-Consequently, the MMD statistic would have a significant value for many sizes of data, but this would be accurately indicating that the posterior distribution is likely to be a poor description of the true data generation process.
-
-In light of this observation the test proposed here may be most appropriate when trying to perform a Bayesian analysis that uses reference priors\fTBD{I need to find a reference} where the priors are chosen to minimise the impact on the posterior, or when one has a large quantity of data.
-However, we believe it is still of value to know when one's posterior belief differs from observed data, even if this may be entirely reasonable from a subjective viewpoint.
+This claimed inadequacy of posterior predictive $p$-values was refuted \citep{noauthor_undated-xk} and while their usefulness is becoming more accepted (see \eg introduction of \cite{Bayarri2007-cp}) it would appear there is still confusion on the subject \citep{Gelman2013-am}.
+We hope that our interpretation of the differences between these methods as different null hypotheses --- appropriate in different circustances --- sheds further light on the matter.
 
 \subsection{Should we worry about using the same data for traning and criticism?}
 
-The test proposed here attempts to falsify the null hypothesis that the data could have been generated by the fitted model or posterior predictive distribution.
-In some situations it may be more appropriate to attempt to falsify the the null hypothesis that future data will be generated by the posterior predictive distribution.
-This can be achieved by reserving a portion of the data to be used for model criticism alone, rather than fitting a model or updating a posterior on the full data.
+Plug-in and posterior predictive $p$-values test the null hypothesis that the observed data could have been generated by the fitted model or posterior predictive distribution.
+In some situations it may be more appropriate to attempt to falsify the null hypothesis that future data will be generated by the plug-in or posterior predictive distribution.
+As mentioned in section~\ref{sec:model-crit-general} this can be achieved by reserving a portion of the data to be used for model criticism alone, rather than fitting a model or updating a posterior on the full data.
 Cross validation methods have also been investigated in this context \citep{Gelfand1992-ow, Gelfand1996-vy, Marshall2007-hd}
 
 \subsection{Omnibus methods for model criticism}
 
-Gelman, Meng \& Stern \citep{Gelman1996-ez} proposed an extension to posterior predictive $p$-values of Rubin \citep{Rubin1984-tw} by generalising the test statistic to a discrepancy meansure that can also take model parameters as input as well as data.
-In doing so they also proposed an omnibus test discrepancy measure
+Gelman, Meng \& Stern \citep{Gelman1996-ez} proposed an extension to posterior predictive $p$-values by generalising the test statistic to a discrepancy measure that can also take model parameters as input as well as data.
+They also proposed an omnibus test discrepancy measure
 \begin{equation}
-  X^2(y,\theta) = \sum_{i=1}^n \frac{(y_i-\mathbb{E}(y_i\given\theta))^2}{\textrm{Var}(y_i\given\theta)}
+  X^2(Y,\theta) = \sum_{i=1}^n \frac{(y_i-\mathbb{E}(y_i\given\theta))^2}{\textrm{Var}(y_i\given\theta)}
 \end{equation}
 which resembles a classical $\chi^2$ statistic.
-While this statistic can be useful in a number of different models, regression models especially, it would have failed to detect any discrepancies in our two toy data examples.
-In the case of exchangeable data (and a model that respects this symmetry) this statistic only measures how well the mean and variance of the data has been captured\fTBD{It is a function of the sufficient statistics and hence we do not expect deviations}.
-In our two toy data examples the mean and variance of the data were fit (near) directly by the proposed models.\fTBD{Check that this statement is true}
+While this statistic can be useful in a number of different models, it would have failed to detect any discrepancies in our two toy data examples.
+In the case of \iid or exchangeable data (and a model that respects this symmetry) this statistic only measures how well the mean and variance of the data has been captured.
+Since the mean and variance of the data were fit (near) directly by our proposed models we would only expect to see siginificant discrepancies if inference failed.
 
 \subsection{Other methods for evaluating statistical models}
 
@@ -485,20 +489,22 @@ For some discussion of sensitivity analysis and graphical model comparison see \
 O'Hagan \citep{OHagan2003-bc} considers using Kullback-Leibler divergences between prior and posterior distributions in hierarchical models.\fTBD{ZG: Expand}
 
 In the spirit of scientific falsification\fTBD{A canonical Popper reference?}, ideally all methods of assessing a model should be performed to gain confidence in any conclusions made.
+Of course, when performing multiple hypothesis tests care must be taken in the intrepetation of individual $p$-values.
 
 \section{Conclusions and future work}
 
 In this paper we have demonstrated an exploratory form of model criticism based on two sample tests using kernel maximum mean discrepancy.
 In contrast to other methods for model criticism, the test analytically maximises over a broad class of statistics, automatically identifying the statistic which most demonstrates the discrepancy between the model and data.
-We demonstrated how this method of model criticism can be applied to neural networks and \NA{something else} and demonstrated the ways in which these models were misrepresenting the data they were trained on.
+We demonstrated how this method of model criticism can be applied to neural networks and Gaussian process regression and demonstrated the ways in which these models were misrepresenting the data they were trained on.
 
 We have demonstrated how kernel MMD two sample tests can be applied to model criticism, but they can be applied to any aspect of statistical modelling where two sample tests are useful.
 This includes for example, Geweke's tests of markov chain posterior sampler validity \citep{Geweke2004-yx} and tests of markov chain convergence\fTBD{I presume this is a thing? ZG: Yes}.
 
-The two sample tests proposed in this paper apply to exchangeable data\fTBD{Update me in light of functional data}, but model criticism techniques should of course apply to models with other symmetries (\eg logitudinal data, graphs, functions\ldots).
-While two sample tests exist for data with different symmetries (\NA{cite something related to functional two sample testing}) it is unclear whether maximum mean discrepancy measures can be naturally extended to these classes; investigating such extensions would be a profitable area for future study.
+The two sample tests proposed in this paper apply to \iid data and models, but model criticism techniques should of course apply to models with other symmetries (\eg exchangeable data, logitudinal data, graphs, functions\ldots).
+We have demonstrated a potential adaptation of the test to regression models and two sample tests exist for data with different symmetries (\NA{cite something related to functional two sample testing}) it is unclear whether maximum mean discrepancy measures can be naturally extended to all of these classes; investigating such extensions would be a profitable area for future study.
 
-\TBD{Repeat of the call to arms about a lack of model checking in machine learning. Do you know what your model is up to right now? Maybe you should check it is ok.}
+We conclude with a question.
+Do you know how the model you are currently working with most misrepresents the data it is attempting to model?
 
 \newpage
 
@@ -715,3 +721,20 @@ Right: Witness function for this data and ABCD model with longer lengthscale.
 }
 \label{fig:temperature-witness}
 \end{figure}
+
+To a frequentist, a statistical model is typically a probability distribution over data with some unknown parameters.
+To a Bayesian, the specification of a model is only complete with a prior distribution for those parameters.
+This difference in terminology is perhaps behind some of the confusion in the literature about the validity of certain model criticism techniques which we now discuss.
+
+Posterior predictive $p$-values and the test proposed here test the null hypothesis that the data was generated from a particular probability distribution - a model with fitted parameters or the posterior predictive distribution\fTBD{ZG: Add in equations}.
+These tests allow us to falsify the hypothesis that a fitted model or posterior predictive distribution is a faithful summary of the data\fTBD{ZG: According to frequentist interpretation}.
+Note however that some proponents of posterior predictive $p$-values prefer to interpret them directly as subjective Bayesian probabilities \citep{Gelman2013-am}.
+
+A more classical null hypothesis associated with model criticism is that the data was generated from a probability distribution of a certain form but with unknown parameters (\eg all normal distributions).
+Posterior $p$-values are uncalibrated for this composite\fTBD{ZG: define composite} hypothesis test \citep{Robins2000-oz} - under broad assumptions posterior predictive $p$-values are asymptotically conservative (the null distribution is concentrated towards values of 0.5).
+Robins et alia \citep{Robins2000-oz} shows that alternatives proposed by Bayarri \& Berger \citep{Bayarri1999-ty}, and prior predictive $p$-values of Box \citep{Box1980-ud} among others are appropriately calibrated\fTBD{Check this assertion about prior predictive}.
+Further examples of tests that are calibrated for this composite null hypothesis incude \citep[e.g.][]{Dey1998-dn, Johnson2004-ej}
+
+However, in our first real data example we are not interested in the question `do MNIST digits come from some deep belief network?'.
+If we were trying to answer this question, then we should expect any calibrated $p$-value to have very low statistical power since the space of probability distributions that can be represented by a deep belief network is very large indeed.
+Insead it is of more interest for this example to ask whether or not our particular trained neural network can faithfully mimick the distribution it was trained on.
