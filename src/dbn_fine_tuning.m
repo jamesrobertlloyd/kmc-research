@@ -133,7 +133,6 @@ for epoch = starting_epoch:epochs
         % AND SAMPLE STATES
         wakehidprobs = logistic(data*vishid + hidrecbiases);
         wakehidstates = (wakehidprobs > rand(size(wakehidprobs))) * 1;
-        poshidstates = wakehidstates;
         wakepenprobs = logistic(wakehidstates*hidpen + penrecbiases);
         wakepenstates = (wakepenprobs > rand(size(wakepenprobs))) * 1;
         %postopprobs = logistic(wakepenstates*pentop + targets*labtop + topbiases);
@@ -172,7 +171,7 @@ for epoch = starting_epoch:epochs
         pvisprobs = logistic(wakehidstates*hidvis + visgenbiases);
         phidprobs = logistic(wakepenstates*penhid + hidgenbiases);
         % UPDATES TO GENERATIVE PARAMETERS
-        hidvis = hidvis + r*poshidstates'*(data-pvisprobs);
+        hidvis = hidvis + r*wakehidstates'*(data-pvisprobs);
         visgenbiases = visgenbiases + r*(data - pvisprobs);
         penhid = penhid + r*wakepenstates'*(wakehidstates-phidprobs);
         hidgenbiases = hidgenbiases + r*(wakehidstates - phidprobs);
