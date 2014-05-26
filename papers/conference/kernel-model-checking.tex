@@ -413,7 +413,7 @@ The test described so far applies when the model being tested has an \iid predic
 This is of course restrictive, so we now demonstrate how we can construct a test for a non \iid model which has similar properties to the MMD statistic.
 In particular we consider regression.
 
-\subsubsection{A nonparametric test of heteroscedasticity and non-normality for regression}
+\subsubsection{A test of local heteroscedasticity and non-normality for regression}
 
 We now assume that our data consists of pairs of inputs and outputs ${(x_i^\textrm{obs}, y_i^\textrm{obs})_{i=1\ldots n}}$.
 A typical formulation of the problem of regression is to estimate the conditional distribution of the outputs given the inputs ${p(y\given x, \theta)}$.
@@ -426,21 +426,59 @@ The null distribution of this statistic can be trivially estimated by sampling s
 
 To demonstrate the utility of this test we apply it to 4 regression algorithms applied to 13 time series analysed in \cite{Lloyd2014-ABCD}.
 In this work the authors compare a number of different methods for constructing Gaussian process regression models.
-While it is clear that a simple smoothing method will almost always fail to capture the rich structure in these data sets, it is not clear if the more advance methods are capturing all relevant aspects of the data.
+While it is clear that a simple smoothing method will almost always fail to capture the rich structure in these data sets\fTBD{Refer to a figure}, it is not clear if the more advance methods are capturing all relevant aspects of the data.
 
-Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 model construction methods.
-This table shows that it is only the method ABCD that is not consistently failing the MMD model check --- we should note however that SP and TCI perform well at extrapolation and interpolation.
+Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 model construction methods; values in bold indicate a positive discovery after a Benjamini--Hochberg\fTBD{cite and explain} procedure with a false discovery rate of 0.05.
+SE, TCI and SP have a very similar pattern of significant $p$-values; only ABCD is not 
 
-\TBD{TABLE}
+\begin{table}[ht]
+\center
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Dataset & SE & TCI & SP & ABCD \\
+\hline
+Airline        & 0.36 & \bf{0.00} & 0.07 & 0.15 \\
+Solar          & \bf{0.00} & \bf{0.00} & \bf{0.00} & 0.05 \\
+Mauna          & 0.99 & 0.41 & 0.34 & 0.21 \\
+Wheat          & \bf{0.00} & \bf{0.00} & \bf{0.00} & 0.19 \\
+Temperature    & 0.54 & 0.83 & 0.68 & 0.75 \\
+Internet       & \bf{0.00} & \bf{0.01} & 0.05 & \bf{0.01} \\
+Call centre    & \bf{0.02} & \bf{0.00} & \bf{0.00} & 0.07 \\
+Radio          & \bf{0.00} & \bf{0.00} & \bf{0.00} & \bf{0.00} \\
+Gas production & \bf{0.00} & \bf{0.01} & \bf{0.01} & 0.11 \\
+Sulphuric      & 0.29 & 0.38 & 0.34 & 0.52 \\
+Unemployment   & \bf{0.00} & \bf{0.02} & \bf{0.00} & \bf{0.01} \\
+Births         & \bf{0.00} & \bf{0.02} & \bf{0.00} & 0.12 \\
+Wages          & \bf{0.00} & \bf{0.01} & \bf{0.01} & \bf{0.00} \\
+\hline
+\end{tabular}
+\caption{Two sample test $p$-values applied to 13 time series and 4 regression algorithms.
+Bold values indicate a positive discovery using a Benjamini--Hochberg procedure with a false discovery rate of 0.05 for each algorithm.}
+\label{table:ABCD-p-values}
+\end{table}
 
-We now look at the type of discrepancies found by this test by looking at the witness function.
-Figure~\ref{fig:time-series-witness} shows two data sets and the fit of SE two them.
-Below are the witness functions of the MMD test which clearly identifies regions of lack of model fit; in both of these examples it is identifying heteroscedasticity.
-This explains why it is only ABCD that is able to pass the test since most of the data sets display extreme heteroscedasticity and ABCD is the only method that can express heteroscedasticity.
+We now investigate the type of discrepancies found by this test by looking at the witness function.
+Figure~\ref{fig:time-series-witness} shows the solar and unemployment data sets, the witness function for the SE fit to solar and the witness function for the ABCD fit to unemployment.
+The solar witness function has a clear narrow peak, indicating that the data is more dense than expected by the fitted model in this region.
+We can see that this has identified a region of low variability in the data \ie it has identified local heteroscedasticity identified by the model.
+This explains why only ABCD has a significantly different distribution of significant $p$-values since it is the only method of the four that can capture heteroscedasticity.
 
-\TBD{FIGURES}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.22\columnwidth]{figures/solar-data}
+\includegraphics[width=0.22\columnwidth]{figures/solar-witness}
+\includegraphics[width=0.22\columnwidth]{figures/unemployment-data}
+\includegraphics[width=0.22\columnwidth]{figures/unemployment-witness}
+\caption{
+From left to right. Solar data. Witness function of SE fit to solar. Unemployment data. Witness function of ABCD fit to unemployment.
+}
+\label{fig:time-series-witness}
+\end{figure}
 
-\TBD{However, presumably ABCD will fail on some data set and we can comment about it}
+The right hand plots of figure~\ref{fig:time-series-witness} show an example of where ABCD has failed to capture structure in the data.
+The witness function shows peaks and troughs at similar values of the input $x$.
+Comparing to the raw data we see that at these input values there are consistent outliers.
+Since ABCD is based on Gaussianity assumptions these consistent outliers will have caused the method to estimate a large variance in this region, when the true data is non-Gaussian.
 
 \subsubsection{Something high dimensional}
 

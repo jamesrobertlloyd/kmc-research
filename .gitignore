@@ -72,3 +72,8 @@ src/gps/temp
 
 papers/conference/format/nips2014.pdf
 data/mnist/dbn-layers*
+
+src/gps/ABCD/
+src/gps/SE/
+src/gps/SP/
+src/gps/TCI/

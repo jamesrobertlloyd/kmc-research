@@ -5,9 +5,21 @@ addpath(genpath('../mmd'));
 addpath(genpath('../util'));
 addpath(genpath('../gpml'));
 
+%% Setup
+
+folders = {'SE', 'TCI', 'SP', 'ABCD'};
+folder = folders{4};
+
+files = dir(strcat(folder, '/*.mat'));
+file = files(2);
+
+fig_title = 'Solar';
+
 init_rand(1);
 
 %% Load data
+
+load(strcat(folder, '/', file.name));
 
 X_data = double(Xtest);
 y_data = double(ytest);
@@ -17,8 +29,14 @@ y_post = ymu + sqrt(ys2) .* randn(size(ys2));
 
 %% Plot
 
-plot(X_post, y_post, 'ro'); hold on;
-plot(X_data, y_data, 'go'); hold off;
+h = figure;
+
+plot(X_data, y_data, 'o');
+xlabel('x');
+ylabel('y');
+title(fig_title);
+
+save2pdf(['temp/' file.name '-data.pdf'], h, 900, true);
 
 %% Get ready for two sample test
 
@@ -27,8 +45,10 @@ B = [X_post, y_post];
 
 %% Standardise data
 
-B = B ./ repmat(std(A), size(B, 1), 1);
-A = A ./ repmat(std(A), size(A, 1), 1);
+std_A = std(A);
+
+B = B ./ repmat(std_A, size(B, 1), 1);
+A = A ./ repmat(std_A, size(A, 1), 1);
 
 %% Calculate some distances for reference
 
@@ -79,7 +99,7 @@ end
 best_ell = trial_ell(1);
 best_log_p = -Inf;
 for ell = trial_ell'
-    display(ell);
+%             display(ell);
     log_p = 0;
     for fold = 1:folds
         K1 = rbf_dot(X_f_train{fold} , X_f_test{fold}, ell);
@@ -94,14 +114,30 @@ for ell = trial_ell'
         best_ell = ell;
     end
 end
-params.sig = best_ell;
-display(params.sig);
+params.sig = 1 * best_ell;
+%         display(params.sig);
 
-%% Perform MMD test
+%% Compute witness function
 
-alpha = 0.05;
-params.shuff = 100;
-%     [testStat,thresh,params,p] = mmdTestBoot_jl(A,B,alpha,params);
-[testStat,thresh,params,p] = mmdTestBoot_strat_jl(A,B,alpha,params);
-display(p);
-%pause;
+increase = 0.2;
+
+if size(A,2) == 2
+    m = size(A, 1);
+    n = size(B, 1);
+    t = (((fullfact([200,200])-0.5) / 200) - 0) * 1;
+    t = t .* ((1+increase) * repmat(range([A]), size(t,1), 1));
+    t = t + repmat(min([A]) - (increase/2)*range([A]), size(t,1), 1);
+    K1 = rbf_dot(A, t, params.sig);
+    K2 = rbf_dot(B, t, params.sig);
+    witness = sum(K1, 1)' / m - sum(K2, 1)' / n;
+    %plot3(t(:,1), t(:,2), witness, 'bo');
+    %hold on;
+    %plot3(B(:,1), B(:,2), repmat(max(max(witness)), size(B)), 'ro');
+    reshaped = reshape(witness, 200, 200)';
+
+    h = figure;
+    imagesc(reshaped(end:-1:1,:));
+    colorbar;
+    save2pdf(['temp/' file.name '-witness.pdf'], h, 900, true);
+    hold off;
+end
