@@ -71,3 +71,4 @@ src/gps/temp
 *.pkl
 
 papers/conference/format/nips2014.pdf
+data/mnist/dbn-layers*

@@ -57,6 +57,20 @@ num_images = 3000;
 fantasies = csvread('../data/mnist/dbn-ft-samples/images.csv');
 labels = csvread('../data/mnist/dbn-ft-samples/labels.csv');
 num_images = 3000;
+
+%% Load dbn layers
+
+intermediate_layers = 8;
+
+folder = '../data/mnist/dbn-layers-';
+for dummy = 1:intermediate_layers
+    folder = strcat(folder, '500-');
+end
+folder = strcat(folder, '2000/');
+
+fantasies = csvread(strcat(folder, 'images.csv'));
+labels = csvread(strcat(folder, 'labels.csv'));
+num_images = 3000;
            
 %% Standardise digit data
 
