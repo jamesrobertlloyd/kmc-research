@@ -11,9 +11,9 @@ folders = {'SE', 'TCI', 'SP', 'ABCD'};
 folder = folders{4};
 
 files = dir(strcat(folder, '/*.mat'));
-file = files(2);
+file = files(6);
 
-fig_title = 'Solar';
+fig_title = 'Internet';
 
 init_rand(1);
 
@@ -31,8 +31,13 @@ y_post = ymu + sqrt(ys2) .* randn(size(ys2));
 
 h = figure;
 
-plot(X_data, y_data, 'o');
+plot(X_data, y_data, 'bo');
+hold on;
+% plot(X_data, y_post, 'ro');
+hold off;
 xlabel('x');
+xlim([min(X_data)-0, max(X_data)+0]);
+ylim([min(y_data)-0, max(y_data)+0]);
 ylabel('y');
 title(fig_title);
 
@@ -119,7 +124,7 @@ params.sig = 1 * best_ell;
 
 %% Compute witness function
 
-increase = 0.2;
+increase = 0.0;
 
 if size(A,2) == 2
     m = size(A, 1);
