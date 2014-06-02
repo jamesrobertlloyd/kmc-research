@@ -118,11 +118,11 @@ As statistical models become more complex and diverse in response to the challen
 This will be especially true as automatic modelling methods \citep[e.g.][]{Grosse2012-zf, Thornton2013-zg, Lloyd2014-ABCD} and probabilistic programming \citep[e.g.][]{Goodman2012-pf, stan-software:2014} mature.
 
 Model criticism typically proceeds by choosing a statistic of interest, computing it on data and comparing this to a suitable null distribution.
-Ideally these statistics are chosen to assess the utility of the statistical model under consideration (see applied examples \citep[e.g.][]{Meulders1998-xo}\fTBD{This is an obscure citation - need to find better examples}) but this can require considerable expertise on the part of the modeller.
-We propose an alternative to this approach by using a statistic defined as a supremum over a broad class of measures of discrepancy between two distributions, the maximum mean discrepancy (MMD) \citep[e.g.][]{Gretton2008-ik}\fTBD{I should cite some earlier references as well}).
+Ideally these statistics are chosen to assess the utility of the statistical model under consideration (see applied examples \citep[e.g.][]{Meulders1998-xo, Gelman2013-st}) but this can require considerable expertise on the part of the modeller.
+We propose an alternative to this approach by using a statistic defined as a supremum over a broad class of measures of discrepancy between two distributions, the maximum mean discrepancy (MMD) \citep[e.g.][]{Borgwardt2006-gy, Gretton2007-ft, Gretton2008-ik}).
 The advantage of this approach is that the discrepancy measure attaining the supremum automatically identifies regions of the data which are most poorly represented by the statistical model fit to the data.
 
-We demonstrate this approach to model criticism on toy data sets, restricted Boltzmann machines\fTBD{Add canonical references} and deep belief networks trained on MNIST digits and Gaussian process regression models trained on several time series.
+We demonstrate this approach to model criticism on toy data sets, restricted Boltzmann machines\fTBD{what is a canonical reference?} and deep belief networks\fTBD{what is a canonical reference?} trained on MNIST digits and Gaussian process \citep[e.g.][]{Rasmussen2006-ml} regression models trained on several time series.
 Our proposed method identifies discrepancies between the data and fitted models that would not be apparent from the predictive performance focused metrics one typically finds in a machine learning paper\fTBD{Should we be explicitly referring to machine learning}.
 It is our belief\fTBD{I'm finding it difficult to find the right words here} that more effort shoud be expended on attempting to falsify models fitted to data, using model criticism techniques or otherwise.
 Not only will this aid research in targeting areas for improvement but it should give greater confidence in any conclusions drawn from a model.
@@ -159,7 +159,7 @@ A frequentist model is a class of probability distributions over data indexed by
 
 \subsection{Criticising estimated models or posterior distributions}
 
-A constrasting method of Bayesian model criticism is the calculation of posterior predictive $p$-values \citep[e.g.][]{Rubin1984-tw}\fTBD{Find older references - See Bayarri Berger 2007 - Guttman} $p_\textrm{post}$ where the prior predictive distribution is replaced with the posterior predictive distribution ${Y \sim \int p(Y \given \theta, M)p(\theta \given Y^\textrm{obs}, M) \mathrm{d}\theta}$.
+A constrasting method of Bayesian model criticism is the calculation of posterior predictive $p$-values \citep[e.g.][]{Guttman1967-my, Rubin1984-tw} $p_\textrm{post}$ where the prior predictive distribution is replaced with the posterior predictive distribution ${Y \sim \int p(Y \given \theta, M)p(\theta \given Y^\textrm{obs}, M) \mathrm{d}\theta}$.
 The corresponding test for an analysis resulting in a point estimate of the parameters $\hat\theta$ would use the plug-in predictive distribution ${Y \sim p(Y \given \hat\theta, M)}$ to form the plug-in $p$-value $p_\textrm{plug}$.
 
 These $p$-values quantify how surprised one should be if, after performing inference having observed data $Y^\textrm{obs}$, one were to observe new data whose value of the statistic $T$ was equal to that of the original data.
@@ -230,7 +230,7 @@ One can also estimate the witness function from finite samples
 \hat{f}(x) = \frac{1}{m}\sum_{i=1}^{m}k(x,x_i) - \frac{1}{n}\sum_{i=1}^{n}k(x,y_i)
 \label{eq:witness-estimate}
 \end{equation}
-\ie the empirical witness function is the difference of two kernel density estimates\fTBD{Cite Nadaraya and Watson}.
+\ie the empirical witness function is the difference of two kernel density estimates \citep[e.g.][]{Rosenblatt1956-hx, Parzen1962-hk}.
 This means that we can interpret the witness function as showing where the estimated densities of $p$ and $q$ are most different.
 
 \subsection{Kernel choice}
@@ -295,7 +295,7 @@ Data was generated as isotropic Gaussian distributions centred on 4 of the 5 poi
 Finally, data was centred on the fifth point drawn from an isotropic $t$-distribution with 2 degrees of freedom.
 In sum, the data is a mixture of Gaussians and a $t$-distribution.
 
-We then fit a mixture of Gaussians\fTBD{what is a classic citation? ZG: McLaughlan + Peel?} with 5 centres to the data and then generated samples from the fitted distribution in order to perform an MMD two sample test.
+We then fit a mixture of Gaussians \citep[e.g.][]{McLachlan2004-qz} with 5 centres to the data and then generated samples from the fitted distribution in order to perform an MMD two sample test.
 We reduced the dimensionality of the data using principal component analysis (PCA), selecting the first two principal components.
 To ensure that the MMD test remains well calibrated we include the PCA dimensionality reduction within the bootstrap estimation of the null distribution.
 The data and posterior predictive samples are plotted on the left of figure~\ref{fig:high_mog}.
@@ -332,14 +332,14 @@ We mention this as a reminder that the test proposed here does not attempt to fa
 
 ``To recognize shapes, first learn to generate images'' quoth Hinton \citep{Hinton2007-eo}.
 Restricted Boltzmann Machine (RBM) pretraining of neural networks was shown by \cite{Hinton2006-yw} to learn a deep belief network (DBN) for the data \ie a generative model.
-In agreement with this observation, as well as computing estimates of marginal likelihoods and testing errors, it has been standard to demonstrate the effectiveness of a neural network by generating samples from the distribution it has learned\fTBD{cite things}.
+In agreement with this observation, as well as computing estimates of marginal likelihoods and testing errors, it has been standard to demonstrate the effectiveness of a neural network by generating samples from the distribution it has learned.
 
 When trained on the MNIST handwritten digit data, samples from RBMs and DBNs certainly look like digits, but it is hard to detect any systematic anomalies purely by visual inspection.
 We now use the kernel MMD two-sample test to investigate how faithfully RBMs and DBNs can capture the distribution over handwritten digits.
 
 \subsubsection{RBMs mistake the identity of digits}
 
-We trained an RBM with architecture $(784)\leftrightarrow(500)\leftrightarrow(10)$\footnotemark~using 15 epochs of persistent contrastive divergence PCD-15 (\NA{cite something}), a batch size of 20 and a learning rate of 0.1 (\ie we used the same settings as the code available at \NA{cite deep learning tutorial}).
+We trained an RBM with architecture $(784)\leftrightarrow(500)\leftrightarrow(10)$\footnotemark~using 15 epochs of persistent contrastive divergence PCD-15, a batch size of 20 and a learning rate of 0.1 (\ie we used the same settings as the code available at the deep learning tutorial \citep{deep-learning-tutorial}).
 \footnotetext{That is, 784 input pixels and 10 indicators of the class label are connected to 500 hidden neurons.}
 We generated 3000 independent samples from the learned generative model by initialising the network with a random training image and performing 1000 gibbs updates with the digit labels clamped\footnotemark~to generate each image (as in \eg \cite{Hinton2007-eo}).
 \footnotetext{Without clamping the label neurons, the generative distribution is heavily biased towards certain digits.}
@@ -393,7 +393,7 @@ On the first toy data example we observed that the MMD statistic does not highli
 \subsubsection{DBNs have nightmares about ghosts}
 
 We now test the effectiveness of deep learning to represent the distribution of MNIST digits.
-In particular, we fit a DBN with architecture $(784)\leftarrow(500)\leftarrow(500)\leftrightarrow(2000)\leftrightarrow(10)$ using RBM pre-training and a generative fine tuning algorithm proposed in (\NA{cite Geoff again}).
+In particular, we fit a DBN with architecture $(784)\leftarrow(500)\leftarrow(500)\leftrightarrow(2000)\leftrightarrow(10)$ using RBM pre-training and a generative fine tuning algorithm described in \cite{Hinton2006-yw}.
 Performing the same tests with 3000 samples results in estimated $p$-values of less than 0.001 except for the digit 4 (0.150) and digit 7 (0.010).
 Summaries of the witness function troughs are shown in the middle right box of figure~\ref{fig:digits}.
 
@@ -426,7 +426,7 @@ The only difference between this test and the MMD two sample test is that our da
 The null distribution of this statistic can be trivially estimated by sampling several sets of replicate data from the plug-in predictive distribution.
 
 To demonstrate this test we apply it to 4 regression algorithms and 13 time series analysed in \cite{Lloyd2014-ABCD}.
-In this work the authors compare several methods for constructing Gaussian process\fTBD{cite GPML} regression models.
+In this work the authors compare several methods for constructing Gaussian process \citep[e.g.][]{Rasmussen2006-ml} regression models.
 Example data sets are shown in figures~\ref{fig:SE-witness}~and~\ref{fig:ABCD-witness}.
 While it is clear that simple smoothing methods will fail to capture all of the structure in the data, it is not clear a priori how much better the more advanced methods will fair.
 
@@ -436,7 +436,7 @@ However, this joint distribution information is rarely used; typically only the 
 
 Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 model construction methods.
 The four methods are Gaussian process regression using a squared exponential kernel (SE), trend-cyclical-irregular models \citep[e.g.][]{lind2006basic} (TCI), spectral mixture kernels \citep{WilAda13} (SP) and the method proposed in \cite{Lloyd2014-ABCD} (ABCD).
-Values in  bold indicate a positive discovery after a Benjamini--Hochberg\fTBD{cite} procedure with a false discovery rate of 0.05 applied to each model construction method.
+Values in  bold indicate a positive discovery after a Benjamini--Hochberg \citep{Benjamini_undated-mh} procedure with a false discovery rate of 0.05 applied to each model construction method.
 SE, TCI and SP have a very similar pattern of significant $p$-values whereas ABCD has fewer significant $p$-values.
 
 \begin{table}[ht]
@@ -515,7 +515,7 @@ In particular the classical $p$-value tests a null hypothesis that the data coul
 Robins, van der Vaart \& Ventura \citep{Robins2000-oz} demonstrated that Bayesian and plug-in $p$-values are not classical $p$-values (frequentist $p$-values in their terminology) \ie they do not have a uniform distribution under the relevant null hypothesis.
 However, this was presented as a failure of these methods; in particular they demonstrated that methods proposed by Bayarri \& Berger \citep{Bayarri1999-ty} based on posterior predictive $p$-values are asymptotically classical $p$-values.
 
-This claimed inadequacy of posterior predictive $p$-values was rebutted \citep{noauthor_undated-xk} and while their usefulness is becoming more accepted (see \eg introduction of \cite{Bayarri2007-cp}) it would appear there is still confusion on the subject \citep{Gelman2013-am}.
+This claimed inadequacy of posterior predictive $p$-values was rebutted \citep{Gelman2003-xx} and while their usefulness is becoming more accepted (see \eg introduction of \cite{Bayarri2007-cp}) it would appear there is still confusion on the subject \citep{Gelman2013-am}.
 We hope that our interpretation of the differences between these methods as different null hypotheses --- appropriate in different circustances --- sheds further light on the matter.
 
 \subsection{Should we worry about using the same data for traning and criticism?}
@@ -545,7 +545,7 @@ For some discussion of sensitivity analysis and graphical model comparison see \
 
 O'Hagan \citep{OHagan2003-bc} considers using Kullback-Leibler divergences between prior and posterior distributions in hierarchical models.\fTBD{ZG: Expand}
 
-In the spirit of scientific falsification\fTBD{A canonical Popper reference?}, ideally all methods of assessing a model should be performed to gain confidence in any conclusions made.
+In the spirit of scientific falsification \citep[e.g.][]{Popper2005-ba}, ideally all methods of assessing a model should be performed to gain confidence in any conclusions made.
 Of course, when performing multiple hypothesis tests care must be taken in the intrepetation of individual $p$-values.
 
 \section{Conclusions and future work}
@@ -555,10 +555,10 @@ In contrast to other methods for model criticism, the test analytically maximise
 We demonstrated how this method of model criticism can be applied to neural networks and Gaussian process regression and demonstrated the ways in which these models were misrepresenting the data they were trained on.
 
 We have demonstrated how kernel MMD two sample tests can be applied to model criticism, but they can be applied to any aspect of statistical modelling where two sample tests are appropriate.
-This includes for example, Geweke's tests of markov chain posterior sampler validity \citep{Geweke2004-yx} and tests of markov chain convergence\fTBD{I presume this is a thing? ZG: Yes}.
+This includes for example, Geweke's tests of markov chain posterior sampler validity \citep{Geweke2004-yx} and tests of markov chain convergence \citep[e.g.][]{Cowles1996-qy}.
 
-The two sample tests proposed in this paper naturally apply to \iid data and models, but model criticism techniques should of course apply to models with other symmetries (\eg exchangeable data, logitudinal data, graphs, functions\ldots).
-We have demonstrated an adaptation of the test to regression models and two sample tests for data with different symmetries (\NA{cite something related to functional two sample testing}) can be found in the literature.
+The two sample tests proposed in this paper naturally apply to \iid data and models, but model criticism techniques should of course apply to models with other symmetries (\eg exchangeable data, logitudinal data / time series, graphs, functions any many others).
+We have demonstrated an adaptation of the kernel MMD test to regression models
 However, it is unclear whether maximum mean discrepancy measures can be naturally extended to all of these classes; investigating such extensions would be a profitable area for future study.
 
 We conclude with a question.
