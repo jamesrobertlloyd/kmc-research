@@ -10,6 +10,8 @@ addpath(genpath('../gpml'));
 folders = {'SE', 'TCI', 'SP', 'ABCD'};
 p_values = nan(13, numel(folders));
 
+residuals = false;
+
 %% For loop over folders
 
 for folder_i = 1:numel(folders)
@@ -36,6 +38,11 @@ for folder_i = 1:numel(folders)
 
         X_post = double(Xtest);
         y_post = ymu + sqrt(ys2) .* randn(size(ys2));
+        
+        if residuals
+            y_data = y_data - ymu;
+            y_post = y_post - ymu;
+        end
 
         %% Plot
 
@@ -129,6 +136,10 @@ for folder_i = 1:numel(folders)
             % Draw two samples of data
             y_post_1 = ymu + sqrt(ys2) .* randn(size(ys2));
             y_post_2 = ymu + sqrt(ys2) .* randn(size(ys2));
+            if residuals
+                y_post_1 = y_post_1 - ymu;
+                y_post_2 = y_post_2 - ymu;
+            end
             C = [X_post, y_post_1];
             D = [X_post, y_post_2];
             C = C ./ repmat(std_A, size(C, 1), 1);

@@ -215,11 +215,11 @@ def main(intermediate_layers=1):
     fine_tune_dbn_layers(random_seed=1,
                          dataset='bucket/mnist.pkl.gz',
                          save_folder=save_folder,
-                         epochs=10,
+                         epochs=50,
                          rbms=rbms,
                          samples=3000,
                          plot_every=1000,
-                         starting_learning_rate=0.002,
+                         starting_learning_rate=0.001,
                          decay_learning_rate=True,
                          cd_iters=15)
     

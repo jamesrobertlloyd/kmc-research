@@ -60,7 +60,7 @@ num_images = 3000;
 
 %% Load dbn layers
 
-intermediate_layers = 8;
+intermediate_layers = 1;
 
 folder = '../data/mnist/dbn-layers-';
 for dummy = 1:intermediate_layers
@@ -70,6 +70,20 @@ folder = strcat(folder, '2000/');
 
 fantasies = csvread(strcat(folder, 'images.csv'));
 labels = csvread(strcat(folder, 'labels.csv'));
+num_images = 3000;
+
+%% Load dbn layers fine tuned
+
+intermediate_layers = 1;
+
+folder = '../data/mnist/dbn-layers-';
+for dummy = 1:intermediate_layers
+    folder = strcat(folder, '500-');
+end
+folder = strcat(folder, '2000/');
+
+fantasies = csvread(strcat(folder, 'images-ft.csv'));
+labels = csvread(strcat(folder, 'labels-ft.csv'));
 num_images = 3000;
            
 %% Standardise digit data
@@ -296,7 +310,7 @@ for digit = 0:9
     % Other things?
     %params.sig = 2;
 
-    display(params.sig);
+%     display(params.sig);
 
     %% Perform MMD test
 
@@ -467,7 +481,7 @@ for digit = 0:9
     nn_i = [];
 
     for c = idx(1:cols)'
-        display(witness_sums(c) / MMD);
+%         display(witness_sums(c) / MMD);
         [~, idx_c] = sort(witnesses_Y.*(c_Y==c), 'ascend');
         %imagesc(reshape(Y(idx_c(1),:), 28, 28)');
         %drawnow;
@@ -498,7 +512,7 @@ for digit = 0:9
     nn_i = [];
 
     for c = idx(1:cols)'
-        display(witness_sums(c) / MMD);
+%         display(witness_sums(c) / MMD);
         [~, idx_c] = sort(witnesses_X.*(c_X==c), 'descend');
     %     imagesc(reshape(X(idx_c(1),:), 28, 28)');
     %     drawnow;
