@@ -544,7 +544,10 @@ Other typical methods of model evaluation include estimating the predictive perf
 For a recent survey of Bayesian methods for model assessment, selection and comparison see \cite{Vehtari2012-oh} which phrases many techniques as estimates of the utility of a model.
 For some discussion of sensitivity analysis and graphical model comparison see \citep[e.g.][]{Gelman2013-st}.
 
-O'Hagan \citep{OHagan2003-bc} considers using Kullback-Leibler divergences between prior and posterior distributions in hierarchical models.\fTBD{To be expanded}
+In this manuscript we have focused on methods that compare statistics of data with predictive distributions, ignoring parameters of the model.
+When working with models in which individual parameters are of interest (\eg hierarchical models) other techniques are relevant.
+O'Hagan \citep{OHagan2003-bc} proposes a method and selectively reviews techniques appropriate in this context.
+The discrepancy measures of  \cite{Gelman1996-ez} are also relevant.
 
 In the spirit of scientific falsification \citep[e.g.][]{Popper2005-ba}, ideally all methods of assessing a model should be performed to gain confidence in any conclusions made.
 Of course, when performing multiple hypothesis tests care must be taken in the intrepetation of individual $p$-values.
@@ -562,7 +565,8 @@ The two sample tests proposed in this paper naturally apply to \iid data and mod
 We have demonstrated an adaptation of the kernel MMD test to regression models
 However, it is unclear whether maximum mean discrepancy measures can be naturally extended to all of these classes; investigating such extensions would be a profitable area for future study.
 
-We conclude with a question.
+In proposing a new method of model criticism we hope we have also exposed the machine learning community to a useful set of tools for diagnosing potential inadequacies of models.
+On this note, we conclude with a question.
 Do you know how the model you are currently working with most misrepresents the data it is attempting to model?
 
 \newpage
