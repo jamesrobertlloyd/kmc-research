@@ -436,7 +436,7 @@ However, this joint distribution information is rarely used; typically only the 
 
 Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 model construction methods.
 The four methods are Gaussian process regression using a squared exponential kernel (SE), trend-cyclical-irregular models \citep[e.g.][]{lind2006basic} (TCI), spectral mixture kernels \citep{WilAda13} (SP) and the method proposed in \cite{Lloyd2014-ABCD} (ABCD).
-To avoid problems of multiple comparisons values in  bold indicate a positive discovery after a Benjamini--Hochberg\fTBD{cite} procedure with a false discovery rate of 0.05.
+Values in  bold indicate a positive discovery after a Benjamini--Hochberg\fTBD{cite} procedure with a false discovery rate of 0.05 applied to each model construction method.
 SE, TCI and SP have a very similar pattern of significant $p$-values whereas ABCD has fewer significant $p$-values.
 
 \begin{table}[ht]
@@ -461,7 +461,7 @@ Wages          & \bf{0.00} & \bf{0.01} & \bf{0.01} & \bf{0.00} \\
 \hline
 \end{tabular}
 \caption{Two sample test $p$-values applied to 13 time series and 4 regression algorithms.
-Bold values indicate a positive discovery using a Benjamini--Hochberg procedure with a false discovery rate of 0.05 for each algorithm.}
+Bold values indicate a positive discovery using a Benjamini--Hochberg procedure with a false discovery rate of 0.05 for each model construction method.}
 \label{table:ABCD-p-values}
 \end{table}
 
@@ -505,13 +505,7 @@ From left to right. Unemployment data. Witness function of ABCD fit to unemploym
 \label{fig:ABCD-witness}
 \end{figure}
 
-\subsubsection{Something high dimensional}
-
-\TBD{Maybe to be done if time}
-
 \section{Discussion of model criticism and related work}
-
-\fTBD{ZG: Discussion of related work feels disconnected}
 
 \subsection{Are we criticising a particular model, or class of models?}
 
