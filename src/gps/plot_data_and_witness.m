@@ -8,12 +8,12 @@ addpath(genpath('../gpml'));
 %% Setup
 
 folders = {'SE', 'TCI', 'SP', 'ABCD'};
-folder = folders{4};
+folder = folders{1};
 
 files = dir(strcat(folder, '/*.mat'));
-file = files(6);
+file = files(9);
 
-fig_title = 'Internet';
+fig_title = 'Gas production';
 
 init_rand(1);
 
@@ -31,14 +31,16 @@ y_post = ymu + sqrt(ys2) .* randn(size(ys2));
 
 h = figure;
 
-plot(X_data, y_data, 'bo');
-hold on;
-% plot(X_data, y_post, 'ro');
-hold off;
+% plot(X_data, y_data, 'bo');
+% hold on;
+% % plot(X_data, y_post, 'ro');
+% hold off;
+[dummy, idx] = sort(X_data, 'ascend');
+mean_var_plot(X_data, y_data, X_data(idx), ymu(idx), 2*sqrt(ys2(idx)));
 xlabel('x');
+ylabel('y');
 xlim([min(X_data)-0, max(X_data)+0]);
 ylim([min(y_data)-0, max(y_data)+0]);
-ylabel('y');
 title(fig_title);
 
 save2pdf(['temp/' file.name '-data.pdf'], h, 900, true);

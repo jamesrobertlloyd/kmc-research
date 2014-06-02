@@ -466,7 +466,7 @@ Bold values indicate a positive discovery using a Benjamini--Hochberg procedure 
 \end{table}
 
 We now investigate the type of discrepancies found by this test by looking at the witness function (which can still be interpreted as the difference of kernel density estimates).
-Figure~\ref{fig:SE-witness} shows the solar and gas production data sets\fTBD{Add the posterior to these plots} and the witness functions of the SE fits to these data.
+Figure~\ref{fig:SE-witness} shows the solar and gas production data sets, the posterior distribution of the SE fits to this data and the witness functions for the SE fit.
 The solar witness function has a clear narrow peak, indicating that the data is more dense than expected by the fitted model in this region.
 We can see that this has identified a region of low variability in the data \ie it has identified local heteroscedasticity not captured by the model.
 Similar conclusions can be drawn about the gas production data and witness function.
@@ -478,7 +478,7 @@ Similar conclusions can be drawn about the gas production data and witness funct
 \includegraphics[width=0.22\columnwidth]{figures/gas-data}
 \includegraphics[width=0.22\columnwidth]{figures/gas-witness}
 \caption{
-From left to right. Solar data. Witness function of SE fit to solar. Gas production data. Witness function of SE fit to gas production.
+From left to right. Solar data with SE posterior. Witness function of SE fit to solar. Gas production data with SE posterior. Witness function of SE fit to gas production.
 }
 \label{fig:SE-witness}
 \end{figure}
@@ -486,7 +486,7 @@ From left to right. Solar data. Witness function of SE fit to solar. Gas product
 Of the four methods compared here, only ABCD is able to model heteroscedasticity, explaining why it is the only method with a substantially different set of significant $p$-values.
 However, the procedure is still potentially failing to capture structure on four of the datasets.
 
-Figure~\ref{fig:ABCD-witness} shows the unemployment and Internet data sets and the witness functions of the ABCD fits to these data.
+Figure~\ref{fig:ABCD-witness} shows the unemployment and Internet data sets, the posterior distribution for the ABCD fits to the data and the witness functions of the ABCD fits.
 The witness function for unemployment shows peaks and troughs at similar values of the input $x$.
 Comparing to the raw data we see that at these input values there are consistent outliers.
 Since ABCD is based on Gaussianity assumptions these consistent outliers have caused the method to estimate a large variance in this region, when the true data is non-Gaussian.
@@ -500,7 +500,7 @@ Indeed, the data appears to have a strict lower bound which is inconsistent with
 \includegraphics[width=0.22\columnwidth]{figures/internet-data}
 \includegraphics[width=0.22\columnwidth]{figures/internet-witness}
 \caption{
-From left to right. Unemployment data. Witness function of ABCD fit to unemployment. Internet data. Witness function of ABCD fit to Internet.
+From left to right. Unemployment data with ABCD posterior. Witness function of ABCD fit to unemployment. Internet data with ABCD posterior. Witness function of ABCD fit to Internet.
 }
 \label{fig:ABCD-witness}
 \end{figure}
