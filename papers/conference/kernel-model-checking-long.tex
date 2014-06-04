@@ -1,0 +1,803 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{format/nips14submit_e,times}
+\usepackage{hyperref}
+\usepackage{url}
+
+% For figures
+\usepackage{graphicx} % more modern
+%\usepackage{epsfig} % less modern
+\usepackage{subfigure} 
+
+% For citations
+\usepackage{natbib}
+
+% For algorithms
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage{color}
+\usepackage{preamble}
+\definecolor{mydarkblue}{rgb}{0,0.08,0.45}
+\hypersetup{ %
+    pdftitle={},
+    pdfauthor={},
+    pdfsubject={},
+    pdfkeywords={},
+    pdfborder=0 0 0,
+    pdfpagemode=UseNone,
+    colorlinks=true,
+    linkcolor=mydarkblue,
+    citecolor=mydarkblue,
+    filecolor=mydarkblue,
+    urlcolor=mydarkblue,
+    pdfview=FitH}
+    
+    
+\usepackage{amsmath, amsfonts, bm, lipsum, capt-of}
+\usepackage{natbib, xcolor, wrapfig, booktabs, multirow, caption}
+\DeclareCaptionType{copyrightbox}
+\usepackage{float}
+
+%\renewcommand{\baselinestretch}{0.99}
+
+\def\ie{i.e.\ }
+\def\eg{e.g.\ }
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
+\title{Exploratory statistical model criticism\\using kernel two sample tests}
+
+\author{
+David S.~Hippocampus\thanks{ Use footnote for providing further information
+about author (webpage, alternative address)---\emph{not} for acknowledging
+funding agencies.} \\
+Department of Computer Science\\
+Cranberry-Lemon University\\
+Pittsburgh, PA 15213 \\
+\texttt{hippo@cs.cranberry-lemon.edu} \\
+\And
+Coauthor \\
+Affiliation \\
+Address \\
+\texttt{email} \\
+\AND
+Coauthor \\
+Affiliation \\
+Address \\
+\texttt{email} \\
+\And
+Coauthor \\
+Affiliation \\
+Address \\
+\texttt{email} \\
+\And
+Coauthor \\
+Affiliation \\
+Address \\
+\texttt{email} \\
+(if needed)\\
+}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\setlength{\marginparwidth}{1in}
+\input{include/commenting.tex}
+
+%% For submission, make all render blank.
+%\renewcommand{\LATER}[1]{}
+%\renewcommand{\fLATER}[1]{}
+%\renewcommand{\TBD}[1]{}
+%\renewcommand{\fTBD}[1]{}
+%\renewcommand{\PROBLEM}[1]{}
+%\renewcommand{\fPROBLEM}[1]{}
+%\renewcommand{\NA}[1]{#1}  % Note, NA's pass through!
+
+\begin{document} 
+
+\maketitle
+
+\begin{abstract} 
+We propose an exploratory approach to statistical model criticism using maximum mean discrepancy (MMD) two sample tests.
+Typical approaches to model criticism require a practitioner to select a statistic by which to measures discrepancies between data and a statistical model.
+MMD two sample tests are instead constructed as an analytic maximisation over a large space of possible statistics and therefore automatically select an appropriate statistic.
+We demonstrate on synthetic data that the selected statistic, called the witness function, can be used to identify where a statistical model most misrepresents the data it was trained on.
+We then apply the procedure to real data where the models being assessed are restricted Boltzmann machines, deep belief networks and Gaussian process regression and demonstrate the ways in which these models are failing to capture the properties of the data they are trained on.
+\end{abstract} 
+
+\allowdisplaybreaks
+
+\section{Introduction}
+
+Statistical model checking or criticism\footnotemark is an important part of a complete statistical analysis.
+\footnotetext{We follow Box \citep{Box1980-ud} using the term `model criticism' for similar reasons to O'Hagan \citep{OHagan2003-bc}.}
+When one fits a linear model to a data set via least squares a complete analysis includes computing \eg Cook's distances \cite{Cook1982-eq} to identify influential points or plotting residuals against fitted values to identify non-linearity or heteroscedasticity.
+Similarly, modern approaches to Bayesian statistics view model criticism as in important component of an iterative cycle of model construction, inference and criticism \citep{Gelman2013-st}.
+
+As statistical models become more complex and diverse in response to the challenges of modern data sets there will be an increasing need for a greater range of model criticism procedures that are either automatic or generally applicable.
+This will be especially true as automatic modelling methods \citep[e.g.][]{Grosse2012-zf, Thornton2013-zg, Lloyd2014-ABCD} and probabilistic programming \citep[e.g.][]{Milch2007-dz, Goodman2012-pf, stan-software:2014} mature\fTBD{What is the canonical 1997 reference?}.
+
+Model criticism typically proceeds by choosing a statistic of interest, computing it on data and comparing this to a suitable null distribution.
+Ideally these statistics are chosen to assess the utility of the statistical model under consideration (see applied examples \citep[e.g.][]{Meulders1998-xo, Gelman2013-st}) but this can require considerable expertise on the part of the modeller.
+We propose an alternative to this approach by using a statistic defined as a supremum over a broad class of measures of discrepancy between two distributions, the maximum mean discrepancy (MMD) \citep[e.g.][]{Borgwardt2006-gy, Gretton2007-ft, Gretton2008-ik}).
+The advantage of this approach is that the discrepancy measure attaining the supremum automatically identifies regions of the data which are most poorly represented by the statistical model fit to the data.
+
+We demonstrate this approach to model criticism on toy data sets, restricted Boltzmann machines\fTBD{what is a canonical reference?} and deep belief networks\fTBD{what is a canonical reference?} trained on MNIST digits and Gaussian process \citep[e.g.][]{Rasmussen2006-ml} regression models trained on several time series.
+Our proposed method identifies discrepancies between the data and fitted models that would not be apparent from the predictive performance focused metrics one typically finds in a machine learning paper\fTBD{Should we be explicitly referring to machine learning}.
+It is our belief\fTBD{I'm finding it difficult to find the right words here} that more effort shoud be expended on attempting to falsify models fitted to data, using model criticism techniques or otherwise.
+Not only will this aid research in targeting areas for improvement but it should give greater confidence in any conclusions drawn from a model.
+
+\section{Model criticism}
+\label{sec:model-crit-general}
+
+Suppose we observe data $Y^\textrm{obs} = (y_i)_{i=1\ldots n}$ and we attempt to fit a model $M$ with parameters $\theta$.
+After performing a statistical analysis we will have either an estimate, $\hat\theta$, or an (approximate) posterior, $p(\theta \given Y^\textrm{obs}, M)$, for the parameters.
+How can we check the validity of this analysis?
+
+\subsection{Criticising prior assumptions}
+
+The classical approach to model criticism is to attempt to falsify the null hypothesis that the data could have been generated by the model $M$ for some value of the parameters $\theta$ \ie ${Y^\textrm{obs} \sim p(Y \given \theta, M)}$.
+This is typically achieved by constructing a statistic $T$ of the data whose distribution does not depend on the parameters $\theta$ \ie a pivotal quantity.
+The extent to which the observed data $Y^\textrm{obs}$ differs from expectations under the model $M$ could then be quantified with a tail-area based $p$-value
+\begin{equation}
+  p_\textrm{freq}(Y^\textrm{obs}) = \mathbb{P}(T(Y)\geq T(Y^\textrm{obs})) \quad \textrm{where} \quad Y \sim p(Y \given \theta, M) \quad \textrm{for any } \theta.
+  \label{eq:freq-p-value}
+\end{equation}
+
+Analogous quantities in a Bayesian analysis are the prior predictive $p$-values of Box \citep{Box1980-ud}.
+The null hypothesis is replaced with the claim that the data could have been generated from the prior predictive distribution ${Y^\textrm{obs} \sim \int p(Y \given \theta, M)p(\theta \given M) \mathrm{d}\theta}$.
+A tail-area $p$-value can then be constructed for any statistic $T$ of the data
+\begin{equation}
+  p_\textrm{prior}(Y^\textrm{obs}) = \mathbb{P}(T(Y)\geq T(Y^\textrm{obs})) \quad \textrm{where} \quad Y \sim \int p(Y \given \theta, M)p(\theta \given M) \mathrm{d}\theta.
+  \label{eq:prior-p-value}
+\end{equation}
+
+Both of these procedures construct a function of the data $p(Y^\textrm{obs})$ whose distribution under a suitable null hypothesis is uniform \ie a $p$-value.
+The $p$-value quantifies how surprised one should be after observing data $Y^\textrm{obs}$ having expected it to have been generated by the model.
+The different null hypotheses reflect the different uses of the word `model' in frequentist and Bayesian analyses.
+A frequentist model is a class of probability distributions over data indexed by parameters whereas a Bayesian model is a joint probability distribution over data and parameters.
+
+\subsection{Criticising estimated models or posterior distributions}
+
+A constrasting method of Bayesian model criticism is the calculation of posterior predictive $p$-values \citep[e.g.][]{Guttman1967-my, Rubin1984-tw} $p_\textrm{post}$ where the prior predictive distribution is replaced with the posterior predictive distribution ${Y \sim \int p(Y \given \theta, M)p(\theta \given Y^\textrm{obs}, M) \mathrm{d}\theta}$.
+The corresponding test for an analysis resulting in a point estimate of the parameters $\hat\theta$ would use the plug-in predictive distribution ${Y \sim p(Y \given \hat\theta, M)}$ to form the plug-in $p$-value $p_\textrm{plug}$.
+
+These $p$-values quantify how surprised one should be if, after performing inference having observed data $Y^\textrm{obs}$, one were to observe new data whose value of the statistic $T$ was equal to that of the original data.
+Put more simply, they quantify how surprising the data $Y^\textrm{obs}$ is even after having observed it.
+A simple variant of this method of model criticism is to use held out data $Y^*$, generated from the same distribution as $Y^\textrm{obs}$, to compute a $p$-value \ie ${p(Y^*) = \mathbb{P}(T(Y)\geq T(Y^*))}$.
+This quantifies how surprising the held out data is after having observed $Y^\textrm{obs}$.
+
+\subsection{Which type of model criticism should be used?}
+
+Different forms of model criticism are appropriate in different contexts, but we believe that posterior predictive and plug-in $p$-values will be most often useful for the types of statistical model considered in the machine learning literature.
+For example, suppose one is fitting a nonparametric or otherwise very flexible model to data \eg a deep belief network.
+Classical $p$-values would assume a null hypothesis that the data could have been generated from some deep belief network.
+Since the space of all possible deep belief networks is very large it will be difficult to ever falsify this hypothesis.
+A more interesting null hypothesis to test in this example is whether or not our particular deep belief network can faithfully mimick the distribution it was trained on.
+This is the null hypothesis of posterior or plug-in $p$-values.
+
+\section{Model criticism for \iid data using two sample tests}
+\label{sec:model-crit-two-sample}
+
+We assume that our data $Y$ are \iid samples from some unknown distribution ${(y_i)_{i=1\ldots n} \simiid p(y\given \theta, M)}$.
+After performing inference resulting in a point estimate of the parameters $\hat\theta$, the null hypothesis associated with a plug-in $p$-value is ${(y^\textrm{obs}_i)_{i=1\ldots n} \simiid p(y \given \hat\theta, M)}$.
+
+We can test this null hypothesis using a two sample test \citep[e.g.][]{Friedman1979-ur, Bickel1969-ao, Hotelling1951-jd}.
+In particular, we have samples of data $(y_i)_{i=1\ldots n}$ and we can generate samples from the plug-in predictive distribution ${(y_i^\textrm{rep})_{i=1\ldots m} \simiid p(y \given \hat\theta, M)}$ and then test whether or not these samples could have been generated from the same distribution.
+
+The methods for constructing $p$-values in the previous section all started with a statistic $T$ of the entire data.
+This however is not necessary; a $p$-value is simply a random variable which has a uniform distribution under the null hypothesis.
+Instead of computing a statistic $T(Y^\textrm{obs})$ of the entire data we consider statistics of data points $t(y)$ and then consider the mean discrepancy between the two samples
+\begin{equation}
+\mathbb{E}(t(y^\textrm{rep})) - \mathbb{E}(t(y)).
+\end{equation}
+
+This quantity measures how different the two distributions are on average as measured by the statistic $t$.
+The benefit of mean discrepancy measures is that we can analytically maximise the discrepancy over a large class of statistics $t$, allowing us to find the statistic that most shows any discrepancy between the two distributions.
+
+\section{Kernel maximum mean discrepancy (MMD) two sample tests}
+
+Consider the two sample problem. We are given samples ${X = (x_i)_{i=1\ldots m}}$ and ${Y = (y_i)_{i=1\ldots n}}$ drawn \iid from distributions $p$ and $q$ respectively.
+Can we determine if $p \neq q$?
+
+An answer to this problem is to consider maximum mean discrepancy (MMD) \citep{Gretton2008-ik} statistics (also called integral probability metrics \citep{Muller1997-vs})
+\begin{equation}
+\textrm{MMD}(\mathcal{F},p,q) = \sup_{f \in \mathcal{F}}(\mathbb{E}_{x\sim p}[f(x)] - \mathbb{E}_{y\sim q}[f(y)])
+\label{eq:MMD}
+\end{equation}
+where $\mathcal{F}$ is a set of functions.
+When $\mathcal{F}$ is a reproducing kernel Hilbert space (RKHS) the function attaining the supremum can be derived analytically and is called the witness function
+\begin{equation}
+f(x) = \mathbb{E}_{x'\sim p}[k(x,x')] - \mathbb{E}_{x'\sim q}[k(x,x')]
+\label{eq:witness}
+\end{equation}
+where $k$ is the kernel of the RKHS.
+
+Substituting this expression into equation~\eqref{eq:MMD} yields
+\begin{equation}
+  \textrm{MMD}^2(\mathcal{F},p,q) = \mathbb{E}_{x,x'\sim p}[k(x,x')] + 2\mathbb{E}_{x\sim p,y\sim q}[k(x,y)] + \mathbb{E}_{y,y'\sim q}[k(y,y')].
+\end{equation}
+
+This expression only involves expectations of the kernel $k$ which can be estimated empirically by
+%\end{eqnarray}
+\begin{equation}
+  \textrm{MMD}_b^2(\mathcal{F},X,Y) = \frac{1}{m^2}\sum_{i,j=1}^{m}k(x_i,x_j) - \frac{2}{mn}\sum_{i,j=1}^{m,n}k(x_i,y_j) + \frac{1}{n^2}\sum_{i,j=1}^{n}k(y_i,y_j).
+\label{eq:MMD_b}
+\end{equation}
+
+One can also estimate the witness function from finite samples
+\begin{equation}
+\hat{f}(x) = \frac{1}{m}\sum_{i=1}^{m}k(x,x_i) - \frac{1}{n}\sum_{i=1}^{n}k(x,y_i)
+\label{eq:witness-estimate}
+\end{equation}
+\ie the empirical witness function is the difference of two kernel density estimates \citep[e.g.][]{Rosenblatt1956-hx, Parzen1962-hk}.
+This means that we can interpret the witness function as showing where the estimated densities of $p$ and $q$ are most different.
+
+\subsection{Kernel choice}
+
+The nature of the two sample test defined by the kernel MMD depends on the choice of the kernel.
+In this paper we use the radial basis function kernel, also known as the squared exponential or exponentiated quadratic.
+This kernel encodes for smooth functions characterised by a typical lengthscale \citep[e.g.][]{Rasmussen2006-ml}.
+A typical heuristic for selecting the lengthscale is to use the median distance between all points as the lengthscale \citep[e.g.][]{Gretton2008-ik}.
+However, since we interpret the witness function as the difference of two kernel density estimates we also consider selecting the lengthscale which gives the best density estimates (see section~\ref{sec:high_dim}).
+
+\subsection{Estimation of the null distribution}
+
+There are a number of different ways in which the null distribution of the MMD statistic~\eqref{eq:MMD_b} can be estimated \citep[e.g.][]{Gretton2008-ik}.
+We use the bootstrap variant for its simplicity and general applicability.
+
+\section{Examples on toy data}
+
+\subsection{Newcomb's speed of light data}
+
+A histogram of Simon Newcomb's 66 measurements used to determine the speed of light \citep{Stigler1977-dd} is shown on the left of figure~\ref{fig:newcomb}.
+We consider fitting a normal distribution to this data by maximum likelihood.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.29\columnwidth]{figures/newcomb_hist}
+\includegraphics[width=0.32\columnwidth]{figures/newcomb_witness_1}
+\includegraphics[width=0.32\columnwidth]{figures/newcomb_witness_2}
+\caption{
+Left: Histogram of Simon Newcomb's speed of light measurements.
+Middle: Histogram together with density estimate (red solid line) and MMD witness function (green dashed line).
+Right: Histogram together with improved density estimate and witness function.
+}
+\label{fig:newcomb}
+\end{figure}
+
+To perform a MMD two sample test we sampled 1000 points from the fitted distribution, used the median heuristic to select a lengthscale and estimated the null distribution using 1000 bootstrap replications.
+The estimated $p$-value of the test was less than 0.001 \ie a clear disparity between the model and data.
+The data, fitted density estimate (the normal distribution) and witness function are shown in the middle of figure~\ref{fig:newcomb}.
+The witness function has a trough at the centre of the data and peaks either side.
+This indicates that the fitted model has placed too little mass in its centre and too much mass outside its centre.
+
+This suggests that we should modify our model by either using a distribution with heavy tails or explicitly modelling the possibility of outliers which could have resulted in the variance being over-estimated.
+However, to demonstrate some of the properties of the MMD statistic we make an unusual choice of fitting a Gaussian by maximum likelihood, but ignoring the two outliers in the data.
+The new fitted density estimate (the normal distribution) and witness function of an MMD test are shown on the right of figure~\ref{fig:newcomb}.
+The estimated $p$-value associated with the MMD two sample test is roughly 0.5, despite the fitted model being a very poor explanation of the outliers.
+This demonstrates that the MMD test using a radial basis function kernel identifies dense discrepancies, rather than outliers.
+However, methods that are not robust to outliers (\eg fitting a Gaussian by maximum likelihood) will likely show dense discrepancies that will be identified by the test.
+
+\subsection{High dimensional data}
+
+\label{sec:high_dim}
+
+The interpretability of the witness functions comes from being equal to the difference of two kernel density estimates~\eqref{eq:witness-estimate}.
+In high dimensional spaces, kernel density estimation is a very high variance procedure that can result in poor density estimates\fTBD{what is a classic citation?} which will destroy the interpretability of the method.
+In response, we consider using dimensionality reduction techniques\fTBD{what is a classic citation?} before performing two sample tests.
+Note however that the statistical test derived from the MMD still has high power in high dimensions \citep{Gretton2008-ik}.
+
+To test how the MMD statistic can be used for high dimensional data we generated synthetic data using the following recipe.
+5 points in a 10 dimensional space were drawn at random from a random 4 dimensional subspace\footnotemark.
+\footnotetext{The details are not especially important; code for replication will be available upon publication}
+Data was generated as isotropic Gaussian distributions centred on 4 of the 5 points.
+Finally, data was centred on the fifth point drawn from an isotropic $t$-distribution with 2 degrees of freedom.
+In sum, the data is a mixture of Gaussians and a $t$-distribution.
+
+We then fit a mixture of Gaussians \citep[e.g.][]{McLachlan2004-qz} with 5 centres to the data and then generated samples from the fitted distribution in order to perform an MMD two sample test.
+We reduced the dimensionality of the data using principal component analysis (PCA), selecting the first two principal components.
+To ensure that the MMD test remains well calibrated we include the PCA dimensionality reduction within the bootstrap estimation of the null distribution.
+The data and posterior predictive samples are plotted on the left of figure~\ref{fig:high_mog}.
+While we can see that one cluster is different from the rest, it is difficult to assess by eye if these distributions are different --- due in part to the difficulty of plotting two sets of samples on top of each other.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.3\columnwidth]{figures/high_mog_pca}
+\hspace{0.1\columnwidth}
+\includegraphics[width=0.31\columnwidth]{figures/high_mog_witness}
+\caption{
+Left: PCA projection of synthetic high dimensional cluster data (green circles) and projection of samples from fitted model (red circles).
+Right: Witness function of MMD two sample test. The erroneously fit cluster is clearly identified.
+}
+\label{fig:high_mog}
+\end{figure}
+
+Using the median heuristic to select a lengthscale results in a test that returns a $p$-value of 0.91, indicating that the test has not identified any discrepancies.
+Indeed, the lengthscale chosen by this heuristic is $4.4$ which is of the order of the distances between clusters.
+The test therefore is blind to discrepancies smaller than distances between clusters\footnotemark, and since the mixture of Gaussians has correctly identified the 5 centres and sizes of the mixture distribution, the test does not find any discrepancies.
+\footnotetext{With enough data the test would eventually identify discrepancies on any scale --- however, the required amount of data can easily be very large}
+
+However, taking the density estimate interpretation of the witness function more seriously suggests choosing lengthscales that result in the best density estimates.
+We therefore selected a lengthscale by 5 fold cross validation using predictive likelihood of the kernel density estimate as the selection criterion.
+With this lengthscale the MMD test returns a $p$-value of 0.05 and the witness function (right of figure~\ref{fig:high_mog}) clearly identifies the cluster that has been incorrectly modelled.
+
+Presented with this discrepancy a statistical modeller might try a more flexible clustering model \citep[e.g.][]{Peel2000-pv, Iwata2012-yj} (a mixture of $t$-distributions would work on this example).
+However, the $p$-value of the MMD statistic can also be made non-significant by fitting a mixture of 10 Gaussians.
+We mention this as a reminder that the test proposed here does not attempt to falsify a class of models, it tests only whether or not the data could plausibly have been generated by a particular fitted model.
+
+\section{Applications to real data and complex statistical models}
+
+\subsection{What exactly do neural networks dream about?}
+
+``To recognize shapes, first learn to generate images'' quoth Hinton \citep{Hinton2007-eo}.
+Restricted Boltzmann Machine (RBM) pretraining of neural networks was shown by \cite{Hinton2006-yw} to learn a deep belief network (DBN) for the data \ie a generative model.
+In agreement with this observation, as well as computing estimates of marginal likelihoods and testing errors, it has been standard to demonstrate the effectiveness of a neural network by generating samples from the distribution it has learned.
+
+When trained on the MNIST handwritten digit data, samples from RBMs and DBNs certainly look like digits, but it is hard to detect any systematic anomalies purely by visual inspection.
+We now use the kernel MMD two-sample test to investigate how faithfully RBMs and DBNs can capture the distribution over handwritten digits.
+
+\subsubsection{RBMs mistake the identity of digits}
+
+We trained an RBM with architecture $(784)\leftrightarrow(500)\leftrightarrow(10)$\footnotemark~using 15 epochs of persistent contrastive divergence PCD-15, a batch size of 20 and a learning rate of 0.1 (\ie we used the same settings as the code available at the deep learning tutorial \citep{deep-learning-tutorial}).
+\footnotetext{That is, 784 input pixels and 10 indicators of the class label are connected to 500 hidden neurons.}
+We generated 3000 independent samples from the learned generative model by initialising the network with a random training image and performing 1000 gibbs updates with the digit labels clamped\footnotemark~to generate each image (as in \eg \cite{Hinton2007-eo}).
+\footnotetext{Without clamping the label neurons, the generative distribution is heavily biased towards certain digits.}
+
+The top left of figure~\ref{fig:digits} shows twenty random samples\footnotemark~from this model.
+\footnotetext{
+Specifically these are the activations of the pixel neurons before sampling sampling binary values.
+This is an attempt to be consistent with the grayscale input distribution of the images.
+Analogous discrepancies would be discovered if we had instead sampled binary pixel values.}
+They certainly look mostly like digits, but has the true distribution over digits been faithfully captured?
+A priori the answer to this question is almost certainly no, but it is not immediately obvious how the learned distribution will deviate from the true distribution.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.48\columnwidth]{figures/rbm_samples}
+\includegraphics[width=0.48\columnwidth]{figures/rbm_witness_troughs}
+\\
+\includegraphics[width=0.48\columnwidth]{figures/many_rbm_cond_witness_troughs}
+\includegraphics[width=0.48\columnwidth]{figures/dbn_ft_cond_witness_troughs}
+\\
+\includegraphics[width=0.48\columnwidth]{figures/many_rbm_cond_witness_peaks}
+\includegraphics[width=0.48\columnwidth]{figures/dbn_ft_cond_witness_peaks}
+\caption{
+Top left: Random samples from an RBM.
+Top right: Troughs of the witness function for the RBM (digits that are over-represented by the model).
+Middle left: Troughs of the witness function for samples from 1500 RBMs.
+Middle right: Troughs of the witness function for the DBN.
+Bottom left: Peaks (digits that are under-represented by the model) of the witness function for samples from 1500 RBMs.
+Bottom right: Peaks of the witness function for the DBN.
+}
+\label{fig:digits}
+\end{figure}
+
+Since we generated digits from the class conditional distributions we compare each class separately.
+Rather than show plots of the witness function for each digit we summarise the witness function by examples of digits closest to the peaks and troughs of the witness function (the witness function estimate is differentiable so we can find the peaks and troughs by gradient based optimisation).
+We apply the MMD two-sample test to each class conditional distribution, using PCA to reduce to 2 dimensions and selecting the lengthscale via cross validation as in section~\ref{sec:high_dim}.
+
+The top right box of figure~\ref{fig:digits} shows the digits closest to the two most extreme troughs\footnotemark~of the witness function for each class; the troughs indicate where the fitted distribution over-represents the distribution of true digits.
+\footnotetext{
+The exact ordering of the peaks and troughs is as follows.
+We partition the space by grouping samples where the witness function has the same sign and gradient based optimisation of the witness function starting from each sample would reach the same peak or trough.
+The contribution to the MMD from each of these groups is used to order the peaks and troughs.
+}
+The estimated $p$-value for all tests was less than 0.001.
+The most obvious error with these digits is that the first 2 and 3 look quite similar.
+
+To test that this was not just a poorly trained single RBM, we trained 1500 RBMs (with differently initialised pseudo random number generators) and generated one sample from each and performed the same tests.
+The estimated $p$-values were again all less than 0.001 and the summaries of the troughs of the witness function are shown in the middle left box of figure~\ref{fig:digits}.
+On the first toy data example we observed that the MMD statistic does not highlight outliers and therefore we can conclude that RBMs are making consistent mistakes \eg generating a 0 from the 7 distribution or a 5 when it should have been generating an 8.
+
+\subsubsection{DBNs have nightmares about ghosts}
+
+We now test the effectiveness of deep learning to represent the distribution of MNIST digits.
+In particular, we fit a DBN with architecture $(784)\leftarrow(500)\leftarrow(500)\leftrightarrow(2000)\leftrightarrow(10)$ using RBM pre-training and a generative fine tuning algorithm described in \cite{Hinton2006-yw}.
+Performing the same tests with 3000 samples results in estimated $p$-values of less than 0.001 except for the digit 4 (0.150) and digit 7 (0.010).
+Summaries of the witness function troughs are shown in the middle right box of figure~\ref{fig:digits}.
+
+The witness function no longer shows any class label mistakes (except perhaps for the digit 1 which looks very peculiar) but the 2, 3, 7 and 8 appear `ghosted' --- the digits fade in and out.
+For comparison the bottom right box of figure~\ref{fig:digits} shows digits closest to the peaks of the witness function; there is no trace of ghosting.
+
+Returning to the RBMs, we do not see ghosting either, but the digits nearest the witness function troughs are somewhat blurred (see bottom left box for comparison with peaks).
+Assuming that the top level associative memory of the DBN also suffers from blurring, this will result in occasionally incorrect neurons in the second hidden layer on the DBN.
+These incorrect bits will then propagate down the DBN resulting in spurious features in several visible neurons, resulting in ghosting.
+
+\subsubsection{Do we need to go deeper?}
+
+\TBD{Currently performing a $p$-values by depth experiment - unfortunately the parameters of the algorithms are very sensitive to depth so I need to make the experiments select these parameters ideally\ldots}
+
+\subsection{Testing non \iid data}
+\label{sec:non_iid}
+
+The test described so far applies when the model being tested has an \iid predictive distribution.
+This is of course restrictive, so we now demonstrate how we can construct a test for a non \iid model based on the MMD statistic.
+In particular we consider regression.
+
+\subsubsection{A test of local heteroscedasticity and non-normality for regression}
+
+We now assume that our data consists of pairs of inputs and outputs ${(x_i^\textrm{obs}, y_i^\textrm{obs})_{i=1\ldots n}}$.
+A typical formulation of the problem of regression is to estimate the conditional distribution of the outputs given the inputs ${p(y\given x, \theta)}$.
+This is consistent with assuming that input-output pairs are generated \iid from some distribution ${p(y, x \given \theta)}$, but conditioned on observing the particular input values ${(x_i^\textrm{obs})_{i=1\ldots n}}$.
+
+Following this observation, we might consider generating data from the plug-in conditional distribution ${y_i^\textrm{rep} \dist p(y\given x_i^\textrm{obs}, \hat\theta)}$ and computing the empirical MMD estimate~\eqref{eq:MMD_b} between ${(x_i^\textrm{obs}, y_i^\textrm{obs})_{i=1\ldots n}}$ and ${(x_i^\textrm{obs}, y_i^\textrm{rep})_{i=1\ldots n}}$.
+The only difference between this test and the MMD two sample test is that our data is generated from conditional distributions, rather than being \iid.
+The null distribution of this statistic can be trivially estimated by sampling several sets of replicate data from the plug-in predictive distribution.
+
+To demonstrate this test we apply it to 4 regression algorithms and 13 time series analysed in \cite{Lloyd2014-ABCD}.
+In this work the authors compare several methods for constructing Gaussian process \citep[e.g.][]{Rasmussen2006-ml} regression models.
+Example data sets are shown in figures~\ref{fig:SE-witness}~and~\ref{fig:ABCD-witness}.
+While it is clear that simple smoothing methods will fail to capture all of the structure in the data, it is not clear a priori how much better the more advanced methods will fair.
+
+To construct $p$-values we use held out data using the same split of training and testing data as the interpolation experiment in \cite{Lloyd2014-ABCD}.
+Gaussian processes when applied to regression problems learn a joint distribution of all output values.
+However, this joint distribution information is rarely used; typically only the pointwise conditional distributions ${p(y\given x_i^\textrm{obs}, \hat\theta)}$ are used which is consistent with the test proposed here.
+
+Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 model construction methods.
+The four methods are Gaussian process regression using a squared exponential kernel (SE), trend-cyclical-irregular models \citep[e.g.][]{lind2006basic} (TCI), spectral mixture kernels \citep{WilAda13} (SP) and the method proposed in \cite{Lloyd2014-ABCD} (ABCD).
+Values in  bold indicate a positive discovery after a Benjamini--Hochberg \citep{Benjamini_undated-mh} procedure with a false discovery rate of 0.05 applied to each model construction method.
+SE, TCI and SP have a very similar pattern of significant $p$-values whereas ABCD has fewer significant $p$-values.
+
+\begin{table}[ht]
+\center
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Dataset & SE & TCI & SP & ABCD \\
+\hline
+Airline        & 0.36 & \bf{0.00} & 0.07 & 0.15 \\
+Solar          & \bf{0.00} & \bf{0.00} & \bf{0.00} & 0.05 \\
+Mauna          & 0.99 & 0.41 & 0.34 & 0.21 \\
+Wheat          & \bf{0.00} & \bf{0.00} & \bf{0.00} & 0.19 \\
+Temperature    & 0.54 & 0.83 & 0.68 & 0.75 \\
+Internet       & \bf{0.00} & \bf{0.01} & 0.05 & \bf{0.01} \\
+Call centre    & \bf{0.02} & \bf{0.00} & \bf{0.00} & 0.07 \\
+Radio          & \bf{0.00} & \bf{0.00} & \bf{0.00} & \bf{0.00} \\
+Gas production & \bf{0.00} & \bf{0.01} & \bf{0.01} & 0.11 \\
+Sulphuric      & 0.29 & 0.38 & 0.34 & 0.52 \\
+Unemployment   & \bf{0.00} & \bf{0.02} & \bf{0.00} & \bf{0.01} \\
+Births         & \bf{0.00} & \bf{0.02} & \bf{0.00} & 0.12 \\
+Wages          & \bf{0.00} & \bf{0.01} & \bf{0.01} & \bf{0.00} \\
+\hline
+\end{tabular}
+\caption{Two sample test $p$-values applied to 13 time series and 4 regression algorithms.
+Bold values indicate a positive discovery using a Benjamini--Hochberg procedure with a false discovery rate of 0.05 for each model construction method.}
+\label{table:ABCD-p-values}
+\end{table}
+
+We now investigate the type of discrepancies found by this test by looking at the witness function (which can still be interpreted as the difference of kernel density estimates).
+Figure~\ref{fig:SE-witness} shows the solar and gas production data sets, the posterior distribution of the SE fits to this data and the witness functions for the SE fit.
+The solar witness function has a clear narrow peak, indicating that the data is more dense than expected by the fitted model in this region.
+We can see that this has identified a region of low variability in the data \ie it has identified local heteroscedasticity not captured by the model.
+Similar conclusions can be drawn about the gas production data and witness function.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.22\columnwidth]{figures/solar-data}
+\includegraphics[width=0.22\columnwidth]{figures/solar-witness}
+\includegraphics[width=0.22\columnwidth]{figures/gas-data}
+\includegraphics[width=0.22\columnwidth]{figures/gas-witness}
+\caption{
+From left to right. Solar data with SE posterior. Witness function of SE fit to solar. Gas production data with SE posterior. Witness function of SE fit to gas production.
+}
+\label{fig:SE-witness}
+\end{figure}
+
+Of the four methods compared here, only ABCD is able to model heteroscedasticity, explaining why it is the only method with a substantially different set of significant $p$-values.
+However, the procedure is still potentially failing to capture structure on four of the datasets.
+
+Figure~\ref{fig:ABCD-witness} shows the unemployment and Internet data sets, the posterior distribution for the ABCD fits to the data and the witness functions of the ABCD fits.
+The ABCD method has captured much of the structure in these data sets, making it difficult to visually identify discrepancies between model and data.
+The witness function for unemployment shows peaks and troughs at similar values of the input $x$.
+Comparing to the raw data we see that at these input values there are consistent outliers.
+Since ABCD is based on Gaussianity assumptions these consistent outliers have caused the method to estimate a large variance in this region, when the true data is non-Gaussian.
+There is also a similar pattern of peaks and troughs on the internet data suggesting that non-normality has again been detected.
+Indeed, the data appears to have a strict lower bound which is inconsistent with Gaussianity.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.22\columnwidth]{figures/unemployment-data}
+\includegraphics[width=0.22\columnwidth]{figures/unemployment-witness}
+\includegraphics[width=0.22\columnwidth]{figures/internet-data}
+\includegraphics[width=0.22\columnwidth]{figures/internet-witness}
+\caption{
+From left to right. Unemployment data with ABCD posterior. Witness function of ABCD fit to unemployment. Internet data with ABCD posterior. Witness function of ABCD fit to Internet.
+}
+\label{fig:ABCD-witness}
+\end{figure}
+
+\section{Discussion of model criticism and related work}
+
+\subsection{Are we criticising a particular model, or class of models?}
+
+In section~\ref{sec:model-crit-general} we interpreted the differences between classical, Bayesian prior/posterior and plug-in $p$-values as corresponding to different null hypotheses and interpretations of the word `model'.
+In particular the classical $p$-value tests a null hypothesis that the data could have been generated by a class of distributions (\eg all normal distributions) whereas all other $p$-values test a particular probability distribution.
+
+Robins, van der Vaart \& Ventura \citep{Robins2000-oz} demonstrated that Bayesian and plug-in $p$-values are not classical $p$-values (frequentist $p$-values in their terminology) \ie they do not have a uniform distribution under the relevant null hypothesis.
+However, this was presented as a failure of these methods; in particular they demonstrated that methods proposed by Bayarri \& Berger \citep{Bayarri1999-ty} based on posterior predictive $p$-values are asymptotically classical $p$-values.
+
+This claimed inadequacy of posterior predictive $p$-values was rebutted \citep{Gelman2003-xx} and while their usefulness is becoming more accepted (see \eg introduction of \cite{Bayarri2007-cp}) it would appear there is still confusion on the subject \citep{Gelman2013-am}.
+We hope that our interpretation of the differences between these methods as different null hypotheses --- appropriate in different circustances --- sheds further light on the matter.
+
+\subsection{Should we worry about using the same data for traning and criticism?}
+
+Plug-in and posterior predictive $p$-values test the null hypothesis that the observed data could have been generated by the fitted model or posterior predictive distribution.
+In some situations it may be more appropriate to attempt to falsify the null hypothesis that future data will be generated by the plug-in or posterior predictive distribution.
+As mentioned in section~\ref{sec:model-crit-general} this can be achieved by reserving a portion of the data to be used for model criticism alone, rather than fitting a model or updating a posterior on the full data.
+Cross validation methods have also been investigated in this context \citep{Gelfand1992-ow, Gelfand1996-vy, Marshall2007-hd}.
+
+\subsection{Omnibus methods for model criticism}
+
+Gelman, Meng \& Stern \citep{Gelman1996-ez} proposed an extension to posterior predictive $p$-values by generalising the test statistic to a discrepancy measure that can also take model parameters as input as well as data.
+They also proposed an omnibus test discrepancy measure
+\begin{equation}
+  X^2(Y,\theta) = \sum_{i=1}^n \frac{(y_i-\mathbb{E}(y_i\given\theta))^2}{\textrm{Var}(y_i\given\theta)}
+\end{equation}
+which resembles a classical $\chi^2$ statistic.
+While this statistic can be useful in a number of different models, it would have failed to detect any discrepancies in our two toy data examples.
+In the case of \iid or exchangeable data (and a model that respects this symmetry) this statistic only measures how well the mean and variance of the data has been captured.
+Since the mean and variance of the data were fit (near) directly by our proposed models we would only expect to see siginificant discrepancies if inference failed.
+
+\subsection{Other methods for evaluating statistical models}
+
+Other typical methods of model evaluation include estimating the predictive performance of the model, analyses of sensitivities to modelling parameters / priors, graphical tests, and estimates of model utility.
+For a recent survey of Bayesian methods for model assessment, selection and comparison see \cite{Vehtari2012-oh} which phrases many techniques as estimates of the utility of a model.
+For some discussion of sensitivity analysis and graphical model comparison see \citep[e.g.][]{Gelman2013-st}.
+
+In this manuscript we have focused on methods that compare statistics of data with predictive distributions, ignoring parameters of the model.
+When working with models in which individual parameters are of interest (\eg hierarchical models) other techniques are relevant.
+O'Hagan \citep{OHagan2003-bc} proposes a method and selectively reviews techniques appropriate in this context.
+The discrepancy measures of  \cite{Gelman1996-ez} are also relevant.
+
+In the spirit of scientific falsification \citep[e.g.][]{Popper2005-ba}, ideally all methods of assessing a model should be performed to gain confidence in any conclusions made.
+Of course, when performing multiple hypothesis tests care must be taken in the intrepetation of individual $p$-values.
+
+\section{Conclusions and future work}
+
+In this paper we have demonstrated an exploratory form of model criticism based on two sample tests using kernel maximum mean discrepancy.
+In contrast to other methods for model criticism, the test analytically maximises over a broad class of statistics, automatically identifying the statistic which most demonstrates the discrepancy between the model and data.
+We demonstrated how this method of model criticism can be applied to neural networks and Gaussian process regression and demonstrated the ways in which these models were misrepresenting the data they were trained on.
+
+We have demonstrated how kernel MMD two sample tests can be applied to model criticism, but they can be applied to any aspect of statistical modelling where two sample tests are appropriate.
+This includes for example, Geweke's tests of markov chain posterior sampler validity \citep{Geweke2004-yx} and tests of markov chain convergence \citep[e.g.][]{Cowles1996-qy}.
+
+The two sample tests proposed in this paper naturally apply to \iid data and models, but model criticism techniques should of course apply to models with other symmetries (\eg exchangeable data, logitudinal data / time series, graphs, functions any many others).
+We have demonstrated an adaptation of the kernel MMD test to regression models
+However, it is unclear whether maximum mean discrepancy measures can be naturally extended to all of these classes; investigating such extensions would be a profitable area for future study.
+
+In proposing a new method of model criticism we hope we have also exposed the machine learning community to a useful set of tools for diagnosing potential inadequacies of models.
+On this note, we conclude with a question.
+Do you know how the model you are currently working with most misrepresents the data it is attempting to model?
+
+\newpage
+
+\bibliography{experiment}
+\bibliographystyle{unsrt}
+
+\end{document} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Alternative maths}
+
+\TBD{This is probably superfluous and not helpful?}
+
+To demonstrate the connection between posterior predictive $p$-values and maximum mean discrepancy measures we rewrite the $p$-value as an expectation
+\begin{equation}
+\mathbb{E}(\mathbb{I}[T(Y^\textrm{rep}) - T(Y) > 0]).
+\end{equation}
+We now remove the indicator function from this expression
+\begin{equation}
+  \mathbb{E}(T(Y^\textrm{rep})) - T(Y)
+\end{equation}
+yielding a measure of how the posterior mean of the statistic compares to the statistic evaluated on the data.
+If we assume that our statistic $T$ is of the form $T(Y) = \sum t(y_i)$ (this includes \eg all empirical moments) then
+\begin{equation}
+\mathbb{E}(T(Y^\textrm{rep})) - T(Y) = \sum \mathbb{E}(t(y_i^\textrm{rep})) - \sum t(y_i) = \mathbb{E}(t(y^\textrm{rep})) - \mathbb{E}(t(y))
+\end{equation}
+where $y$ and $y^\textrm{rep}$ are distributed according to the empirical distribution of the data and the posterior predictive distribution over single data points respectively.
+This quantity is called a mean discrepancy between the distribution of $y$ and $y^\textrm{rep}$.
+
+In the practical application of posterior predictive $p$-values, statistics are chosen to measure aspects of the data that are of relevance to the analysis being performed.
+Whilst there are numerous examples (\NA{cite some applied papers}) of sensible choices for standard models, there is little work on exploratory model criticism.
+The benefit of considering mean discrepancies is that we can analytically maximise over a large space of different statistics.
+
+\TBD{
+Can we relate any of this to utility theory.
+Using scoring rules to justify the use of the posterior predictive.
+}
+
+\subsubsection{Alternative maths}
+
+In this setting it is natural to replace the posterior predictive distribution over data sets with the posterior predictive distribution over data points
+\begin{equation}
+p(y^\textrm{rep}|M,Y) = \int p(y^\textrm{rep}|M,\theta)p(\theta|M,Y)\mathrm{d}\theta.
+\end{equation}
+We then define posterior predictive $p$-values as
+\begin{equation}
+  p_\textrm{x}(Y) = \mathbb{P}_{y\sim \hat{Y}}(T(y^\textrm{rep})\geq T(y)|M,Y) = \mathbb{E}_{y\sim \hat{Y}}(\mathbb{I}[T(y^\textrm{rep}) - T(y) > 0])
+\end{equation}
+where $\hat{Y}$ if the empirical distribution of the data.
+This is a measure of how extreme the data is compared to the posterior predictive distribution over data points.
+If we remove the indicator function in the above equation we get
+\begin{equation}
+  \mathbb{E}(T(y^\textrm{rep})) - \mathbb{E}(T(y))
+\end{equation}
+which measures the mean discrepancy between the posterior predictive distribution and the data as measured by the statistic $T$.
+
+\section{Model criticism with posterior predictive $p$-values}
+
+Suppose we observe data $Y = (y_i)_{i=1\ldots n}$ and we attempt to fit a model $M$ with parameters $\theta$.
+After performing a statistical analysis we will have either an estimate, $\hat\theta$, or an (approximate) posterior, $p(\theta|M,Y)$, for the parameters.
+
+The posterior predictive distribution over replicate data\fTBD{ZG: Be more gentle} $Y^\textrm{rep}$ is given by
+\begin{equation}
+p(Y^\textrm{rep}|M,Y) = \int p(Y^\textrm{rep}|M,\theta)p(\theta|M,Y)\mathrm{d}\theta
+\end{equation}
+where the posterior distribution for $\theta$ may be replaced by a point mass in a frequentist analysis \ie a plug-in predictive distribution\fTBD{Write equation}.
+In a Bayesian context this\fTBD{Reference equation} represents the belief over potential future data sets, $Y^\textrm{rep}$, generated by the same mechanism as the first data set after having observed $Y$.
+
+Posterior predictive $p$-values \citep{Rubin1984-tw} are defined by
+\begin{equation}
+p_\textrm{post}(Y) = \mathbb{P}(T(Y^\textrm{rep})\geq T(Y)|M,Y)
+\end{equation}
+where $T$ is a statistic \ie a function of the data.
+This is the posterior probability that a potential future data set will be more extreme than the observed data as measured by the statistic $T$.
+Small $p$-values indicate that the observed data, $Y$, is extreme compared to the posterior predictive distribution, indicating a lack of fit between the posterior distribution and the data.
+
+Consequently the MMD can be expressed without the supremum as\fTBD{Some of this maths can probably be cut for brevity - ZG: Hard to follow}
+%\begin{eqnarray}
+%\textrm{MMD}^2(\mathcal{F},p,q) & = & \phantom{-2}\mathbb{E}_{x,x'\sim p}[k(x,x')] \nonumber\\
+%&& - 2\mathbb{E}_{x\sim p,y\sim p}[k(x,y)] \nonumber\\
+%&& + \phantom{2}\mathbb{E}_{y,y'\sim q}[k(y,y')]
+%\end{eqnarray}
+\begin{equation}
+  \textrm{MMD}^2(\mathcal{F},p,q) = \mathbb{E}_{x,x'\sim p}[k(x,x')] + 2\mathbb{E}_{x\sim p,y\sim p}[k(x,y)] + \mathbb{E}_{y,y'\sim q}[k(y,y')]
+\end{equation}
+for which one can form a simple biased estimate
+%\begin{eqnarray}
+%\textrm{MMD}_b^2(\mathcal{F},X,Y) & = & \phantom{+}\frac{1}{m^2}\sum_{i,j=1}^{m}k(x_i,x_j) \nonumber\\
+%&& - \frac{2}{mn}\sum_{i,j=1}^{m,n}k(x_i,y_j) \nonumber\\
+%&& + \frac{1}{n^2}\sum_{i,j=1}^{n}k(y_i,y_j)
+%\end{eqnarray}
+\begin{equation}
+  \textrm{MMD}_b^2(\mathcal{F},X,Y) = \frac{1}{m^2}\sum_{i,j=1}^{m}k(x_i,x_j) - \frac{2}{mn}\sum_{i,j=1}^{m,n}k(x_i,y_j) + \frac{1}{n^2}\sum_{i,j=1}^{n}k(y_i,y_j)
+\label{eq:MMD_b}
+\end{equation}
+with which one can construct statistical tests of whether or not ${p=q}$ after estimating its null distribution.
+
+%\subsection{Spotting an unusual cluster}
+%
+%Figure~\ref{fig:blob_blob_ring} shows synthetic 2 dimensional data generated from two Gaussians and a uniform ring density (green circles).
+%
+%\begin{figure}[ht]
+%\centering
+%\includegraphics[width=0.98\columnwidth]{figures/blob_blob_ring}
+%\caption{
+%An experiment on synthetic data revealing a statistically significant maximum mean discrepancy.
+%Green $\circ$ are data, red $\times$ are locations over-represented by the model, blue $+$ are locations under-represented by the model.
+%}
+%\label{fig:blob_blob_ring}
+%\end{figure}
+%
+%We fit a mixture of Gaussians (cite) to this data using 3 centres.
+%The kernel two sample test using the median lengthscale heuristic returns a $p$-value of (insert number here) indicating that no discrepancies can be identifed at this lengthscale.
+%However, plotting a histogram of all pairwise distances over the data reveals two predominant scales in the data; the median is closest to the larger value.
+%
+%Performing a kernel two sample test with the smaller lengthscale results in a $p$-value of (insert number) indicating a discrepancy between the model and the data.
+%Similar to before we can identify this discrepancy via the witness function.
+%\TBD{
+%Something about extreme points or basins of attraction or a plot of the witness function.
+%}
+%The witness function has clearly identified the uniform ring of data points as being inconsistent with the mixture of Gaussians model.
+%
+%\TBD{Follow up could be trying to fit this with more Gaussians - how many do we need to patch it up - will there always be discrepancies or will they become too small to notice?}
+
+\subsection{How much can be modelled using normal distributions?}
+
+\TBD{This section is proto-draft quality}
+
+We now show how we can use the kernel two sample test to criticise models of functional data.
+In particular we test Gaussian process (\TBD{cite Rasmussen + Williams}) regression models.
+In this setting our data consists of (input, output) pairs $(x_i, y_i)$ and our goal is to model the conditional distribution $\mathbb{P}(y\given x)$.
+The $(y_i)_{i=1\ldots N}$ are typically not exchangeable, but the pairs $(x_i, y_i)$ are.
+The distribution of the inputs $(x_i)_{i=1\ldots N}$ are typically not modelled, but we can estimate the distribution of the inputs using their empirical distribution, and then model the joint distribution as $\mathbb{P}(y\given x)\mathbb{P}(x)$.
+We can therefore test a regression model by sampling from the posterior or fitted distribution for $\mathbb{P}(y\given x)\mathbb{P}(x)$ and comparing this to a bootstrap sample of the original data.
+
+\subsubsection{Detecting heteroscedasticity and non-normality non-parametrically}
+
+We first apply the two sample test to 13 time series and 4 algorithms analysed in \TBD{cite AAAI work}.
+In this work the authors compare a number of different methods for constructing Gaussian process models.
+While it is clear that a simple smoothing method will almost always fail to capture the rich structure in these data sets, it is not clear if the more advance methods are capturing all relevant aspects of the data.
+
+Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 model construction methods.
+This table shows that it is only the method ABCD that is not consistently failing the MMD model criticism --- we should note however that SP and TCI perform well at extrapolation and interpolation.
+
+\begin{table}[ht]
+\center
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Dataset & ABCD & SP & TCI & SE \\
+\hline
+Airline        & 0.47 & 0.14 & {\bf0.00} & {\bf0.00} \\
+Solar          & 0.34 & {\bf0.00} & {\bf0.01} & {\bf0.00} \\
+Mauna          & 0.84 & 0.56 & 0.24 & 0.49\\
+Wheat          & 0.48 & 0.20 & 0.24 & {\bf0.00} \\
+Temperature    & {\bf0.00} & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+Internet       & 0.34 & {\bf0.03} & {\bf0.01} & {\bf0.00} \\
+Call centre    & 0.52 & {\bf0.02} & {\bf0.00} & 0.08 \\
+Radio          & 0.42 & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+Gas production & 0.18 & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+Sulphuric      & 0.28 & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+Unemployment   & 0.08 & {\bf0.00} & {\bf0.01} & {\bf0.00} \\
+Births         & {\bf0.00} & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+Wages          & 0.68 & {\bf0.00} & {\bf0.00} & {\bf0.00} \\
+\hline
+\end{tabular}
+\caption{Two sample test $p$-values applied to 13 time series and }
+\label{table:ABCD-p-values}
+\end{table}
+
+We now look at the type of discrepancies found by this test by looking at the witness function.
+Figure~\ref{fig:time-series-witness} shows two data sets and the fit of SE two them.
+Below are the witness functions of the MMD test which clearly identifies regions of lack of model fit; in both of these examples it is identifying heteroscedasticity.
+This explains why it is only ABCD that is able to pass the test since most of the data sets display extreme heteroscedasticity and ABCD is the only method that can express heteroscedasticity.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.22\columnwidth]{figures/02-solar-witness}
+\includegraphics[width=0.22\columnwidth]{figures/02-solar-witness}
+\includegraphics[width=0.22\columnwidth]{figures/09-gas-production-witness}
+\includegraphics[width=0.22\columnwidth]{figures/09-gas-production-witness}
+\caption{
+Top left: Solar data.
+Top right: Gas prodcution data.
+Bottom left: Witness function on solar data for SE method.
+Bottom right: Witness function on gas production data for SE method.
+}
+\label{fig:time-series-witness}
+\end{figure}
+
+However, all methods would appear to be an inappropriate model for the temperature and births data (and there is some cause for suspicion on the gas production data).
+Figure~\ref{fig:temperature-witness} shows the data, model fit of ABCD (all methods produce a similar fit to this data).
+\TBD{Mention why we increase the lengthscale of the test}.
+The witness function is showing that the left hand side of data is more concentrated in the centre than the posterior and vice versa on the right hand side of the data.
+This could be a suggestion of heteroscedasticity, but that is not apparent in the data.
+If we were to take slices of the witness function at the left hand side and right hand side of the data, we would get a similar shape of a peak with two troughs (and the vertical reflection) much like the speed of light data.
+With this in mind we can indeed see that the left hand side of the data is prone to outliers at the peaks and troughs of data.
+In contrast no outliers are apparent on the right hand side of data.
+This usefully shows that it would not be sufficient to improve this model just by replacing the Gaussian distributed residuals with a heavy tailed distribution --- the variance or degree of heavy tailed ness would also have to change with the input variable.
+That is, if I had just done a test for outliers I would not have discovered the full story.
+\TBD{I can test this assertion by fitting a $t$-distribution manually}.
+Similar discrepancies were observed on the births and gas production data.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.30\columnwidth]{figures/05-temperature-detailed-witness}
+\includegraphics[width=0.30\columnwidth]{figures/05-temperature-detailed-witness}
+\includegraphics[width=0.30\columnwidth]{figures/05-temperature-witness}
+\caption{
+Left: Temperature data with ABCD model fit.
+Middle: Witness function for this data and ABCD model with lengthscale chosen by cross validation.
+Right: Witness function for this data and ABCD model with longer lengthscale.
+}
+\label{fig:temperature-witness}
+\end{figure}
+
+To a frequentist, a statistical model is typically a probability distribution over data with some unknown parameters.
+To a Bayesian, the specification of a model is only complete with a prior distribution for those parameters.
+This difference in terminology is perhaps behind some of the confusion in the literature about the validity of certain model criticism techniques which we now discuss.
+
+Posterior predictive $p$-values and the test proposed here test the null hypothesis that the data was generated from a particular probability distribution - a model with fitted parameters or the posterior predictive distribution\fTBD{ZG: Add in equations}.
+These tests allow us to falsify the hypothesis that a fitted model or posterior predictive distribution is a faithful summary of the data\fTBD{ZG: According to frequentist interpretation}.
+Note however that some proponents of posterior predictive $p$-values prefer to interpret them directly as subjective Bayesian probabilities \citep{Gelman2013-am}.
+
+A more classical null hypothesis associated with model criticism is that the data was generated from a probability distribution of a certain form but with unknown parameters (\eg all normal distributions).
+Posterior $p$-values are uncalibrated for this composite\fTBD{ZG: define composite} hypothesis test \citep{Robins2000-oz} - under broad assumptions posterior predictive $p$-values are asymptotically conservative (the null distribution is concentrated towards values of 0.5).
+Robins et alia \citep{Robins2000-oz} shows that alternatives proposed by Bayarri \& Berger \citep{Bayarri1999-ty}, and prior predictive $p$-values of Box \citep{Box1980-ud} among others are appropriately calibrated\fTBD{Check this assertion about prior predictive}.
+Further examples of tests that are calibrated for this composite null hypothesis incude \citep[e.g.][]{Dey1998-dn, Johnson2004-ej}
+
+However, in our first real data example we are not interested in the question `do MNIST digits come from some deep belief network?'.
+If we were trying to answer this question, then we should expect any calibrated $p$-value to have very low statistical power since the space of probability distributions that can be represented by a deep belief network is very large indeed.
+Insead it is of more interest for this example to ask whether or not our particular trained neural network can faithfully mimick the distribution it was trained on.
