@@ -7,7 +7,7 @@ function mean_var_plot( xdata, ydata, xrange, forecast_mu, forecast_scale, small
     % Figure settings.
     lw = 1.2;
     opacity = 1;
-    light_blue = [227 237 255]./255;
+    light_blue = [180 180 255]./255;
     
     if ~data_only
         % Plot confidence bears.

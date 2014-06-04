@@ -7,13 +7,13 @@ addpath(genpath('../gpml'));
 
 %% Setup
 
-folders = {'SE', 'TCI', 'SP', 'ABCD'};
-folder = folders{1};
-
-files = dir(strcat(folder, '/*.mat'));
-file = files(9);
-
-fig_title = 'Gas production';
+% folders = {'SE', 'TCI', 'SP', 'ABCD'};
+% folder = folders{1};
+% 
+% files = dir(strcat(folder, '/*.mat'));
+% file = files(9);
+% 
+% fig_title = 'Gas production';
 
 init_rand(1);
 
@@ -143,7 +143,7 @@ if size(A,2) == 2
     reshaped = reshape(witness, 200, 200)';
 
     h = figure;
-    imagesc(reshaped(end:-1:1,:));
+    imagesc(-reshaped(end:-1:1,:));
     colorbar;
     save2pdf(['temp/' file.name '-witness.pdf'], h, 900, true);
     hold off;
