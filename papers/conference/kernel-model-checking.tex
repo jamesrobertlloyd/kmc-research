@@ -354,7 +354,7 @@ The estimated $p$-value for all tests was less than 0.001.
 The most obvious error with these digits is that the first 2 and 3 look quite similar.
 
 To test that this was not just a poorly trained single RBM, we trained 1500 RBMs (with differently initialised pseudo random number generators) and generated one sample from each and performed the same tests.
-The estimated $p$-values were again all less than 0.001 and the summaries of the troughs of the witness function are shown in the middle left box of figure~\ref{fig:digits}.
+The estimated $p$-values were again all less than 0.001 and the summaries of the troughs of the witness function are shown in figure~\ref{fig:digits}c.
 On the first toy data example we observed that the MMD statistic does not highlight outliers and therefore we can conclude that RBMs are making consistent mistakes \eg generating a 0 from the 7 distribution or a 5 when it should have been generating an 8.
 
 \paragraph{DBNs have nightmares about ghosts}
@@ -362,10 +362,10 @@ On the first toy data example we observed that the MMD statistic does not highli
 We now test the effectiveness of deep learning to represent the distribution of MNIST digits.
 In particular, we fit a DBN with architecture $(784)\leftarrow(500)\leftarrow(500)\leftrightarrow(2000)\leftrightarrow(10)$ using RBM pre-training and a generative fine tuning algorithm described in \cite{Hinton2006-yw}.
 Performing the same tests with 3000 samples results in estimated $p$-values of less than 0.001 except for the digit 4 (0.150) and digit 7 (0.010).
-Summaries of the witness function troughs are shown in the middle right box of figure~\ref{fig:digits}.
+Summaries of the witness function troughs are shown in figure~\ref{fig:digits}d.
 
 The witness function no longer shows any class label mistakes (except perhaps for the digit 1 which looks very peculiar) but the 2, 3, 7 and 8 appear `ghosted' --- the digits fade in and out.
-For comparison the bottom right box of figure~\ref{fig:digits} shows digits closest to the peaks of the witness function; there is no trace of ghosting.
+For comparison, figure~\ref{fig:digits}f shows digits closest to the peaks of the witness function; there is no trace of ghosting.
 This discrepancy could be due to errors in the autoassociative memory of a DBN propogating down the hidden layers resulting in spurious features in several visible neurons.
 
 \section{An extension to non \iid data}
@@ -380,25 +380,25 @@ In particular we construct a model criticism procedure for regression models.
 \center
 \begin{tabular}{|c|c|c|c|c|}
 \hline
-Dataset & SE & TCI & SP & ABCD \\
+Dataset & Lin & SE & SP & ABCD \\
 \hline
-Airline        & 0.36 & \bf{0.00} & 0.07 & 0.15 \\
+Airline        & 0.34 & 0.36 & 0.07 & 0.15 \\
 Solar          & \bf{0.00} & \bf{0.00} & \bf{0.00} & 0.05 \\
-Mauna          & 0.99 & 0.41 & 0.34 & 0.21 \\
+Mauna          & \bf{0.00} & 0.99 & 0.34 & 0.21 \\
 Wheat          & \bf{0.00} & \bf{0.00} & \bf{0.00} & 0.19 \\
-Temperature    & 0.54 & 0.83 & 0.68 & 0.75 \\
-Internet       & \bf{0.00} & \bf{0.01} & 0.05 & \bf{0.01} \\
-Call centre    & \bf{0.02} & \bf{0.00} & \bf{0.00} & 0.07 \\
+Temperature    &  0.44 & 0.54 & 0.68 & 0.75 \\
+Internet       & \bf{0.00} & \bf{0.00} & 0.05 & \bf{0.01} \\
+Call centre    & \bf{0.00} & \bf{0.02} & \bf{0.00} & 0.07 \\
 Radio          & \bf{0.00} & \bf{0.00} & \bf{0.00} & \bf{0.00} \\
-Gas production & \bf{0.00} & \bf{0.01} & \bf{0.01} & 0.11 \\
-Sulphuric      & 0.29 & 0.38 & 0.34 & 0.52 \\
-Unemployment   & \bf{0.00} & \bf{0.02} & \bf{0.00} & \bf{0.01} \\
-Births         & \bf{0.00} & \bf{0.02} & \bf{0.00} & 0.12 \\
-Wages          & \bf{0.00} & \bf{0.01} & \bf{0.01} & \bf{0.00} \\
+Gas production & \bf{0.00} & \bf{0.00} & \bf{0.01} & 0.11 \\
+Sulphuric      & \bf{0.00} & 0.29 & 0.34 & 0.52 \\
+Unemployment   & \bf{0.00} & \bf{0.00} & \bf{0.00} & \bf{0.01} \\
+Births         & \bf{0.00} & \bf{0.00} & \bf{0.00} & 0.12 \\
+Wages          & \bf{0.00} & \bf{0.00} & \bf{0.01} & \bf{0.00} \\
 \hline
 \end{tabular}
 \caption{Two sample test $p$-values applied to 13 time series and 4 regression algorithms.
-Bold values indicate a positive discovery using a Benjamini--Hochberg procedure with a false discovery rate of 0.05 for each model construction method.}
+Bold values indicate a positive discovery using a Benjamini--Hochberg procedure with a false discovery rate of 0.05 for each method.}
 \label{table:ABCD-p-values}
 \end{wraptable}
 
@@ -411,15 +411,15 @@ The null distribution of this statistic can be trivially estimated by sampling s
 To demonstrate this test we apply it to 4 regression algorithms and 13 time series analysed in \cite{Lloyd2014-ABCD}.
 In this work the authors compare several methods for constructing Gaussian process \citep[e.g.][]{Rasmussen2006-ml} regression models.
 Example data sets are shown in figures~\ref{fig:SE-witness}~and~\ref{fig:ABCD-witness}.
-While it is clear that simple smoothing methods will fail to capture all of the structure in this data, it is not clear a priori how much better the more advanced methods will fair.
+While it is clear that simple methods will fail to capture all of the structure in this data, it is not clear a priori how much better the more advanced methods will fair.
 
 To construct $p$-values we use held out data using the same split of training and testing data as the interpolation experiment in \cite{Lloyd2014-ABCD}\footnotemark.
 \footnotetext{Gaussian processes when applied to regression problems learn a joint distribution of all output values.
 However, this joint distribution information is rarely used; typically only the pointwise conditional distributions ${p(y\given x_i^\textrm{obs}, \hat\theta)}$ are used which is consistent with the test proposed here.}
-Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 model construction methods.
-The four methods are Gaussian process regression using a squared exponential kernel (SE), trend-cyclical-irregular models \citep[e.g.][]{lind2006basic} (TCI), spectral mixture kernels \citep{WilAda13} (SP) and the method proposed in \cite{Lloyd2014-ABCD} (ABCD).
+Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 regression methods.
+The four methods are linear regression (Lin), Gaussian process regression using a squared exponential kernel (SE), spectral mixture kernels \citep{WilAda13} (SP) and the method proposed in \cite{Lloyd2014-ABCD} (ABCD).
 Values in  bold indicate a positive discovery after a Benjamini--Hochberg \citep{Benjamini_undated-mh} procedure with a false discovery rate of 0.05 applied to each model construction method.
-SE, TCI and SP have a very similar pattern of significant $p$-values whereas ABCD has fewer significant $p$-values.
+%Lin, TCI and SP have a very similar pattern of significant $p$-values whereas ABCD has fewer significant $p$-values.
 
 We now investigate the type of discrepancies found by this test by looking at the witness function (which can still be interpreted as the difference of kernel density estimates).
 Figure~\ref{fig:SE-witness} shows the solar and gas production data sets, the posterior distribution of the SE fits to this data and the witness functions for the SE fit.
