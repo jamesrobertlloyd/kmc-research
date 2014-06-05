@@ -124,11 +124,11 @@ When one fits a linear model to a data set a complete analysis includes computin
 Similarly, modern approaches to Bayesian statistics view model criticism as in important component of a cycle of model construction, inference and criticism \citep{Gelman2013-st}.
 
 As statistical models become more complex and diverse in response to the challenges of modern data sets there will be an increasing need for a greater range of model criticism procedures that are either automatic or widely applicable.
-This will be especially true as automatic modelling methods \citep[e.g.][]{Grosse2012-zf, Thornton2013-zg, Lloyd2014-ABCD} and probabilistic programming \citep[e.g.][]{Koller1997-am, Milch2007-dz, Goodman2012-pf, stan-software:2014} mature.
+This will be especially true as automatic modelling methods \citep[e.g.][]{Grosse2012-zi, Thornton2013-zg, Lloyd2014-nz} and probabilistic programming \citep[e.g.][]{Koller1997-am, Milch2005-qc, Goodman2008-ok, Stan_Development_Team2014-ha} mature.
 
 Model criticism typically proceeds by choosing a statistic of interest, computing it on data and comparing this to a suitable null distribution.
 Ideally these statistics are chosen to assess the utility of the statistical model under consideration (see applied examples \citep[e.g.][]{Gelman2013-st}) but this can require considerable expertise on the part of the modeller.
-We propose an alternative to this manual approach by using a statistic defined as a supremum over a broad class of measures of discrepancy between two distributions, the maximum mean discrepancy (MMD) \citep[e.g.][]{Gretton2008-ik}).
+We propose an alternative to this manual approach by using a statistic defined as a supremum over a broad class of measures of discrepancy between two distributions, the maximum mean discrepancy (MMD) \citep[e.g.][]{Gretton2008-gs}).
 The advantage of this approach is that the discrepancy measure attaining the supremum automatically identifies regions of the data which are most poorly represented by the statistical model fit to the data.
 
 We demonstrate MMD model criticism on toy examples, restricted Boltzmann machines and deep belief networks trained on MNIST digits and Gaussian process regression models trained on several time series.
@@ -201,7 +201,7 @@ In particular, we have samples of data $(y_i^\textrm{obs})_{i=1\ldots n}$ and we
 For consistency with two sample testing literature we now switch notation; suppose we have samples ${X = (x_i)_{i=1\ldots m}}$ and ${Y = (y_i)_{i=1\ldots n}}$ drawn \iid from distributions $p$ and $q$ respectively.
 The two sample problem asks if $p = q$.
 
-A way of answering the two sample problem is to consider maximum mean discrepancy (MMD) \citep[e.g.][]{Gretton2008-ik} statistics
+A way of answering the two sample problem is to consider maximum mean discrepancy (MMD) \citep[e.g.][]{Gretton2008-gs} statistics
 \begin{equation}
 \textrm{MMD}(\mathcal{F},p,q) = \sup_{f \in \mathcal{F}}(\mathbb{E}_{x\sim p}[f(x)] - \mathbb{E}_{y\sim q}[f(y)])
 \label{eq:MMD}
@@ -269,7 +269,7 @@ The data, fitted density estimate (normal distribution) and witness function are
 The witness function has a trough at the centre of the data and peaks either side indicating that the fitted model has placed too little mass in its centre and too much mass outside its centre.
 
 \footnotetext{
-Throughout this paper we estimate the null distribution of the MMD statistic using the bootstrap method described in \citep{Gretton2008-ik} using 1000 replicates.
+Throughout this paper we estimate the null distribution of the MMD statistic using the bootstrap method described in \citep{Gretton2008-gs} using 1000 replicates.
 We use a radial basis function kernel and select the lengthscale by 5 fold cross validation using predictive likelihood of the kernel density estimate as the selection criterion.}
 
 This suggests that we should modify our model by either using a distribution with heavy tails or explicitly modelling the possibility of outliers.
@@ -280,7 +280,7 @@ The estimated $p$-value associated with the MMD two sample test is roughly 0.5 d
 The nature of an MMD test depends on the kernel defining the RKHS in equation~\eqref{eq:MMD}.
 In this paper we use the radial basis function kernel which encodes for smooth functions with a typical lengthscale \citep[e.g.][]{Rasmussen2006-ml}.
 Consequently the test identifies `dense' discrepancies, only identifying outliers if the model and inference method are not robust to them.
-This is not a failure; a test that can identify too many types of discrepancy would have low statistical power (see \citep{Gretton2008-ik} for discussion of the power of the MMD test and alternatives).
+This is not a failure; a test that can identify too many types of discrepancy would have low statistical power (see \citep{Gretton2008-gs} for discussion of the power of the MMD test and alternatives).
 
 \paragraph{High dimensional data}
 
@@ -312,7 +312,7 @@ The poorly fit cluster is clearly identified.
 \end{figure}
 
 The MMD test returns a $p$-value of 0.05 and the witness function (right of figure~\ref{fig:high_mog}) clearly identifies the cluster that has been incorrectly modelled.
-Presented with this discrepancy a statistical modeller might try a more flexible clustering model \citep[e.g.][]{Peel2000-pv, Iwata2012-yj}.
+Presented with this discrepancy a statistical modeller might try a more flexible clustering model \citep[e.g.][]{Peel2000-pv, Iwata2013-yj}.
 The $p$-value of the MMD statistic can also be made non-significant by fitting a mixture of 10 Gaussians; this is a sufficient approximation to the $t$-distribution such that no discrepancy can be detected with the amount of data available.
 
 \section{What exactly do neural networks dream about?}
@@ -330,7 +330,7 @@ Analogous discrepancies would be discovered if we had instead sampled binary pix
 
 \paragraph{RBMs can consistently mistake the identity of digits}
 
-We trained an RBM with architecture $(784)\leftrightarrow(500)\leftrightarrow(10)$\footnotemark~using 15 epochs of persistent contrastive divergence (PCD-15), a batch size of 20 and a learning rate of 0.1 (\ie we used the same settings as the code available at the deep learning tutorial \citep{deep-learning-tutorial}).
+We trained an RBM with architecture $(784)\leftrightarrow(500)\leftrightarrow(10)$\footnotemark~using 15 epochs of persistent contrastive divergence (PCD-15), a batch size of 20 and a learning rate of 0.1 (\ie we used the same settings as the code available at the deep learning tutorial \citep{noauthor_2014-kp}).
 \footnotetext{That is, 784 input pixels and 10 indicators of the class label are connected to 500 hidden neurons.}
 We generated 3000 independent samples from the learned generative model by initialising the network with a random training image and performing 1000 gibbs updates with the digit labels clamped\footnotemark~to generate each image (as in \eg \cite{Hinton2007-eo}).
 \footnotetext{Without clamping the label neurons, the generative distribution is heavily biased towards certain digits.}
@@ -411,16 +411,16 @@ Bold values indicate a positive discovery using a Benjamini--Hochberg procedure 
 \label{table:ABCD-p-values}
 \end{wraptable}
 
-To demonstrate this test we apply it to 4 regression algorithms and 13 time series analysed in \cite{Lloyd2014-ABCD}.
+To demonstrate this test we apply it to 4 regression algorithms and 13 time series analysed in \cite{Lloyd2014-nz}.
 In this work the authors compare several methods for constructing Gaussian process \citep[e.g.][]{Rasmussen2006-ml} regression models.
 Example data sets are shown in figures~\ref{fig:SE-witness}~and~\ref{fig:ABCD-witness}.
 While it is clear that simple methods will fail to capture all of the structure in this data, it is not clear a priori how much better the more advanced methods will fair.
 
-To construct $p$-values we use held out data using the same split of training and testing data as the interpolation experiment in \cite{Lloyd2014-ABCD}\footnotemark.
+To construct $p$-values we use held out data using the same split of training and testing data as the interpolation experiment in \cite{Lloyd2014-nz}\footnotemark.
 \footnotetext{Gaussian processes when applied to regression problems learn a joint distribution of all output values.
 However this joint distribution information is rarely used; typically only the pointwise conditional distributions ${p(y\given x_i^\textrm{obs}, \hat\theta)}$ are used as we have done here.}
 Table~\ref{table:ABCD-p-values} shows a table of $p$-values for 13 data sets and 4 regression methods.
-The four methods are linear regression (Lin), Gaussian process regression using a squared exponential kernel (SE), spectral mixture kernels \citep{WilAda13} (SP) and the method proposed in \cite{Lloyd2014-ABCD} (ABCD).
+The four methods are linear regression (Lin), Gaussian process regression using a squared exponential kernel (SE), spectral mixture kernels \citep{Wilson2013-eq} (SP) and the method proposed in \cite{Lloyd2014-nz} (ABCD).
 Values in  bold indicate a positive discovery after a Benjamini--Hochberg \citep{Benjamini_undated-mh} procedure with a false discovery rate of 0.05 applied to each model construction method.
 %Lin, TCI and SP have a very similar pattern of significant $p$-values whereas ABCD has fewer significant $p$-values.
 
@@ -495,7 +495,7 @@ In this manuscript we have focused on methods that compare statistics of data wi
 The discrepancy measures of \cite{Gelman1996-ez} compute statistics of data and parameters; examples can be found in \cite{Gelman2013-st}.
 O'Hagan \citep{OHagan2003-bc} also proposes a method and selectively reviews techniques for model criticism that also take model parameters into account.
 
-In the spirit of scientific falsification \citep[e.g.][]{Popper2005-ba}, ideally all methods of assessing a model should be performed to gain confidence in any conclusions made.
+In the spirit of scientific falsification \citep[e.g.][]{Popper2005-qq}, ideally all methods of assessing a model should be performed to gain confidence in any conclusions made.
 Of course, when performing multiple hypothesis tests care must be taken in the intrepetation of individual $p$-values.
 
 \section{Conclusions and future work}
@@ -518,7 +518,7 @@ In proposing a new method of model criticism we hope we have also exposed the re
 
 \small
 
-\bibliography{experiment}
+\bibliography{library}
 \bibliographystyle{unsrt}
 
 \end{document} 
