@@ -3,6 +3,8 @@ kmc-research
 
 Research into using maximum mean discrepancy as a method of model checking
 
+Paper link and tidying of code will appear / happen soon
+
     Copyright (C) 2013 James Robert Lloyd
 
     This program is free software: you can redistribute it and/or modify
