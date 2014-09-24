@@ -1,0 +1,691 @@
+\input{include/header_beamer}
+\usepackage{etex}
+
+\usepackage{tabularx}
+\usepackage{include/picins}
+\usepackage{include/preamble}
+\usepackage{xcolor}
+\usepackage{tikz}
+
+\usetikzlibrary{shapes.geometric,arrows,chains,matrix,positioning,scopes,calc}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Some look and feel definitions
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setlength{\columnsep}{0.03\textwidth}
+\setlength{\columnseprule}{0.0018\textwidth}
+\setlength{\parindent}{0.0cm}
+  
+\tikzstyle{mybox} = [draw=white, rectangle]
+\tikzset{hide on/.code={\only<#1>{\color{white}}}}
+
+\definecolor{camlightblue}{rgb}{0.601 , 0.8, 1}
+\definecolor{camdarkblue}{rgb}{0, 0.203, 0.402}
+\definecolor{camred}{rgb}{1, 0.203, 0}
+\definecolor{camyellow}{rgb}{1, 0.8, 0}
+\definecolor{lightblue}{rgb}{0, 0, 0.80}
+\definecolor{white}{rgb}{1, 1, 1}
+\definecolor{whiteblue}{rgb}{0.80, 0.80, 1}
+
+\newcolumntype{x}[1]{>{\centering\arraybackslash\hspace{0pt}}m{#1}}
+\newcommand{\tabbox}[1]{#1}
+
+\hypersetup{colorlinks=true,citecolor=blue}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Commenting package
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{include/commenting}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% The talk
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Statistical model criticism}
+
+\author{
+James Robert Lloyd
+}
+
+\institute{
+Department of Engineering, University of Cambridge, UK
+}
+
+\begin{document}
+
+\frame[plain] {
+\titlepage
+}
+
+\begin{frame}{Why check or criticise models?}
+  \begin{itemize}
+    \item Statistical analyses are based on assumptions\dots
+    \begin{itemize}
+       \item \eg Linearity, Gaussianity, Stationarity etc.
+     \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item \dots but reality typically breaks these assumptions\dots
+    \begin{itemize}
+       \item `A man in daily muddy contact with field experiments could not be expected to have much faith in any direct assumption of independently distributed normal errors' \cite{Box1976-yg}
+     \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item \dots and this can lead us to produce false inferences
+    \begin{itemize}
+       \item `We were seeing things that were 25-standard deviation moves, several 
+days in a row'
+     \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Example: linear regression}
+\footnotesize
+\begin{verbatim}
+Call:
+lm(formula = y ~ x)
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)  
+(Intercept)    5.802      2.702   2.148   0.0368 *
+x            -10.645      4.656  -2.286   0.0267 *
+\end{verbatim}
+\pause
+\begin{tikzpicture}[scale=1]
+  \begin{scope}[xshift=0\textwidth]
+    \node [mybox] (box){
+      \includegraphics[width=0.45\textwidth]{figures/outlier-scatter.pdf}
+    };
+  \end{scope}
+  \begin{scope}[xshift=0.5\textwidth]
+    \node [mybox] (box){
+      \includegraphics[width=0.45\textwidth]{figures/without-outliers.pdf}
+    };
+  \end{scope}
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Is cross validation enough?}
+  \begin{itemize}
+    \item Machine learning is typically concerned with predictive accuracy\dots
+    \vspace{\baselineskip}
+    \pause
+    \item \dots which can be estimated by cross validation
+  \end{itemize}
+  \begin{center}
+    \begin{tabular}{|l|c|}
+      \hline
+      Algorithm & CV error (standard error) \\
+      \hline
+      Linear regression & 4.8 (1.3) \\
+      Theil--Sen estimator & 2.0 (1.4) \\
+      \hline
+    \end{tabular}
+  \end{center}
+  \pause
+  \begin{itemize}
+    \item So we're fine, right?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Is cross validation enough?}
+  \uncover<1->{
+  \begin{itemize}
+    \item Let's try some new data
+  \end{itemize}
+  }
+  \only<2,3>{
+  \begin{center}
+    \begin{tabular}{|l|c|}
+      \hline
+      Algorithm & CV error (standard error) \\
+      \hline
+      Linear regression & 2.0 (0.1) \\
+      Theil--Sen estimator & 1.3 (0.2) \\
+      \hline
+    \end{tabular}
+  \end{center}
+  }
+  \only<3>{
+  \begin{itemize}
+    \item So outliers again?
+  \end{itemize}
+  }
+  \uncover<4->{
+  \begin{center}
+    \begin{tabular}{|l|c|}
+      \hline
+      Algorithm & CV error (standard error) \\
+      \hline
+      Linear regression & 2.0 (0.1) \\
+      Theil--Sen estimator & 1.3 (0.2) \\
+      5 nearest neighbours & 0.1 (0.01) \\
+      \hline
+    \end{tabular}
+  \end{center}
+  }
+  \uncover<5->{
+  \begin{itemize}
+    \item When I said outliers I actually meant non-linearity
+  \end{itemize}
+  }
+  \uncover<6->{
+    \begin{center}
+      \includegraphics[width=0.45\textwidth]{figures/non-linear.pdf}
+    \end{center}
+  }
+\end{frame}
+
+\begin{frame}{Is being Bayesian enough?}
+  \begin{itemize}
+    \item Why not just do all inference in a super model that contains everything we could ever possibly believe?
+    \pause
+    \begin{itemize}
+      \item And then \eg estimate the utility of smaller models for certain tasks
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item How long did you spend coding your last inference scheme?
+    \begin{itemize}
+      \item Or have you ever got probabilistic programming to work in a non-trivial model?
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Model criticism / checking gives us tools to explore potential inadequacies of a method\dots
+    \begin{itemize}
+       \item \dots without having to implement inference for every expanded method we can think of
+     \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Agenda}
+  \begin{itemize}
+    \item Classical diagnostics for linear regression
+    \vspace{\baselineskip}
+    \item Frequentist theory
+    \vspace{\baselineskip}
+    \item Bayesian model criticism
+    \vspace{\baselineskip}
+    \item A concern about calibration
+    \vspace{\baselineskip}
+    \item Methods for Gaussian processes
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Non-agenda}
+  \begin{itemize}
+    \item Sensitivity analysis
+    \vspace{\baselineskip}
+    \item Estimates of model utility
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Maximum likelihood linear regression}
+  \begin{itemize}
+    \item Assume that outputs $y$ are linearly related to inputs $X$ plus independent Gaussian errors or noise $\varepsilon$
+    \begin{itemize}
+      \item $y = X\beta + \varepsilon$
+      \item $\varepsilon \simiid \mathcal{N}(0, \sigma^2)$
+    \end{itemize}
+    \pause
+    \vspace{\baselineskip}
+    \item Maximum likelihood solution can be found analytically
+    \begin{itemize}
+      \item $\hat\beta = (X^{\textrm{T}}X)^{-1}X^{\textrm{T}}y$
+      \item $\hat\sigma^2 = \|y - X \hat\beta\|^2 / n$
+    \end{itemize}
+    \pause
+    \vspace{\baselineskip}
+    \item Many assumptions to be tested before we believe these solutions
+    \begin{itemize}
+      \item \eg $X$ non-random, linearity, constant variance, Gaussianity, independent errors
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Outliers}
+  \begin{itemize}
+    \item Perhaps some of the errors are unexpectedly large?
+    \pause
+    \vspace{\baselineskip}
+    \item We can check this by comparing $\hat\varepsilon = y - X\hat\beta$ to its expected distribution
+    \pause
+    \vspace{\baselineskip}
+    \item Let $H = X(X^{\textrm{T}}X)^{-1}X^{\textrm{T}}$, then $\frac{\hat\varepsilon_i}{\hat\sigma\sqrt{1 - h_{ii}}}$ has a standard $t$-distribution when $\hat\sigma$ is the standard unbiased estimator of $\sigma$
+    \pause
+    \vspace{\baselineskip}
+    \item These are the studentised residuals
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Outliers}
+\scriptsize
+\begin{verbatim}
+library(car)
+fit <- lm(mpg~disp+hp+wt+drat, data=mtcars)
+
+outlierTest(fit)
+
+No Studentized residuals with Bonferonni p < 0.05
+Largest |rstudent|:
+               rstudent unadjusted p-value Bonferonni p
+Toyota Corolla  2.51597            0.01838      0.58816
+\end{verbatim}
+\begin{center}
+\begin{tikzpicture}[scale=1]
+  \begin{scope}[xshift=0\textwidth]
+    \node [mybox] (box){
+      \includegraphics[width=0.45\textwidth]{figures/residuals.pdf}
+    };
+  \end{scope}
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Non-normality}
+  \begin{itemize}
+    \item If the true residuals are normally distributed then the studentised residuals will have a $t$-distribution
+    \pause
+    \vspace{\baselineskip}
+    \item We can test this with a quantile-quantile plot and assess the significance of any departures from equality using a Kolmogorov--Smirnov test
+    \pause
+  \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}[scale=1]
+      \begin{scope}[xshift=0\textwidth]
+        \node [mybox] (box){
+          \includegraphics[width=0.45\textwidth]{figures/qqplot.png}
+        };
+      \end{scope}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Non-constant error variance}
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{figures/scale-location.pdf}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Influential points}
+  \begin{itemize}
+    \item In our first example the outliers turned a positive gradient into a negative one
+    \begin{itemize}
+      \item The resulting linear regression was highly dependent on these two points
+    \end{itemize}
+    \pause
+    \vspace{\baselineskip}
+    \item We can calculate the influence of each data point on the model fit as follows
+    \begin{itemize}
+      \item $D_i = \frac{\sum_{j=1}^n (\hat{y}_j - \hat{y}_{j(i)})^2}{p \times \textrm{MSE}}$ \ie Cook's distance
+    \end{itemize}
+    \pause
+    \vspace{\baselineskip}
+    \item Values greater than 1 indicate a point that had a large influence on the fitted values
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Influential points}
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{figures/cooks.pdf}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Many other assumptions and tests}
+  \begin{itemize}
+    \item Non-linearity
+    \vspace{\baselineskip}
+    \item Correlated residuals
+    \vspace{\baselineskip}
+    \item Co-planar inputs
+    \vspace{\baselineskip}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Frequentist model criticism}
+  \begin{itemize}
+    \item We suppose that our data are generated by some parametric model with unknown parameters
+    \begin{itemize}
+      \item $X \,|\, \theta \sim f(x\,|\,\theta)$
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item We wish to test this null hypothesis and control the rate of false positives (Type I errors)
+    \vspace{\baselineskip}
+    \pause
+    \item A typical method is to calculate a $p$-value which is a function of the data
+    \vspace{\baselineskip}
+    \pause
+    \item A frequentist $p$-value is a random variable which has a uniform $[0,1]$ distribution under the null hypothesis
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Frequentist model criticism}
+  \begin{itemize}
+    \item Constructing a $p$-value typically proceeds by choosing a statistic $T$ which is a function of the data
+    \begin{itemize}
+      \item The statistic is chosen such that large values are undesirable \eg outliers
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item If $\theta$ were known then we could define $p$-values as
+    \begin{itemize}
+      \item $p(x_{\textrm{obs}}) = \mathbb{P}_{f(x\,|\,\theta)}(T(X) > T(x_{\textrm{obs}}))$
+      \item \ie We will be suspicious of our model when $T(x_{\textrm{obs}})$ is large
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item When $\theta$ is unknown a typical approach is to choose $T$ such that its distribution is independent of $\theta$
+    \begin{itemize}
+      \item These are called pivotal quantites
+      \item Studentised residuals are an example of a pivotal quantity
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Bayesian model criticism}
+  \begin{itemize}
+    \item The frequentist approach tests whether or not the data $x_{\textrm{obs}}$ could have been generated by the `model' $f(x\,|\,\theta)$ for any $\theta$
+    \vspace{\baselineskip}
+    \pause
+    \item A more relevant null hypothesis for a Bayesian is that the data was generated from the prior predictive distribution
+    \begin{itemize}
+      \item Prior predictive just means the prior over data (as opposed to parameters)
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item We could therefore compute prior predictive $p$-values
+    \begin{itemize}
+      \item $p_{\textrm{prior}}(x_{\textrm{obs}}) = \mathbb{P}_{f(x\,|\,\theta)\pi(\theta)}(T(X) > T(x_{\textrm{obs}}))$
+      \item \cite{Box1980-ud}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Prior predictive $p$-values}
+  \begin{itemize}
+    \item These $p$-values allow us to answer the question:
+    \begin{itemize}
+      \item Is some aspect of the data extreme given my prior assumptions?
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item The statistic $T$ measures the way in which the data is extreme
+    \vspace{\baselineskip}
+    \pause
+    \item Ill-defined when using improper priors 
+    \vspace{\baselineskip}
+    \pause
+    \item Vague priors can lead to vague tests
+    \begin{itemize}
+      \item Probably best used when one really has a subjective prior
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Example: Speed of light data}
+  \begin{center}
+    \begin{tikzpicture}[scale=1]
+      \begin{scope}[xshift=0\textwidth]
+        \node [mybox] (box){
+          \includegraphics[width=0.45\textwidth]{figures/newcomb_hist.pdf}
+        };
+      \end{scope}
+    \end{tikzpicture}
+  \end{center}
+  \begin{itemize}
+    \pause
+    \item Suppose we wish to fit a normal distribution to this data with vague priors on the mean and variance
+    \vspace{\baselineskip}
+    \pause
+    \item We could test this assumption using skewness as the test statistic
+    \pause
+    \begin{itemize}
+      \item Skewness = -4.5; $p$-value = tiny
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Posterior predictive $p$-values}
+  \begin{itemize}
+    \item Rubin \cite{Rubin1984-tw} instead proposed comparing statistics to their distribution under the posterior distribution
+    \begin{itemize}
+      \item $p_{\textrm{post}}(x_{\textrm{obs}}) = \mathbb{P}_{f(x\,|\,\theta)\pi(\theta\,|\,x_{\textrm{obs}})}(T(X) > T(x_{\textrm{obs}}))$
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item These $p$-values allow us to answer the question:
+    \begin{itemize}
+      \item If I were to observe more data, would I be surprised if it was as extreme as the data I originally observed?
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item One may be concerned about using the data twice
+    \begin{itemize}
+      \item The common retort is that the posterior predictive $p$-value is a well defined subjective probability statement and should be interpreted as such
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Example: Speed of light data again}
+  \begin{itemize}
+    \item Is the minimum value in the data surprising?
+    \vspace{\baselineskip}
+    \pause
+    \item A prior predictive would be vague about this quantity
+    \vspace{\baselineskip}
+    \pause
+    \item Instead we can test this by sampling data sets of the same size from the posterior, and recording their minima
+    \pause
+  \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}[scale=1]
+      \begin{scope}[xshift=0\textwidth]
+        \node [mybox] (box){
+          \includegraphics[width=0.45\textwidth]{figures/minima_hist.pdf}
+        };
+      \end{scope}
+      \begin{scope}[xshift=0.5\textwidth]
+        \node [mybox] (box){
+          \includegraphics[width=0.45\textwidth]{figures/newcomb_hist.pdf}
+        };
+      \end{scope}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Discrepancy $p$-values}
+  \begin{itemize}
+    \item Gelman et alia \cite{Gelman1996-ez} proposed generalising the statistic $T(x)$ to a discrepancy measure $d(x, \theta)$ which depends on the parameters $\theta$ of the model
+    \vspace{\baselineskip}
+    \pause
+    \item The observed discrepancy is again compared to the posterior predictive distribution
+    \vspace{\baselineskip}
+    \pause
+    \item $p_{\textrm{dis}}(x_{\textrm{obs}}) = \mathbb{P}(d(X,\theta) \geq d(x_{\textrm{obs}},\theta)\,|\,x_{\textrm{obs}})$
+    \vspace{\baselineskip}
+    \pause
+    \item Can be estimated using samples of the joint posterior distribution of $(X, \theta)$ \eg from MCMC
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Example: Forecasting U.S.\ elections}
+  \begin{itemize}
+    \item Copied without permission from Gelman, A. et al. Bayesian Data Analysis, Third Edition. (Taylor \& Francis, 2013)
+    \vspace{\baselineskip}
+    \item Fitting a linear model to proportion of votes for Democrats by state for 11 presidential elections
+  \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}[scale=1]
+      \begin{scope}[xshift=0\textwidth]
+        \node [mybox] (box){
+          \includegraphics[width=0.8\textwidth]{figures/linear.jpg}
+        };
+      \end{scope}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Example: Forecasting U.S.\ elections}
+  \begin{center}
+    \begin{tikzpicture}[scale=1]
+      \begin{scope}[xshift=0\textwidth]
+        \node [mybox] (box){
+          \includegraphics[width=0.8\textwidth]{figures/variables.jpg}
+        };
+      \end{scope}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Example: Forecasting U.S.\ elections}
+  \begin{itemize}
+    \item Linear model assumes that each (input, output) tuple is exchangeable
+    \vspace{\baselineskip}
+    \pause
+    \item This ignores any correlation between states in a particular year due to nationwide swings in voting
+    \vspace{\baselineskip}
+    \pause
+    \item We can construct a test staistic that can test for this correlation
+    \begin{itemize}
+      \item For each year compute the average error of the prediction in each state
+      \item Compute the root mean square of these averageerrors over the 11 years
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Example: Forecasting U.S.\ elections}
+  \begin{center}
+    \begin{tikzpicture}[scale=1]
+      \begin{scope}[xshift=0\textwidth]
+        \node [mybox] (box){
+          \includegraphics[width=0.8\textwidth]{figures/model_check.jpg}
+        };
+      \end{scope}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Example: Forecasting U.S.\ elections}
+  \begin{itemize}
+    \item The posterior distribution underestimates the test statistic
+    \vspace{\baselineskip}
+    \pause
+    \item The practical consequence of this is that the model will give overly precise predictions of national election results
+    \vspace{\baselineskip}
+    \pause
+    \item The model can be improved by adding indicator variables for each year
+    \begin{itemize}
+      \item Can also include year $\times$ region features to capture regional voting swings
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{A problem of calibration}
+  \begin{itemize}
+    \item The Bayesian $p$-values defined thus far are not frequentist $p$-values
+    \vspace{\baselineskip}
+    \pause
+    \item Alternatives were proposed by \cite{Bayarri1999-ty} and were shown to be asymptotically frequentist $p$-values by \cite{Robins2000-oz}
+    \vspace{\baselineskip}
+    \pause
+    \item But maybe this isn't a problem --- perhaps we are confusing the use of the word `model'
+    \begin{itemize}
+      \item \textit{``If our goal is to check the model $f(x;\theta)$ rather than the prior $\pi(\theta)$, our procedures should perform adequately whatever the prior, including point-mass priors''} --- James Robins discussion of \cite{Bayarri1999-ty}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Different tests for different goals}
+  \begin{itemize}
+    \item Frequentist $p$-values test an entire class of models
+    \begin{itemize}
+      \item The null hypothesis is that the data could have been generated by $f(x\,|\,\theta)$ for some $\theta$
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Prior predictive $p$-values test a particular prior distribution
+    \begin{itemize}
+      \item The null hypothesis is that the data could have been generated from the prior distribution
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Posterior predictive $p$-values use the data twice so require a different interpretation
+    \begin{itemize}
+      \item Can be interpreted literally as the probability of a future data set being more extreme than the one just observed
+      \item Can also be interpreted as a test of whether or not the posterior distribution would be a reasonable summary of the observed data
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Model criticism for Gaussian processes}
+  \begin{itemize}
+    \item Suppose that $y_i \sim f(x_i) + \varepsilon_i$ where
+    \begin{itemize}
+      \item $f \sim \mathcal{GP}(0, k)$
+      \item $\varepsilon \simiid \mathcal{N}(0, \sigma^2)$
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item We might be interested in testing the residuals
+    \begin{itemize}
+      \pause
+      \item We can construct a discrepancy measure based on some function of $y_i - f(x_i)$
+      \pause
+      \item A posterior predictive check would then correspond to comparing some function of the prior and posterior of $\varepsilon$
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Similarly, we could construct discrepancies based on $y_i - \varepsilon_i$
+    \begin{itemize}
+      \pause
+      \item This amounts to comparing the prior and posterior of $f$
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Thanks}
+  \begin{center}
+  \Huge
+  Thanks
+  \end{center}
+\end{frame}
+
+{
+\section{References}
+\section{Extended Bibliography}
+\tiny
+\begin{frame}[allowframebreaks,plain]
+  \frametitle{References}
+  \bibliography{library}
+  \bibliographystyle{alpha}
+\end{frame}
+}
+
+\end{document}
+
+\begin{frame}{Choosing the statistic}
+  \TBD{Find some fun quotes and allude to my own work}
+\end{frame}
+
+\begin{frame}{Title}
+  \begin{itemize}
+    \item Content
+    \vspace{\baselineskip}
+    \item Content
+    \vspace{\baselineskip}
+    \item Content
+    \begin{itemize}
+       \item Content
+       \item Content
+     \end{itemize}
+  \end{itemize}
+\end{frame}
