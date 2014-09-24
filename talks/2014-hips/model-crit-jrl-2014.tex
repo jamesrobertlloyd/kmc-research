@@ -49,7 +49,7 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\title{Statistical model criticism}
+\title{Statistical model criticism using\\kernel two sample tests}
 
 \author{
 James Robert Lloyd
@@ -208,145 +208,15 @@ x            -10.645      4.656  -2.286   0.0267 *
 
 \begin{frame}{Agenda}
   \begin{itemize}
-    \item Classical diagnostics for linear regression
+    \item Frequentist and Bayesian theory
     \vspace{\baselineskip}
-    \item Frequentist theory
+    \item A concern about calibration and a potential resolution
     \vspace{\baselineskip}
-    \item Bayesian model criticism
-    \vspace{\baselineskip}
-    \item A concern about calibration
+    \item A new nonparametric method for model checking
     \vspace{\baselineskip}
     \item Methods for Gaussian processes
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Non-agenda}
-  \begin{itemize}
-    \item Sensitivity analysis
     \vspace{\baselineskip}
-    \item Estimates of model utility
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Maximum likelihood linear regression}
-  \begin{itemize}
-    \item Assume that outputs $y$ are linearly related to inputs $X$ plus independent Gaussian errors or noise $\varepsilon$
-    \begin{itemize}
-      \item $y = X\beta + \varepsilon$
-      \item $\varepsilon \simiid \mathcal{N}(0, \sigma^2)$
-    \end{itemize}
-    \pause
-    \vspace{\baselineskip}
-    \item Maximum likelihood solution can be found analytically
-    \begin{itemize}
-      \item $\hat\beta = (X^{\textrm{T}}X)^{-1}X^{\textrm{T}}y$
-      \item $\hat\sigma^2 = \|y - X \hat\beta\|^2 / n$
-    \end{itemize}
-    \pause
-    \vspace{\baselineskip}
-    \item Many assumptions to be tested before we believe these solutions
-    \begin{itemize}
-      \item \eg $X$ non-random, linearity, constant variance, Gaussianity, independent errors
-    \end{itemize}
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Outliers}
-  \begin{itemize}
-    \item Perhaps some of the errors are unexpectedly large?
-    \pause
-    \vspace{\baselineskip}
-    \item We can check this by comparing $\hat\varepsilon = y - X\hat\beta$ to its expected distribution
-    \pause
-    \vspace{\baselineskip}
-    \item Let $H = X(X^{\textrm{T}}X)^{-1}X^{\textrm{T}}$, then $\frac{\hat\varepsilon_i}{\hat\sigma\sqrt{1 - h_{ii}}}$ has a standard $t$-distribution when $\hat\sigma$ is the standard unbiased estimator of $\sigma$
-    \pause
-    \vspace{\baselineskip}
-    \item These are the studentised residuals
-  \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]{Outliers}
-\scriptsize
-\begin{verbatim}
-library(car)
-fit <- lm(mpg~disp+hp+wt+drat, data=mtcars)
-
-outlierTest(fit)
-
-No Studentized residuals with Bonferonni p < 0.05
-Largest |rstudent|:
-               rstudent unadjusted p-value Bonferonni p
-Toyota Corolla  2.51597            0.01838      0.58816
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}[scale=1]
-  \begin{scope}[xshift=0\textwidth]
-    \node [mybox] (box){
-      \includegraphics[width=0.45\textwidth]{figures/residuals.pdf}
-    };
-  \end{scope}
-\end{tikzpicture}
-\end{center}
-\end{frame}
-
-\begin{frame}{Non-normality}
-  \begin{itemize}
-    \item If the true residuals are normally distributed then the studentised residuals will have a $t$-distribution
-    \pause
-    \vspace{\baselineskip}
-    \item We can test this with a quantile-quantile plot and assess the significance of any departures from equality using a Kolmogorov--Smirnov test
-    \pause
-  \end{itemize}
-  \begin{center}
-    \begin{tikzpicture}[scale=1]
-      \begin{scope}[xshift=0\textwidth]
-        \node [mybox] (box){
-          \includegraphics[width=0.45\textwidth]{figures/qqplot.png}
-        };
-      \end{scope}
-    \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-\begin{frame}{Non-constant error variance}
-  \begin{center}
-    \includegraphics[width=0.7\textwidth]{figures/scale-location.pdf}
-  \end{center}
-\end{frame}
-
-\begin{frame}{Influential points}
-  \begin{itemize}
-    \item In our first example the outliers turned a positive gradient into a negative one
-    \begin{itemize}
-      \item The resulting linear regression was highly dependent on these two points
-    \end{itemize}
-    \pause
-    \vspace{\baselineskip}
-    \item We can calculate the influence of each data point on the model fit as follows
-    \begin{itemize}
-      \item $D_i = \frac{\sum_{j=1}^n (\hat{y}_j - \hat{y}_{j(i)})^2}{p \times \textrm{MSE}}$ \ie Cook's distance
-    \end{itemize}
-    \pause
-    \vspace{\baselineskip}
-    \item Values greater than 1 indicate a point that had a large influence on the fitted values
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Influential points}
-  \begin{center}
-    \includegraphics[width=0.7\textwidth]{figures/cooks.pdf}
-  \end{center}
-\end{frame}
-
-\begin{frame}{Many other assumptions and tests}
-  \begin{itemize}
-    \item Non-linearity
-    \vspace{\baselineskip}
-    \item Correlated residuals
-    \vspace{\baselineskip}
-    \item Co-planar inputs
-    \vspace{\baselineskip}
+    \item Discussion
   \end{itemize}
 \end{frame}
 
@@ -387,6 +257,47 @@ Toyota Corolla  2.51597            0.01838      0.58816
     \begin{itemize}
       \item These are called pivotal quantites
       \item Studentised residuals are an example of a pivotal quantity
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Maximum likelihood linear regression}
+  \begin{itemize}
+    \item Assume that outputs $y$ are linearly related to inputs $X$ plus independent Gaussian errors or noise $\varepsilon$
+    \begin{itemize}
+      \item $y = X\beta + \varepsilon$
+      \item $\varepsilon \simiid \mathcal{N}(0, \sigma^2)$
+    \end{itemize}
+    \pause
+    \vspace{\baselineskip}
+    \item Maximum likelihood solution can be found analytically
+    \begin{itemize}
+      \item $\hat\beta = (X^{\textrm{T}}X)^{-1}X^{\textrm{T}}y$
+      \item $\hat\sigma^2 = \|y - X \hat\beta\|^2 / n$
+    \end{itemize}
+    \pause
+    \vspace{\baselineskip}
+    \item Many assumptions to be tested before we believe these solutions
+    \begin{itemize}
+      \item \eg $X$ non-random, linearity, constant variance, Gaussianity, independent errors
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Outliers}
+  \begin{itemize}
+    \item Perhaps some of the errors are unexpectedly large?
+    \pause
+    \vspace{\baselineskip}
+    \item We can check this by comparing $\hat\varepsilon = y - X\hat\beta$ to its expected distribution
+    \pause
+    \vspace{\baselineskip}
+    \item Let $H = X(X^{\textrm{T}}X)^{-1}X^{\textrm{T}}$, then $\frac{\hat\varepsilon_i}{\hat\sigma\sqrt{1 - h_{ii}}}$ has a standard $t$-distribution when $\hat\sigma$ is the standard unbiased estimator of $\sigma$
+    \pause
+    \vspace{\baselineskip}
+    \item These are the studentised residuals
+    \begin{itemize}
+      \item They are pivotal quantities since their distribution does not depend on $\beta$ or $\sigma$.
     \end{itemize}
   \end{itemize}
 \end{frame}
@@ -502,9 +413,185 @@ Toyota Corolla  2.51597            0.01838      0.58816
   \end{center}
 \end{frame}
 
+\begin{frame}{A problem of calibration}
+  \begin{itemize}
+    \item The Bayesian $p$-values defined thus far are not frequentist $p$-values
+    \vspace{\baselineskip}
+    \pause
+    \item Alternatives were proposed by \cite{Bayarri1999-ty} and were shown to be asymptotically frequentist $p$-values by \cite{Robins2000-oz}
+    \vspace{\baselineskip}
+    \pause
+    \item But maybe this isn't a problem --- perhaps we are confusing the use of the word `model'
+    \begin{itemize}
+      \item \textit{``If our goal is to check the model $f(x;\theta)$ rather than the prior $\pi(\theta)$, our procedures should perform adequately whatever the prior, including point-mass priors''} --- James Robins discussion of \cite{Bayarri1999-ty}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Different tests for different goals}
+  \begin{itemize}
+    \item Frequentist $p$-values test an entire class of models
+    \begin{itemize}
+      \item The null hypothesis is that the data could have been generated by $f(x\,|\,\theta)$ for some $\theta$
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Prior predictive $p$-values test a particular prior distribution
+    \begin{itemize}
+      \item The null hypothesis is that the data could have been generated from the prior distribution
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Posterior predictive $p$-values use the data twice so require a different interpretation
+    \begin{itemize}
+      \item Can be interpreted literally as the probability of a future data set being more extreme than the one just observed
+      \item Can also be interpreted as a test of whether or not the posterior distribution would be a reasonable summary of the observed data
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{How do we choose the test statistic?}
+  \begin{itemize}
+    \item All of the tests so far have required a statistic by which one measures if the data is extreme
+    \vspace{\baselineskip}
+    \pause
+    \item We could apply a battery of statistics to every problem
+    \begin{itemize}
+      \item Without understanding dependencies between all statistics multiple comparisons adjustments will become highly conservative
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Can we instead define a statistic in high level terms, and then compute the statistic which most demonstrates any discrepancy?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Maximum mean discrepancy two sample tests}
+  \begin{itemize}
+    \item Suppose we have samples $x \simiid p$ and $y \simiid q$ and we wish to test the hypothesis $p = q$
+    \vspace{\baselineskip}
+    \pause
+    \item Define $\textrm{MMD}(\mathcal{F},p,q) = \sup_{f \in \mathcal{F}}(\mathbb{E}_{x\sim p}[f(x)] - \mathbb{E}_{y\sim q}[f(y)])$ where $\mathcal{F}$ is a reproducing kernel Hilbert space (RKHS) with kernel $k$
+    \vspace{\baselineskip}
+    \pause
+    \item The function attaining this supremum can be computed analytically
+    \begin{itemize}
+      \item $f(x) = \mathbb{E}_{x'\sim p}[k(x,x')] - \mathbb{E}_{x'\sim q}[k(x,x')]$
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Substituting and squaring:
+    \begin{itemize}
+		\item $\textrm{MMD}^2(\mathcal{F},p,q) = \mathbb{E}_{x,x'\sim p}[k(x,x')] + 2\mathbb{E}_{x\sim p,y\sim q}[k(x,y)] + \mathbb{E}_{y,y'\sim q}[k(y,y')]$
+	\end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Empirical estimation}
+  \begin{itemize}
+    \item We can estimate these expectations from finite samples
+    \begin{itemize}
+      \item $\textrm{MMD}_b^2(\mathcal{F},X,Y) = \frac{1}{m^2}\sum_{i,j=1}^{m}k(x_i,x_j) - \frac{2}{mn}\sum_{i,j=1}^{m,n}k(x_i,y_j) + \frac{1}{n^2}\sum_{i,j=1}^{n}k(y_i,y_j)$
+      \item $\hat{f}(x) = \frac{1}{m}\sum_{i=1}^{m}k(x,x_i) - \frac{1}{n}\sum_{i=1}^{n}k(x,y_i)$
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item The empirical witness function is just the difference of two kernel density estimates
+    \vspace{\baselineskip}
+    \pause
+    \item We can estimate the null distribution of the MMD statistic by a bootstrap procedure
+    \begin{itemize}
+      \item It is an example of a permutation test
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Application to model checking}
+  \begin{itemize}
+    \item Need to make some simplifying assumptions
+    \begin{itemize}
+      \item Data $y$ are generated $\iid$ from some distribution $q$
+      \item We make a point estimate of $q$ which we denote $p$
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item The hypothesis that $p = q$ is now the hypothesis that the model is correct
+    \vspace{\baselineskip}
+    \pause
+    \item We can generate samples from $p$ and then perform a two sample test
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Example: Speed of light data again again}
+  \begin{center}
+  \begin{tabular}{cc}
+    \includegraphics[width=0.435\textwidth]{figures/newcomb_hist} &
+    \pause
+    \includegraphics[width=0.48\textwidth]{figures/newcomb_witness_1}
+  \end{tabular}
+  \end{center}
+  \pause
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{figures/newcomb_witness_2}
+  \end{center}
+\end{frame}
+
+\begin{frame}{What happens in high dimensions?}
+  \begin{itemize}
+    \item Interpretability of test comes from interpretation of witness function as difference of kernel density estimates
+    \vspace{\baselineskip}
+    \pause
+    \item Kernel density estimation is high variance in high dimensions and will likely be uninterpretable
+    \vspace{\baselineskip}
+    \pause
+    \item Potential solution: Include dimensionality reduction as part of the test statistic
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{What happens in high dimensions?}
+  \begin{center}
+  \begin{tabular}{cc}
+    \includegraphics[width=0.48\textwidth]{figures/high_mog_pca} &
+    \pause
+    \includegraphics[width=0.48\textwidth]{figures/high_mog_witness}
+  \end{tabular}
+  \end{center}
+  \pause
+  \begin{itemize}
+    \item Estimated $p$-value of 0.05
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{What happens in high dimensions?}
+  \begin{center}
+  \begin{tabular}{cc}
+    \includegraphics[width=0.48\textwidth]{figures/high_mog_pca} &
+    \pause
+    \includegraphics[width=0.48\textwidth]{figures/high_mog_witness}
+  \end{tabular}
+  \end{center}
+  \pause
+  \begin{itemize}
+    \item Estimated $p$-value of 0.05
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{What do neural networks dream about?}
+  \begin{center}
+    \begin{tabular}{ccc}
+      Samples from RBM & $\,$ & \includegraphics[width=0.48\textwidth]{figures/rbm_samples} \\
+      \pause
+      Witness fn peaks : RBM & $\,$ & \includegraphics[width=0.48\textwidth]{figures/rbm_witness_troughs} \\
+      \pause
+      Witness fn peaks : RBMs & $\,$ & \includegraphics[width=0.48\textwidth]{figures/many_rbm_cond_witness_troughs} \\
+      \pause
+      Witness fn peaks : DBN & $\,$ & \includegraphics[width=0.48\textwidth]{figures/dbn_ft_cond_witness_troughs} \\
+    \end{tabular}
+  \end{center}
+\end{frame}
+
 \begin{frame}{Discrepancy $p$-values}
   \begin{itemize}
-    \item Gelman et alia \cite{Gelman1996-ez} proposed generalising the statistic $T(x)$ to a discrepancy measure $d(x, \theta)$ which depends on the parameters $\theta$ of the model
+    \item Gelman et alia \cite{Gelman1996-ez} proposed generalising the statistic $T(x)$ of posterior predictive $p$-values to a discrepancy measure $d(x, \theta)$ which depends on the parameters $\theta$ of the model
     \vspace{\baselineskip}
     \pause
     \item The observed discrepancy is again compared to the posterior predictive distribution
@@ -589,43 +676,6 @@ Toyota Corolla  2.51597            0.01838      0.58816
   \end{itemize}
 \end{frame}
 
-\begin{frame}{A problem of calibration}
-  \begin{itemize}
-    \item The Bayesian $p$-values defined thus far are not frequentist $p$-values
-    \vspace{\baselineskip}
-    \pause
-    \item Alternatives were proposed by \cite{Bayarri1999-ty} and were shown to be asymptotically frequentist $p$-values by \cite{Robins2000-oz}
-    \vspace{\baselineskip}
-    \pause
-    \item But maybe this isn't a problem --- perhaps we are confusing the use of the word `model'
-    \begin{itemize}
-      \item \textit{``If our goal is to check the model $f(x;\theta)$ rather than the prior $\pi(\theta)$, our procedures should perform adequately whatever the prior, including point-mass priors''} --- James Robins discussion of \cite{Bayarri1999-ty}
-    \end{itemize}
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Different tests for different goals}
-  \begin{itemize}
-    \item Frequentist $p$-values test an entire class of models
-    \begin{itemize}
-      \item The null hypothesis is that the data could have been generated by $f(x\,|\,\theta)$ for some $\theta$
-    \end{itemize}
-    \vspace{\baselineskip}
-    \pause
-    \item Prior predictive $p$-values test a particular prior distribution
-    \begin{itemize}
-      \item The null hypothesis is that the data could have been generated from the prior distribution
-    \end{itemize}
-    \vspace{\baselineskip}
-    \pause
-    \item Posterior predictive $p$-values use the data twice so require a different interpretation
-    \begin{itemize}
-      \item Can be interpreted literally as the probability of a future data set being more extreme than the one just observed
-      \item Can also be interpreted as a test of whether or not the posterior distribution would be a reasonable summary of the observed data
-    \end{itemize}
-  \end{itemize}
-\end{frame}
-
 \begin{frame}{Model criticism for Gaussian processes}
   \begin{itemize}
     \item Suppose that $y_i \sim f(x_i) + \varepsilon_i$ where
@@ -652,11 +702,101 @@ Toyota Corolla  2.51597            0.01838      0.58816
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Thanks}
-  \begin{center}
-  \Huge
-  Thanks
-  \end{center}
+\begin{frame}{Example: Is this model `correct'?}
+\newcommand{\wmgd}{0.5\columnwidth}
+\newcommand{\hmgd}{3.0cm}
+\newcommand{\mdrd}{figures/11-unemployment}
+\newcommand{\mbm}{\hspace{-0.3cm}}
+\begin{tabular}{cc}
+\mbm \includegraphics[width=\wmgd,height=\hmgd]{\mdrd/11-unemployment_raw_data} & \includegraphics[width=\wmgd,height=\hmgd]{\mdrd/11-unemployment_all}
+\end{tabular}
+
+{\footnotesize
+\begin{itemize}
+
+  \item \input{\mdrd/11-unemployment_1_short_description.tex} 
+
+  \item \input{\mdrd/11-unemployment_2_short_description.tex} 
+
+  \item \input{\mdrd/11-unemployment_3_short_description.tex} 
+
+  \item \input{\mdrd/11-unemployment_4_short_description.tex} 
+
+  \item \input{\mdrd/11-unemployment_5_short_description.tex} 
+
+\end{itemize}
+}
+\end{frame}
+
+\begin{frame}{Different statistics for each component}
+
+\begin{itemize}
+  \item $p$-values of several statistics for each model component
+  \item Mea culpa these $p$-values are unadjusted for multiple comparisons, but they are also uncalibrated (they are conservative)
+\end{itemize}
+
+\vspace{\baselineskip}
+
+\begin{center}
+\begin{tabular}{|r|rr|rr|rr|}
+\hline
+ & \multicolumn{2}{c|}{ACF} & \multicolumn{2}{c|}{Periodogram} & \multicolumn{2}{c|}{QQ} \\
+\bf{\#} & {min} & {min loc} & {max} & {max loc} & {max} & {min}\\
+\hline
+
+1 & \textcolor{gray}{0.502} & \textcolor{gray}{0.582} & \textcolor{gray}{0.341} & \textcolor{gray}{0.413} & \textcolor{gray}{0.341} & \textcolor{gray}{0.679}\\
+
+2 & \textcolor{gray}{0.802} & \textcolor{gray}{0.199} & \textcolor{gray}{0.558} & \textcolor{gray}{0.630} & 0.049 & \textcolor{gray}{0.785}\\
+
+3 & \textcolor{gray}{0.251} & \textcolor{gray}{0.475} & \textcolor{gray}{0.799} & \textcolor{gray}{0.447} & \textcolor{gray}{0.534} & \textcolor{gray}{0.769}\\
+
+4 & \textcolor{gray}{0.527} & \textcolor{gray}{0.503} & \textcolor{gray}{0.504} & \textcolor{gray}{0.481} & \textcolor{gray}{0.430} & \textcolor{gray}{0.616}\\
+
+5 & \textcolor{gray}{0.493} & \textcolor{gray}{0.477} & \textcolor{gray}{0.503} & \textcolor{gray}{0.487} & \textcolor{gray}{0.518} & \textcolor{gray}{0.381}\\
+
+\hline
+\end{tabular}
+\end{center}
+
+\end{frame}
+
+\begin{frame}{Example: Identifying outliers}
+  \newcommand{\wmgd}{0.5\columnwidth}
+  \newcommand{\hmgd}{3.0cm}
+  \newcommand{\mdrd}{figures/11-unemployment} 
+  \newcommand{\mbm}{\hspace{-0.3cm}}
+The following discrepancies between the prior and posterior distributions for this component have been detected.
+\begin{itemize}
+    \item The qq plot has an unexpectedly large positive deviation from equality ($x = y$). This discrepancy has an estimated $p$-value of 0.049.
+\end{itemize}
+
+\vspace{\baselineskip}
+
+\begin{tabular}{cc}
+\mbm \includegraphics[width=\wmgd,height=\hmgd]{\mdrd/11-unemployment_2} & 
+\mbm \includegraphics[width=\wmgd,height=\hmgd]{\mdrd/11-unemployment_qq_bands_2}
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Discussion}
+  \begin{itemize}
+    \item Box advocated for model criticism to be part of the loop of the scientific process\dots
+    \begin{itemize}
+      \item Probabilistic version of falsification
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item \dots but should we just be estimating the utility of a model?
+    \vspace{\baselineskip}
+    \pause
+    \item Perhaps we should be using model criticism to estimate the utility of expanding a model?
+    \begin{itemize}
+      \item They are often much cheaper to compute (thinking and computing time) than performing inference in an expanded model class
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item What are other forms of model criticism that are widely applicable and can help identify the nature of discrepancies between model and data in highly complicated systems
+  \end{itemize}
 \end{frame}
 
 {
@@ -671,10 +811,6 @@ Toyota Corolla  2.51597            0.01838      0.58816
 }
 
 \end{document}
-
-\begin{frame}{Choosing the statistic}
-  \TBD{Find some fun quotes and allude to my own work}
-\end{frame}
 
 \begin{frame}{Title}
   \begin{itemize}
