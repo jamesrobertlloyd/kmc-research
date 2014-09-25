@@ -65,7 +65,80 @@ Department of Engineering, University of Cambridge, UK
 \titlepage
 }
 
-\begin{frame}{Why check or criticise models?}
+\begin{frame}{Science}
+  \begin{center}
+  \tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+                       text width=0.2\textwidth, text centered, rounded corners, minimum height=3em]
+  \tikzstyle{line} = [draw, -latex', ultra thick]
+  \tikzstyle{thin line} = [draw, -latex']
+  \tikzstyle{cloud} = [draw, ellipse,fill=red!20,minimum height=2em]
+    
+  \begin{tikzpicture}[node distance = 0.3\textwidth]
+    \footnotesize
+    % Place nodes
+    \node [block] at (0, 0) (hypothesis) {Hypothesis generation};
+    \node [block] at (0.4\textwidth, 0) (infer) {Deduction and inference};
+    \node [block] at (0.4\textwidth, -0.2\textwidth) (apply) {Application};
+    \node [cloud] at (0.4\textwidth, +0.2\textwidth) (data) {Data};
+    \node [block] at (0.8\textwidth, 0) (criticise) {Evaluation and criticism};
+    % Draw edges
+    \path [line] (hypothesis.east) -- (infer.west);
+    \path [line] (infer.east) -- (criticise.west);
+    \path [thin line] (infer.south) -- (apply.north);
+    \path [thin line] (data.south) -- (infer.north);
+    \path [thin line] (data.south east) -- (criticise.north west);
+    \path [thin line] (hypothesis.north east) -- (data.south west);
+    \path [thin line] (criticise.south west) -- (apply.north east);
+    \draw[->, ultra thick] (criticise.south) .. controls (0.8\textwidth,-0.4\textwidth) and (0.0\textwidth,-0.4\textwidth) .. (hypothesis.south);
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Many ML papers stop at evaluation\dots}
+  \begin{itemize}
+    \item Easy to positively review a paper which demonstrates improved cross validated predictive performance\dots
+    \vspace{\baselineskip}
+    \pause
+    \item \dots so many research efforts stop when they can demonstrate improved predictive performance
+    \vspace{\baselineskip}
+    \pause
+    \item At its worst this is the equivalent of $p$-value hacking
+    \vspace{\baselineskip}
+    \pause
+    \item Predictive performance alone tells us very little about how to improve a model / method    
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{\dots breaking the inductive part of the loop}
+  \begin{center}
+  \tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+                       text width=0.2\textwidth, text centered, rounded corners, minimum height=3em]
+  \tikzstyle{line} = [draw, -latex', ultra thick]
+  \tikzstyle{thin line} = [draw, -latex']
+  \tikzstyle{cloud} = [draw, ellipse,fill=red!20,minimum height=2em]
+    
+  \begin{tikzpicture}[node distance = 0.3\textwidth]
+    \footnotesize
+    % Place nodes
+    \node [block] at (0, 0) (hypothesis) {Hypothesis generation};
+    \node [block] at (0.4\textwidth, 0) (infer) {Deduction and inference};
+    \node [block] at (0.4\textwidth, -0.2\textwidth) (apply) {Application};
+    \node [cloud] at (0.4\textwidth, +0.2\textwidth) (data) {Data};
+    \node [block] at (0.8\textwidth, 0) (criticise) {Evaluation and \dots};
+    % Draw edges
+    \path [line] (hypothesis.east) -- (infer.west);
+    \path [line] (infer.east) -- (criticise.west);
+    \path [thin line] (infer.south) -- (apply.north);
+    \path [thin line] (data.south) -- (infer.north);
+    \path [thin line] (data.south east) -- (criticise.north west);
+    \path [thin line] (hypothesis.north east) -- (data.south west);
+    \path [thin line] (criticise.south west) -- (apply.north east);
+    \draw[->, dashed] (criticise.south) .. controls (0.8\textwidth,-0.4\textwidth) and (0.0\textwidth,-0.4\textwidth) .. (hypothesis.south);
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Why else check or criticise models?}
   \begin{itemize}
     \item Statistical analyses are based on assumptions\dots
     \begin{itemize}
@@ -105,6 +178,7 @@ x            -10.645      4.656  -2.286   0.0267 *
       \includegraphics[width=0.45\textwidth]{figures/outlier-scatter.pdf}
     };
   \end{scope}
+  \pause
   \begin{scope}[xshift=0.5\textwidth]
     \node [mybox] (box){
       \includegraphics[width=0.45\textwidth]{figures/without-outliers.pdf}
@@ -203,6 +277,21 @@ x            -10.645      4.656  -2.286   0.0267 *
     \begin{itemize}
        \item \dots without having to implement inference for every expanded method we can think of
      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{My journey with model criticism}
+  \begin{itemize}
+    \item My previous research has involved automatic statistical model building
+    \vspace{\baselineskip}
+    \pause
+    \item I wanted these model building systems to know when they had produced a model which was `obviously' wrong
+    \vspace{\baselineskip}
+    \pause
+    \item On entering the literature I found a Bayesians vs frequentists debate that does not appear to have been resolved\dots
+    \vspace{\baselineskip}
+    \pause
+    \item \dots and generally very little advice on which method of model criticism to use when
   \end{itemize}
 \end{frame}
 
@@ -544,20 +633,6 @@ x            -10.645      4.656  -2.286   0.0267 *
     \vspace{\baselineskip}
     \pause
     \item Potential solution: Include dimensionality reduction as part of the test statistic
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{What happens in high dimensions?}
-  \begin{center}
-  \begin{tabular}{cc}
-    \includegraphics[width=0.48\textwidth]{figures/high_mog_pca} &
-    \pause
-    \includegraphics[width=0.48\textwidth]{figures/high_mog_witness}
-  \end{tabular}
-  \end{center}
-  \pause
-  \begin{itemize}
-    \item Estimated $p$-value of 0.05
   \end{itemize}
 \end{frame}
 
