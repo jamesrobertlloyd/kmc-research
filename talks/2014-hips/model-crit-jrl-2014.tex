@@ -65,80 +65,7 @@ Department of Engineering, University of Cambridge, UK
 \titlepage
 }
 
-\begin{frame}{Science}
-  \begin{center}
-  \tikzstyle{block} = [rectangle, draw, fill=blue!20, 
-                       text width=0.2\textwidth, text centered, rounded corners, minimum height=3em]
-  \tikzstyle{line} = [draw, -latex', ultra thick]
-  \tikzstyle{thin line} = [draw, -latex']
-  \tikzstyle{cloud} = [draw, ellipse,fill=red!20,minimum height=2em]
-    
-  \begin{tikzpicture}[node distance = 0.3\textwidth]
-    \footnotesize
-    % Place nodes
-    \node [block] at (0, 0) (hypothesis) {Hypothesis generation};
-    \node [block] at (0.4\textwidth, 0) (infer) {Deduction and inference};
-    \node [block] at (0.4\textwidth, -0.2\textwidth) (apply) {Application};
-    \node [cloud] at (0.4\textwidth, +0.2\textwidth) (data) {Data};
-    \node [block] at (0.8\textwidth, 0) (criticise) {Evaluation and criticism};
-    % Draw edges
-    \path [line] (hypothesis.east) -- (infer.west);
-    \path [line] (infer.east) -- (criticise.west);
-    \path [thin line] (infer.south) -- (apply.north);
-    \path [thin line] (data.south) -- (infer.north);
-    \path [thin line] (data.south east) -- (criticise.north west);
-    \path [thin line] (hypothesis.north east) -- (data.south west);
-    \path [thin line] (criticise.south west) -- (apply.north east);
-    \draw[->, ultra thick] (criticise.south) .. controls (0.8\textwidth,-0.4\textwidth) and (0.0\textwidth,-0.4\textwidth) .. (hypothesis.south);
-  \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-%\begin{frame}{Many ML papers stop at evaluation\dots}
-%  \begin{itemize}
-%    \item Easy to positively review a paper which demonstrates improved cross validated predictive performance\dots
-%    \vspace{\baselineskip}
-%    \pause
-%    \item \dots so many research efforts stop when they can demonstrate improved predictive performance
-%    \vspace{\baselineskip}
-%    \pause
-%    \item At its worst this is the equivalent of $p$-value hacking
-%    \vspace{\baselineskip}
-%    \pause
-%    \item Predictive performance alone tells us very little about how to improve a model / method    
-%  \end{itemize}
-%\end{frame}
-
-\begin{frame}{Many ML papers stop at evaluation}
-  \begin{center}
-  \tikzstyle{block} = [rectangle, draw, fill=blue!20, 
-                       text width=0.2\textwidth, text centered, rounded corners, minimum height=3em]
-  \tikzstyle{line} = [draw, -latex', ultra thick]
-  \tikzstyle{thin line} = [draw, -latex']
-  \tikzstyle{cloud} = [draw, ellipse,fill=red!20,minimum height=2em]
-    
-  \begin{tikzpicture}[node distance = 0.3\textwidth]
-    \footnotesize
-    % Place nodes
-    \node [block] at (0, 0) (hypothesis) {Hypothesis generation};
-    \node [block] at (0.4\textwidth, 0) (infer) {Deduction and inference};
-    \node [block] at (0.4\textwidth, -0.2\textwidth) (apply) {Application};
-    \node [cloud] at (0.4\textwidth, +0.2\textwidth) (data) {Data};
-    \node [block] at (0.8\textwidth, 0) (criticise) {Evaluation and \dots};
-    % Draw edges
-    \path [line] (hypothesis.east) -- (infer.west);
-    \path [line] (infer.east) -- (criticise.west);
-    \path [thin line] (infer.south) -- (apply.north);
-    \path [thin line] (data.south) -- (infer.north);
-    \path [thin line] (data.south east) -- (criticise.north west);
-    \path [thin line] (hypothesis.north east) -- (data.south west);
-    \path [thin line] (criticise.south west) -- (apply.north east);
-    \draw[->, dashed] (criticise.south) .. controls (0.8\textwidth,-0.4\textwidth) and (0.0\textwidth,-0.4\textwidth) .. (hypothesis.south);
-  \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-\begin{frame}{Why else check or criticise models?}
+\begin{frame}{Why check or criticise models?}
   \begin{itemize}
     \item Statistical analyses are based on assumptions\dots
     \begin{itemize}
@@ -187,96 +114,75 @@ x            -10.645      4.656  -2.286   0.0267 *
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Is cross validation enough?}
-  \begin{itemize}
-    \item Machine learning is typically concerned with predictive accuracy\dots
-    \vspace{\baselineskip}
-    \pause
-    \item \dots which can be estimated by cross validation
-  \end{itemize}
+\begin{frame}{A version of the scientific method}
   \begin{center}
-    \begin{tabular}{|l|c|}
-      \hline
-      Algorithm & CV error (standard error) \\
-      \hline
-      Linear regression & 4.8 (1.3) \\
-      Theil--Sen estimator & 2.0 (1.4) \\
-      \hline
-    \end{tabular}
+  \tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+                       text width=0.2\textwidth, text centered, rounded corners, minimum height=3em]
+  \tikzstyle{line} = [draw, -latex', ultra thick]
+  \tikzstyle{thin line} = [draw, -latex']
+  \tikzstyle{cloud} = [draw, ellipse,fill=red!20,minimum height=2em]
+    
+  \begin{tikzpicture}[node distance = 0.3\textwidth]
+    \footnotesize
+    % Place nodes
+    \node [block] at (0, 0) (hypothesis) {Hypothesis generation};
+    \node [block] at (0.4\textwidth, 0) (infer) {Deduction and inference};
+    \node [cloud] at (0.4\textwidth, -0.2\textwidth) (apply) {Application};
+    \node [cloud] at (0.4\textwidth, +0.2\textwidth) (data) {Data};
+    \node [block] at (0.8\textwidth, 0) (criticise) {Evaluation and criticism};
+    % Draw edges
+    \path [line] (hypothesis.east) -- (infer.west);
+    \path [line] (infer.east) -- (criticise.west);
+    \path [thin line] (infer.south) -- (apply.north);
+    \path [thin line] (data.south) -- (infer.north);
+    \path [thin line] (data.south east) -- (criticise.north west);
+    \path [thin line] (hypothesis.north east) -- (data.south west);
+    \path [thin line] (criticise.south west) -- (apply.north east);
+    \draw[->, ultra thick] (criticise.south) .. controls (0.8\textwidth,-0.4\textwidth) and (0.0\textwidth,-0.4\textwidth) .. (hypothesis.south);
+  \end{tikzpicture}
   \end{center}
-  \pause
-  \begin{itemize}
-    \item So we're fine, right?
-  \end{itemize}
 \end{frame}
 
-\begin{frame}{Is cross validation enough?}
-  \uncover<1->{
-  \begin{itemize}
-    \item Let's try some new data
-  \end{itemize}
-  }
-  \only<2,3>{
+\begin{frame}{Many ML papers stop at evaluation}
   \begin{center}
-    \begin{tabular}{|l|c|}
-      \hline
-      Algorithm & CV error (standard error) \\
-      \hline
-      Linear regression & 2.0 (0.1) \\
-      Theil--Sen estimator & 1.3 (0.2) \\
-      \hline
-    \end{tabular}
+  \tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+                       text width=0.2\textwidth, text centered, rounded corners, minimum height=3em]
+  \tikzstyle{line} = [draw, -latex', ultra thick]
+  \tikzstyle{thin line} = [draw, -latex']
+  \tikzstyle{cloud} = [draw, ellipse,fill=red!20,minimum height=2em]
+    
+  \begin{tikzpicture}[node distance = 0.3\textwidth]
+    \footnotesize
+    % Place nodes
+    \node [block] at (0, 0) (hypothesis) {Hypothesis generation};
+    \node [block] at (0.4\textwidth, 0) (infer) {Deduction and inference};
+    \node [cloud] at (0.4\textwidth, -0.2\textwidth) (apply) {Application};
+    \node [cloud] at (0.4\textwidth, +0.2\textwidth) (data) {Data};
+    \node [block] at (0.8\textwidth, 0) (criticise) {Evaluation and \dots};
+    % Draw edges
+    \path [line] (hypothesis.east) -- (infer.west);
+    \path [line] (infer.east) -- (criticise.west);
+    \path [thin line] (infer.south) -- (apply.north);
+    \path [thin line] (data.south) -- (infer.north);
+    \path [thin line] (data.south east) -- (criticise.north west);
+    \path [thin line] (hypothesis.north east) -- (data.south west);
+    \path [thin line] (criticise.south west) -- (apply.north east);
+    \draw[->, dashed] (criticise.south) .. controls (0.8\textwidth,-0.4\textwidth) and (0.0\textwidth,-0.4\textwidth) .. (hypothesis.south);
+  \end{tikzpicture}
   \end{center}
-  }
-  \only<3>{
-  \begin{itemize}
-    \item So outliers again?
-  \end{itemize}
-  }
-  \uncover<4->{
-  \begin{center}
-    \begin{tabular}{|l|c|}
-      \hline
-      Algorithm & CV error (standard error) \\
-      \hline
-      Linear regression & 2.0 (0.1) \\
-      Theil--Sen estimator & 1.3 (0.2) \\
-      5 nearest neighbours & 0.1 (0.01) \\
-      \hline
-    \end{tabular}
-  \end{center}
-  }
-  \uncover<5->{
-  \begin{itemize}
-    \item When I said outliers I actually meant non-linearity
-  \end{itemize}
-  }
-  \uncover<6->{
-    \begin{center}
-      \includegraphics[width=0.45\textwidth]{figures/non-linear.pdf}
-    \end{center}
-  }
 \end{frame}
 
-\begin{frame}{Is being Bayesian enough?}
+\begin{frame}{Agenda}
   \begin{itemize}
-    \item Why not just do all inference in a super model that contains everything we could ever possibly believe?
-    \pause
-    \begin{itemize}
-      \item And then \eg estimate the utility of smaller models for certain tasks
-    \end{itemize}
+  	\item Why I became interested in model criticism
     \vspace{\baselineskip}
-    \pause
-    \item How long did you spend coding your last inference scheme?
-    \begin{itemize}
-      \item Or have you ever got probabilistic programming to work in a non-trivial model?
-    \end{itemize}
+    \item Review of frequentist and Bayesian theory
     \vspace{\baselineskip}
-    \pause
-    \item Model criticism / checking gives us tools to explore potential inadequacies of a method\dots
-    \begin{itemize}
-       \item \dots without having to implement inference for every expanded method we can think of
-     \end{itemize}
+    \item A concern about calibration and a potential resolution
+    \vspace{\baselineskip}
+    \item An application of a nonparametric test to model criticism
+    \vspace{\baselineskip}
+    \item Discussion
   \end{itemize}
 \end{frame}
 
@@ -291,22 +197,29 @@ x            -10.645      4.656  -2.286   0.0267 *
     \item On entering the literature I found a Bayesians vs frequentists debate that does not appear to have been resolved\dots
     \vspace{\baselineskip}
     \pause
-    \item \dots and generally very little advice on which method of model criticism to use when
+    \item \dots and generally very little actionable advice on which method of model criticism to use and when
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Agenda}
-  \begin{itemize}
-    \item Frequentist and Bayesian theory
-    \vspace{\baselineskip}
-    \item A concern about calibration and a potential resolution
-    \vspace{\baselineskip}
-    \item A new nonparametric method for model checking
-    \vspace{\baselineskip}
-    \item Methods for Gaussian processes
-    \vspace{\baselineskip}
-    \item Discussion
-  \end{itemize}
+\begin{frame}{Is this model `correct'?}
+  \begin{center}
+  \begin{tikzpicture}
+    \begin{scope}[yshift=0.0\textwidth]
+    \node at (-0.25\textwidth, 0) {\includegraphics[width=0.5\textwidth]{figures/11-unemployment/11-unemployment_raw_data}};
+    \node at (0.25\textwidth, 0) {\includegraphics[width=0.5\textwidth]{figures/11-unemployment/11-unemployment_all}};
+    \end{scope}
+    \pause
+    \begin{scope}[yshift=-0.25\textwidth]
+    \node at (-0.333\textwidth, 0) {\includegraphics[width=0.3\textwidth]{figures/11-unemployment/11-unemployment_1}};
+    \node at (0.0\textwidth, 0) {\includegraphics[width=0.3\textwidth]{figures/11-unemployment/11-unemployment_2}};
+    \node at (0.333\textwidth, 0) {\includegraphics[width=0.3\textwidth]{figures/11-unemployment/11-unemployment_3}};
+    \end{scope}
+    \begin{scope}[yshift=-0.45\textwidth]
+    \node at (-0.166666\textwidth, 0) {\includegraphics[width=0.3\textwidth]{figures/11-unemployment/11-unemployment_4}};
+    \node at (0.166666\textwidth, 0) {\includegraphics[width=0.3\textwidth]{figures/11-unemployment/11-unemployment_5}};
+    \end{scope}
+  \end{tikzpicture}
+  \end{center}
 \end{frame}
 
 \begin{frame}{Frequentist model criticism}
@@ -426,7 +339,7 @@ x            -10.645      4.656  -2.286   0.0267 *
     \pause
     \item Vague priors can lead to vague tests
     \begin{itemize}
-      \item Probably best used when one really has a subjective prior
+      \item Probably best used when one really has a subjective prior or the model is not vague about the test statistic
     \end{itemize}
   \end{itemize}
 \end{frame}
@@ -534,8 +447,10 @@ x            -10.645      4.656  -2.286   0.0267 *
     \item Posterior predictive $p$-values use the data twice so require a different interpretation
     \begin{itemize}
       \item Can be interpreted literally as the probability of a future data set being more extreme than the one just observed
-      \item Can also be interpreted as a test of whether or not the posterior distribution would be a reasonable summary of the observed data
     \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Can also use held out data to test posterior distributions
   \end{itemize}
 \end{frame}
 
@@ -551,6 +466,10 @@ x            -10.645      4.656  -2.286   0.0267 *
     \vspace{\baselineskip}
     \pause
     \item Can we instead define a statistic in high level terms, and then compute the statistic which most demonstrates any discrepancy?
+    \pause
+    \begin{itemize}
+      \item And will we be able to interpret this statistic?
+    \end{itemize}
   \end{itemize}
 \end{frame}
 
@@ -610,7 +529,7 @@ x            -10.645      4.656  -2.286   0.0267 *
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Example: Speed of light data again again}
+\begin{frame}{Example: Speed of light data again (again)}
   \begin{center}
   \begin{tabular}{cc}
     \includegraphics[width=0.435\textwidth]{figures/newcomb_hist} &
@@ -633,6 +552,9 @@ x            -10.645      4.656  -2.286   0.0267 *
     \vspace{\baselineskip}
     \pause
     \item Potential solution: Include dimensionality reduction as part of the test statistic
+    \begin{itemize}
+      \item $\frac{1}{m^2}\sum_{i,j=1}^{m}k(x_i^{\textrm{PCA}},x_j^{\textrm{PCA}}) - \frac{2}{mn}\sum_{i,j=1}^{m,n}k(x_i^{\textrm{PCA}},y_j^{\textrm{PCA}}) + \frac{1}{n^2}\sum_{i,j=1}^{n}k(y_i^{\textrm{PCA}},y_j^{\textrm{PCA}})$
+    \end{itemize}
   \end{itemize}
 \end{frame}
 
@@ -651,17 +573,200 @@ x            -10.645      4.656  -2.286   0.0267 *
 \end{frame}
 
 \begin{frame}{What do neural networks dream about?}
+  \begin{itemize}
+    \item Various versions of deep belief networks have been trained to produce generative models of MNIST handwritten digits
+    \vspace{\baselineskip}
+    \pause
+    \item Samples from these models certainly look like digits, but what aspects of the distribution over handwritten digits do these models not capture?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{An RBM trained on MNIST}
+  \begin{center}
+  \includegraphics[width=0.4\textwidth]{figures/rbm_pca}
+  \end{center}
+  \pause
+  \begin{center}
+  \begin{tabular}{cc}
+    \includegraphics[width=0.4\textwidth]{figures/rbm_0_pca} & 
+    \pause
+    \includegraphics[width=0.4\textwidth]{figures/rbm_0_witness}
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}{What do neural networks dream about?}
   \begin{center}
     \begin{tabular}{ccc}
-      Samples from RBM & $\,$ & \includegraphics[width=0.48\textwidth]{figures/rbm_samples} \\
+      Real digits & $\,$ & \includegraphics[width=0.48\textwidth]{figures/many_rbm_cond_witness_peaks} \\
       \pause
-      Witness fn peaks : RBM & $\,$ & \includegraphics[width=0.48\textwidth]{figures/rbm_witness_troughs} \\
+      Witness fn troughs : RBM & $\,$ & \includegraphics[width=0.48\textwidth]{figures/rbm_witness_troughs} \\
       \pause
-      Witness fn peaks : RBMs & $\,$ & \includegraphics[width=0.48\textwidth]{figures/many_rbm_cond_witness_troughs} \\
+      Witness fn troughs : RBMs & $\,$ & \includegraphics[width=0.48\textwidth]{figures/many_rbm_cond_witness_troughs} \\
       \pause
-      Witness fn peaks : DBN & $\,$ & \includegraphics[width=0.48\textwidth]{figures/dbn_ft_cond_witness_troughs} \\
+      Witness fn troughs : DBN & $\,$ & \includegraphics[width=0.48\textwidth]{figures/dbn_ft_cond_witness_troughs} \\
     \end{tabular}
   \end{center}
+\end{frame}
+
+\begin{frame}{Why have I not mentioned power?}
+  \begin{itemize}
+    \item Quantification of power requires specification of an explicit alternative model or hypothesis
+    \vspace{\baselineskip}
+    \pause
+    \item ``Model criticism \dots is intended as an open-minded phase of investigation
+to identify any problems with the model. Formulation of explicit alternatives
+comes after the model criticism phase has identified some problems.'' \cite{OHagan2003-bc}
+    \vspace{\baselineskip}
+    \pause
+    \item I'm not sure anymore that alternative free hypothesis tests are the correct way to think about model criticism
+    \begin{itemize}
+      \item Some effort should be made to characterise the alternative hypotheses for which certain tests have high power
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Future work}
+  \begin{itemize}
+    \item Can we usefully characterise the types of alternative models for which MMD tests have high power?
+    \begin{itemize}
+      \pause
+      \item Using different kernels will identify different types of discrepancy
+      \pause
+      \item This characterisation probably already in the literature 
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Could these alternatives be usefully understood as specific nonparametric models by exploiting the connections between RKHSs and Gaussian processes?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Discussion}
+  \begin{itemize}
+    \item Box advocated for model criticism to be part of the loop of the scientific process\dots
+    \begin{itemize}
+      \item Probabilistic version of falsification
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item \dots but should we just be estimating the utility of a model?
+    \vspace{\baselineskip}
+    \pause
+    \item Perhaps we should be using model criticism to estimate the utility of expanding a model?
+    \begin{itemize}
+      \item They are often much cheaper to compute (thinking and computing time) than performing inference in an expanded model class
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item What are other forms of model criticism that are widely applicable and can help identify the nature of discrepancies between model and data in highly complicated systems
+  \end{itemize}
+\end{frame}
+
+{
+\section{References}
+\section{Extended Bibliography}
+\tiny
+\begin{frame}[allowframebreaks,plain]
+  \frametitle{References}
+  \bibliography{library}
+  \bibliographystyle{alpha}
+\end{frame}
+}
+
+\begin{frame}{Appendix}
+\end{frame}
+
+\begin{frame}{Is cross validation enough?}
+  \begin{itemize}
+    \item Machine learning is typically concerned with predictive accuracy\dots
+    \vspace{\baselineskip}
+    \pause
+    \item \dots which can be estimated by cross validation
+  \end{itemize}
+  \begin{center}
+    \begin{tabular}{|l|c|}
+      \hline
+      Algorithm & CV error (standard error) \\
+      \hline
+      Linear regression & 4.8 (1.3) \\
+      Theil--Sen estimator & 2.0 (1.4) \\
+      \hline
+    \end{tabular}
+  \end{center}
+  \pause
+  \begin{itemize}
+    \item So we're fine, right?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Is cross validation enough?}
+  \uncover<1->{
+  \begin{itemize}
+    \item Let's try some new data
+  \end{itemize}
+  }
+  \only<2,3>{
+  \begin{center}
+    \begin{tabular}{|l|c|}
+      \hline
+      Algorithm & CV error (standard error) \\
+      \hline
+      Linear regression & 2.0 (0.1) \\
+      Theil--Sen estimator & 1.3 (0.2) \\
+      \hline
+    \end{tabular}
+  \end{center}
+  }
+  \only<3>{
+  \begin{itemize}
+    \item So outliers again?
+  \end{itemize}
+  }
+  \uncover<4->{
+  \begin{center}
+    \begin{tabular}{|l|c|}
+      \hline
+      Algorithm & CV error (standard error) \\
+      \hline
+      Linear regression & 2.0 (0.1) \\
+      Theil--Sen estimator & 1.3 (0.2) \\
+      5 nearest neighbours & 0.1 (0.01) \\
+      \hline
+    \end{tabular}
+  \end{center}
+  }
+  \uncover<5->{
+  \begin{itemize}
+    \item When I said outliers I actually meant non-linearity
+  \end{itemize}
+  }
+  \uncover<6->{
+    \begin{center}
+      \includegraphics[width=0.45\textwidth]{figures/non-linear.pdf}
+    \end{center}
+  }
+\end{frame}
+
+\begin{frame}{Is being Bayesian enough?}
+  \begin{itemize}
+    \item Why not just do all inference in a super model that contains everything we could ever possibly believe?
+    \pause
+    \begin{itemize}
+      \item And then \eg estimate the utility of smaller models for certain tasks
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item How long did you spend coding your last inference scheme?
+    \begin{itemize}
+      \item Or have you ever got probabilistic programming to work in a non-trivial model?
+    \end{itemize}
+    \vspace{\baselineskip}
+    \pause
+    \item Model criticism / checking gives us tools to explore potential inadequacies of a method\dots
+    \begin{itemize}
+       \item \dots without having to implement inference for every expanded method we can think of
+     \end{itemize}
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Discrepancy $p$-values}
@@ -841,49 +946,15 @@ x            -10.645      4.656  -2.286   0.0267 *
   \newcommand{\mdrd}{figures/11-unemployment} 
   \newcommand{\mbm}{\hspace{-0.3cm}}
 The following discrepancies between the prior and posterior distributions for this component have been detected.
-\begin{itemize}
-    \item The qq plot has an unexpectedly large positive deviation from equality ($x = y$). This discrepancy has an estimated $p$-value of 0.049.
-\end{itemize}
-
-\vspace{\baselineskip}
-
-\begin{tabular}{cc}
-\mbm \includegraphics[width=\wmgd,height=\hmgd]{\mdrd/11-unemployment_2} & 
-\mbm \includegraphics[width=\wmgd,height=\hmgd]{\mdrd/11-unemployment_qq_bands_2}
-\end{tabular}
-\end{frame}
-
-\begin{frame}{Discussion}
   \begin{itemize}
-    \item Box advocated for model criticism to be part of the loop of the scientific process\dots
-    \begin{itemize}
-      \item Probabilistic version of falsification
-    \end{itemize}
-    \vspace{\baselineskip}
-    \pause
-    \item \dots but should we just be estimating the utility of a model?
-    \vspace{\baselineskip}
-    \pause
-    \item Perhaps we should be using model criticism to estimate the utility of expanding a model?
-    \begin{itemize}
-      \item They are often much cheaper to compute (thinking and computing time) than performing inference in an expanded model class
-    \end{itemize}
-    \vspace{\baselineskip}
-    \pause
-    \item What are other forms of model criticism that are widely applicable and can help identify the nature of discrepancies between model and data in highly complicated systems
+    \item The qq plot has an unexpectedly large positive deviation from equality ($x = y$). This discrepancy has an estimated $p$-value of 0.049.
   \end{itemize}
-\end{frame}
 
-{
-\section{References}
-\section{Extended Bibliography}
-\tiny
-\begin{frame}[allowframebreaks,plain]
-  \frametitle{References}
-  \bibliography{library}
-  \bibliographystyle{alpha}
+  \begin{tabular}{cc}
+    \mbm \includegraphics[width=\wmgd,height=\hmgd]{\mdrd/11-unemployment_2} & 
+    \mbm \includegraphics[width=\wmgd,height=\hmgd]{\mdrd/11-unemployment_qq_bands_2}
+  \end{tabular}
 \end{frame}
-}
 
 \end{document}
 
