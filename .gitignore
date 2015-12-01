@@ -70,6 +70,8 @@ src/lda/4f13
 src/gps/temp
 *.pkl
 
+posters/tex/kmc-nips.pdf
+
 papers/conference/format/nips2014.pdf
 data/mnist/dbn-layers*
 
