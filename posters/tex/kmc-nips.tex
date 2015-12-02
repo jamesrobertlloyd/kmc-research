@@ -307,9 +307,9 @@ Simplifying slightly less, many model criticism methods are composed of:
 \begin{itemize}
   \item A null hypothesis in the form of a model or models of data e.g.
   \begin{itemize}
-    \item A class of models e.g.\ all linear regression models with Gaussian noise
-    \item A particular model e.g.\ a neural network after training
-    \item A distribution over models e.g.\ prior or posterior distributions
+    \item All linear regression models with Gaussian noise
+    \item A neural network after training
+    \item Prior or posterior distributions
   \end{itemize}
   \item A statistic to measure how extreme a collection of data is e.g.
   \begin{itemize}
@@ -387,7 +387,7 @@ Machine learning has been focused on model performance i.e.\ evaluation, which p
 
 %\vspace{1\baselineskip}
 
-Suppose we have samples ${X = (x_i)_{i=1\ldots m}}$ and ${Y = (y_i)_{i=1\ldots n}}$ drawn iid.\ from distributions $p$ and $q$ respectively.
+Suppose we have samples ${X = (x_i)_{i=1\ldots m}}$ and ${Y = (y_i)_{i=1\ldots n}}$ drawn i.i.d.\ from distributions $p$ and $q$ respectively.
 The two sample problem asks if $p = q$.
 A way of answering the two sample problem is to consider maximum mean discrepancy (MMD) statistics
 \vspace{-1\baselineskip}
@@ -407,7 +407,7 @@ When $\mathcal{F}$ is a reproducing kernel Hilbert space (RKHS) the function att
 
 We return to the central question \textbf{How do we choose the statistic by which to measure how surprising our data is?}
 Kernel two sample tests are of interest since they are defined as a maximisation over a large class of statistics; in a weak sense the statistic is selected automatically.
-Moreover we can use this statistic to identify where a model and data disagree most.
+Moreover we can use this statistic to identify where a model and data most disagree.
 
 %\begin{tabularx}{0.96\columnwidth}{X X}
 
