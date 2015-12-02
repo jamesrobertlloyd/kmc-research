@@ -279,7 +279,7 @@
   \vspace{0.5\baselineskip}
   \item We investigated the application of a kernel hypothesis test to model criticism and give examples of its usage
   \vspace{0.5\baselineskip}
-  \item But most importantly we would like more people to be mindful of the benefits of model criticism
+  \item But most importantly we would like more people to be mindful of the benefits of model criticism. Ask yourself, \textbf{Do you know how the model you are currently working with most misrepresents the data it is attempting to model?}
 \end{itemize}
 
 \vspace{1\baselineskip}
@@ -314,7 +314,7 @@ Simplifying slightly less, many model criticism methods are composed of:
   \item A statistic to measure how extreme a collection of data is e.g.
   \begin{itemize}
     \item The largest distance between any two data points
-    \item The minimum value of the likelihood of data under a model (i.e.\ an outlier measure)
+    \item The minimum value of the likelihood of individual data points under a model (i.e.\ an outlier measure)
   \end{itemize}
   \item A method to perform an alternative free hypothesis test using this statistic and null hypothesis
 \end{itemize}
@@ -330,15 +330,17 @@ The question that motivated this research was, \textbf{How do we choose the stat
 
 \mysection{Why do we need model criticism?}
 
+Answer: Science!
+
 %\vspace{1\baselineskip}
 
-\begin{quotation}
-``A man in daily muddy contact with field experiments could not be expected to have much faith in any direct assumption of independently distributed normal errors''
-\end{quotation}
+%\begin{quotation}
+%``A man in daily muddy contact with field experiments could not be expected to have much faith in any direct assumption of independently distributed normal errors''
+%\end{quotation}
 
-\vspace{1\baselineskip}
+%\vspace{1\baselineskip}
 
-But perhaps more importantly, vigorous criticism is an essential part of the scientific method
+%But perhaps more importantly, vigorous criticism is an essential part of the scientific method
 
 %\item \dots and that can lead to false conclusions\dots
 
@@ -376,7 +378,8 @@ But perhaps more importantly, vigorous criticism is an essential part of the sci
 
 %\vspace{1\baselineskip}
 
-Machine learning has been focused on model performance i.e.\ evaluation, which provides little information on \textbf{how to improve} a model
+Vigorous criticism is an essential part of the scientific method.
+Machine learning has been focused on model performance i.e.\ evaluation, which provides little information on \textbf{how to improve} a model.
 
 %\vspace{1\baselineskip}
 
@@ -386,12 +389,12 @@ Machine learning has been focused on model performance i.e.\ evaluation, which p
 
 Suppose we have samples ${X = (x_i)_{i=1\ldots m}}$ and ${Y = (y_i)_{i=1\ldots n}}$ drawn iid.\ from distributions $p$ and $q$ respectively.
 The two sample problem asks if $p = q$.
-
 A way of answering the two sample problem is to consider maximum mean discrepancy (MMD) statistics
-%\vspace{-0.3\baselineskip}
+\vspace{-1\baselineskip}
 \begin{equation*}
 \textrm{MMD}(\mathcal{F},p,q) = \sup_{f \in \mathcal{F}}(\mathbb{E}_{x\sim p}[f(x)] - \mathbb{E}_{y\sim q}[f(y)])
 \label{eq:MMD}
+\vspace{-1\baselineskip}
 \end{equation*}
 where $\mathcal{F}$ is a set of functions.
 When $\mathcal{F}$ is a reproducing kernel Hilbert space (RKHS) the function attaining the supremum (called the witness function) and the value of the MMD can be estimated from finite samples.
@@ -404,6 +407,7 @@ When $\mathcal{F}$ is a reproducing kernel Hilbert space (RKHS) the function att
 
 We return to the central question \textbf{How do we choose the statistic by which to measure how surprising our data is?}
 Kernel two sample tests are of interest since they are defined as a maximisation over a large class of statistics; in a weak sense the statistic is selected automatically.
+Moreover we can use this statistic to identify where a model and data disagree most.
 
 %\begin{tabularx}{0.96\columnwidth}{X X}
 
@@ -412,7 +416,6 @@ Kernel two sample tests are of interest since they are defined as a maximisation
 
 Returning to our histogram data, we fit a normal distribution to it (red line) and then performed a kernel two sample test, resulting in the witness function shown in dashed green.
 The witness function peaks indicate where there is less data than expected; the troughs where there is more.
-Note that the main discrepancies between model and data (by this measure) are not near the outlier.
 
 \newpage
 
@@ -422,16 +425,16 @@ Note that the main discrepancies between model and data (by this measure) are no
 
 \end{multicols}
 
-\vspace{1\baselineskip}
+Note that the main discrepancies between model and data (by this measure) are not near the outlier; kernel two sample tests provide an interesting complement to outlier detection.
 
 \newpage
 
 \mysection{What do neural networks dream about?}
 
-\vspace{1\baselineskip}
+\vspace{0.5\baselineskip}
 
 We trained RBMs to generate MNIST digits.
-We then used kernel two sample tests to show us digits underrepresented (left) and overrepresented (right) by the model.
+We then used kernel two sample tests to identify images underrepresented (left) and overrepresented (right) by the model.
 
 \begin{center}
   \includegraphics[width=0.48\columnwidth]{../figures/many_rbm_cond_witness_peaks}
@@ -451,11 +454,11 @@ The extra layers do not appear to have removed the fuzziness, it has just become
 
 %Note well, these overrepresented digits are not outliers, they are digits that are consistently produced by the models.
 
-\vspace{1\baselineskip}
+\vspace{0.5\baselineskip}
 
 \mysection{A test of local heteroscedasticity}
 
-\vspace{1\baselineskip}
+\vspace{0.5\baselineskip}
 
 Shown below left is some data and the fit of a Gaussian process regression model.
 On the right is the witness function after performing a kernel two sample test.
@@ -468,17 +471,20 @@ On the right is the witness function after performing a kernel two sample test.
 The test identifies that something strange is happening at the bottom left.
 Indeed, this is a region of very low data variability that the homoscedastic model fit to it cannot represent.
 
-\vspace{1\baselineskip}
+\vspace{0.5\baselineskip}
 
-\mysection{Discussion}
+\mysection{Discussion and conclusion}
 
-\vspace{1\baselineskip}
+\vspace{0.5\baselineskip}
 
-Q: Did we answer our central question of how to choose a statistic for model criticism?
+Did we answer our central question of how to choose a statistic for model criticism?
+Not really, but these methods are interesting since one can specify a statistic in high level terms e.g.\ `smooth function' rather than specifying an equation.
+You might also be wondering what happened to statistical power, or why the answer to misspecified models is not just to try fitting ever larger ones.
+There's not quite enough space to write my thoughts here; talk to me or read the last chapter of my thesis!
 
-A: Not really, but these methods are interesting since one can specify a statistic in high level terms e.g.\ `smooth function' rather than specifying an equation.
+\vspace{0.5\baselineskip}
 
-Q: Question
+We end by encouraging you to try model criticism methods and ask yourself, \textbf{Do you know how the model you are currently working with most misrepresents the data it is attempting to model?}
 
 \end{multicols}
 
