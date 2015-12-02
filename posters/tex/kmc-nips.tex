@@ -222,7 +222,7 @@
     % Title text
     \node[inner sep=0,text width=0.7\textwidth,text centered,font=\Huge] (Title) at (0,0) 
     {
-      {\sffamily \Huge \textbf{Statistical Model criticism using Kernel Two Sample Tests}}\\
+      {\sffamily \Huge \textbf{Statistical Model Criticism using Kernel Two Sample Tests}}\\
       {\huge\sffamily James Robert Lloyd and Zoubin Ghahramani}\\
       \vspace{-0.3\baselineskip}
       {\large\sffamily Department of Engineering, University of Cambridge, UK}
@@ -288,13 +288,49 @@
 
 \vspace{1\baselineskip}
 
+Simplifying drastically, model criticism asks the question, ``is my model wrong?''.
+For example, consider this one dimensional data represented by a histogram.
+Would this data be fit well by a normal distribution?
+
+\begin{center}
+  \includegraphics[width=0.48\columnwidth]{../figures/newcomb_hist}
+\end{center}
+
+Answer: Of course not, there are gross outliers.
+
+\vspace{1\baselineskip}
+
+Simplifying slightly less, many model criticism methods are composed of:
+
+\vspace{1\baselineskip}
+
+\begin{itemize}
+  \item A null hypothesis in the form of a model or models of data e.g.
+  \begin{itemize}
+    \item A class of models e.g.\ all linear regression models with Gaussian noise
+    \item A particular model e.g.\ a neural network after training
+    \item A distribution over models e.g.\ prior or posterior distributions
+  \end{itemize}
+  \item A statistic to measure how extreme a collection of data is e.g.
+  \begin{itemize}
+    \item The largest distance between any two data points
+    \item The minimum value of the likelihood of data under a model (i.e.\ an outlier measure)
+  \end{itemize}
+  \item A method to perform an alternative free hypothesis test using this statistic and null hypothesis
+\end{itemize}
+
+\vspace{1\baselineskip}
+
+The result of model criticism is then a measure of how surprising the data is, viewed through some statistic, under the assumption of some model or class of models.
+The question that motivated this research was, \textbf{How do we choose the statistic by which to measure how surprising our data is?}
+
 \vspace{1\baselineskip}
 
 \newpage
 
 \mysection{Why do we need model criticism?}
 
-\vspace{1\baselineskip}
+%\vspace{1\baselineskip}
 
 \begin{quotation}
 ``A man in daily muddy contact with field experiments could not be expected to have much faith in any direct assumption of independently distributed normal errors''
@@ -340,13 +376,51 @@ But perhaps more importantly, vigorous criticism is an essential part of the sci
 
 %\vspace{1\baselineskip}
 
-Machine learning has been focused on model performance i.e.\ validation, which provides little information on \emph{how to improve} a model
+Machine learning has been focused on model performance i.e.\ evaluation, which provides little information on \textbf{how to improve} a model
 
-\vspace{1\baselineskip}
+%\vspace{1\baselineskip}
 
 \mysection{Kernel two sample tests}
 
-\vspace{1\baselineskip}
+%\vspace{1\baselineskip}
+
+Suppose we have samples ${X = (x_i)_{i=1\ldots m}}$ and ${Y = (y_i)_{i=1\ldots n}}$ drawn iid.\ from distributions $p$ and $q$ respectively.
+The two sample problem asks if $p = q$.
+
+A way of answering the two sample problem is to consider maximum mean discrepancy (MMD) statistics
+%\vspace{-0.3\baselineskip}
+\begin{equation*}
+\textrm{MMD}(\mathcal{F},p,q) = \sup_{f \in \mathcal{F}}(\mathbb{E}_{x\sim p}[f(x)] - \mathbb{E}_{y\sim q}[f(y)])
+\label{eq:MMD}
+\end{equation*}
+where $\mathcal{F}$ is a set of functions.
+When $\mathcal{F}$ is a reproducing kernel Hilbert space (RKHS) the function attaining the supremum (called the witness function) and the value of the MMD can be estimated from finite samples.
+
+%\vspace{1\baselineskip}
+
+\mysection{Application to model criticism}
+
+%\vspace{1\baselineskip}
+
+We return to the central question \textbf{How do we choose the statistic by which to measure how surprising our data is?}
+Kernel two sample tests are of interest since they are defined as a maximisation over a large class of statistics; in a weak sense the statistic is selected automatically.
+
+%\begin{tabularx}{0.96\columnwidth}{X X}
+
+\setlength{\columnseprule}{0\textwidth}
+\begin{multicols}{2}
+
+Returning to our histogram data, we fit a normal distribution to it (red line) and then performed a kernel two sample test, resulting in the witness function shown in dashed green.
+The witness function peaks indicate where there is less data than expected; the troughs where there is more.
+Note that the main discrepancies between model and data (by this measure) are not near the outlier.
+
+\newpage
+
+\begin{center}
+  \includegraphics[width=0.96\columnwidth]{../figures/newcomb_witness_1}
+\end{center}
+
+\end{multicols}
 
 \vspace{1\baselineskip}
 
@@ -375,13 +449,24 @@ But maybe we just need to go deeper and use a DBN?
 Here the overrepresented digits appear to have entire sections faded out.
 The extra layers do not appear to have removed the fuzziness, it has just become more correlated.
 
-Note well, these overrepresented digits are not outliers, they are digits that are consistently produced by the models.
+%Note well, these overrepresented digits are not outliers, they are digits that are consistently produced by the models.
 
 \vspace{1\baselineskip}
 
-\mysection{Other examples}
+\mysection{A test of local heteroscedasticity}
 
 \vspace{1\baselineskip}
+
+Shown below left is some data and the fit of a Gaussian process regression model.
+On the right is the witness function after performing a kernel two sample test.
+
+\begin{center}
+  \includegraphics[width=0.48\columnwidth]{../figures/solar-data}
+  \includegraphics[width=0.48\columnwidth]{../figures/solar-witness}
+\end{center}
+
+The test identifies that something strange is happening at the bottom left.
+Indeed, this is a region of very low data variability that the homoscedastic model fit to it cannot represent.
 
 \vspace{1\baselineskip}
 
@@ -389,7 +474,11 @@ Note well, these overrepresented digits are not outliers, they are digits that a
 
 \vspace{1\baselineskip}
 
-\vspace{1\baselineskip}
+Q: Did we answer our central question of how to choose a statistic for model criticism?
+
+A: Not really, but these methods are interesting since one can specify a statistic in high level terms e.g.\ `smooth function' rather than specifying an equation.
+
+Q: Question
 
 \end{multicols}
 
